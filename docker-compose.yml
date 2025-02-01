@@ -1,0 +1,24 @@
+services:
+  db:
+    container_name: models-postgres
+    image: postgis/postgis:latest
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: models-db
+      TZ: Africa/Cairo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    container_name: models-redis
+    image: redis
+    restart: always
+    ports:
+      - '6379:6379'
+
+volumes:
+  postgres_data:
+  redis_data:

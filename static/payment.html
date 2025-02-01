@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Form</title>
+  </head>
+  <body>
+    <!-- Payment Widget Script -->
+    <script
+      src="https://eu-prod.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"
+      integrity="{integrity}"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Payment Form -->
+    <form
+      action="{shopperResultUrl}"
+      class="paymentWidgets"
+      data-brands="VISA MASTER AMEX"
+    ></form>
+  </body>
+</html>
