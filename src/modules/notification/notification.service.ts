@@ -8,7 +8,7 @@ import { currentUserType } from '../../libs/types/current-user.type';
 import { FCMTokenInput } from '../fcm-token/dtos/inputs/fcm-token.input';
 import { FCMService } from '../fcm-token/fcm-token.service';
 import { QueueService } from '../../libs/queue/queue.service';
-import { Individual } from '../individual/entities/individual.entity';
+import { Student } from '../individual/entities/student.entity';
 import { NotificationTypeEnum } from './enums/notification.enum';
 import { Notification } from './entities/notification.entity';
 import { NotificationMessage } from './types/notification.type';
@@ -19,8 +19,8 @@ export class NotificationService {
   constructor(
     private readonly fcmService: FCMService,
     private readonly queueService: QueueService,
-    @InjectBaseRepository(Individual)
-    private readonly individualRepo: BaseRepository<Individual>,
+    @InjectBaseRepository(Student)
+    private readonly studentRepo: BaseRepository<Student>,
     @InjectBaseRepository(Notification)
     private readonly notificationRepo: BaseRepository<Notification>,
   ) {

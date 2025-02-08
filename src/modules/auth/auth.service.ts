@@ -1,24 +1,24 @@
-import { get } from 'env-var';
-import { UserRoleEnum } from '../user/enums/user.enum';
-import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
 import { Injectable } from '@nestjs/common';
-import { OtpService } from '../otp/otp.service';
-import { UserService } from '../user/user.service';
-import { User } from '../user/entities/user.entity';
-import { OtpUseCaseEnum } from '../otp/enums/otp.enum';
-import { SignupInput } from './dtos/inputs/signup.input';
-import { Session } from '../session/entities/session.entity';
-import { BaseRepository } from '../../libs/types/base-repository';
-import { Individual } from '../individual/entities/individual.entity';
-import { UserTransformer } from '../user/transformer/user.transformer';
-import { TokenPayload } from '../../libs/types/auth-token-payload.type';
-import { Organization } from '../organization/entities/organization.entity';
-import { ErrorCodeEnum } from '../../libs/application/exceptions/error-code.enum';
+import * as bcrypt from 'bcryptjs';
+import { get } from 'env-var';
+import * as jwt from 'jsonwebtoken';
 import { BaseHttpException } from '../../libs/application/exceptions/base-http-exception';
+import { ErrorCodeEnum } from '../../libs/application/exceptions/error-code.enum';
 import { InjectBaseRepository } from '../../libs/decorators/inject-base-repository.decorator';
-import { ResetPasswordInput } from './dtos/inputs/reset-password.input';
+import { TokenPayload } from '../../libs/types/auth-token-payload.type';
+import { BaseRepository } from '../../libs/types/base-repository';
 import { HelperService } from '../../libs/utils/helper/helper.service';
+import { Student } from '../individual/entities/student.entity';
+import { Organization } from '../organization/entities/organization.entity';
+import { OtpUseCaseEnum } from '../otp/enums/otp.enum';
+import { OtpService } from '../otp/otp.service';
+import { Session } from '../session/entities/session.entity';
+import { User } from '../user/entities/user.entity';
+import { UserRoleEnum } from '../user/enums/user.enum';
+import { UserTransformer } from '../user/transformer/user.transformer';
+import { UserService } from '../user/user.service';
+import { ResetPasswordInput } from './dtos/inputs/reset-password.input';
+import { SignupInput } from './dtos/inputs/signup.input';
 import { UpdateEmailInput } from './dtos/inputs/update-email.input';
 import { UpdatePasswordInput } from './dtos/inputs/update-password.input';
 
@@ -31,8 +31,8 @@ export class AuthService {
     private readonly userTransformer: UserTransformer,
     @InjectBaseRepository(User)
     private readonly userRepo: BaseRepository<User>,
-    @InjectBaseRepository(Individual)
-    private readonly individualRepo: BaseRepository<Individual>,
+    @InjectBaseRepository(Student)
+    private readonly studentRepo: BaseRepository<Student>,
     @InjectBaseRepository(Organization)
     private readonly organizationRepo: BaseRepository<Organization>,
   ) {}
@@ -45,11 +45,11 @@ export class AuthService {
     const data = await this.userTransformer.registerAsUserTransformer(input);
     const user = await this.userRepo.createOne(data);
 
-    if (role === UserRoleEnum.ORGANIZATION)
+    if (role === UserRoleEnum.PROVIDER)
       await this.organizationRepo.createOne({ user });
 
-    if (role === UserRoleEnum.INDIVIDUAL)
-      await this.individualRepo.createOne({ user, lastName, firstName });
+    if (role === UserRoleEnum.STUDENT)
+      await this.studentRepo.createOne({ user, lastName, firstName });
 
     await this.otpService.sendOtp(user.id, OtpUseCaseEnum.VERIFY_ACCOUNT);
     return user;

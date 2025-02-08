@@ -2,7 +2,6 @@ import { Entity, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
-import { Job } from '../../job/entities/job.entity';
 
 @Entity()
 export class Organization extends BaseModel {
@@ -43,7 +42,4 @@ export class Organization extends BaseModel {
   @OneToOne(() => User, (user) => user.organization, { onDelete: 'CASCADE' })
   @JoinColumn()
   user: User;
-
-  @OneToMany(() => Job, (job) => job.organization)
-  jobs: Job[];
 }

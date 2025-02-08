@@ -5,6 +5,6 @@ export enum UserVerificationCodeUseCaseEnum {
 
 export enum UserRoleEnum {
   ADMIN = 'ADMIN',
-  INDIVIDUAL = 'INDIVIDUAL',
-  ORGANIZATION = 'ORGANIZATION',
+  STUDENT = 'STUDENT',
+  PROVIDER = 'PROVIDER',
 }

@@ -7,16 +7,16 @@ export class ChatUserResponse {
 
   @Expose()
   @Transform(({ obj }) => {
-    return obj.role === UserRoleEnum.INDIVIDUAL
-      ? obj.individual?.fullName
+    return obj.role === UserRoleEnum.STUDENT
+      ? obj.student?.fullName
       : obj.organization?.name;
   })
   name: string;
 
   @Expose()
   @Transform(({ obj }) =>
-    obj.role === UserRoleEnum.INDIVIDUAL
-      ? obj.individual?.profilePicture
+    obj.role === UserRoleEnum.STUDENT
+      ? obj.student?.profilePicture
       : obj.organization?.logo,
   )
   profilePicture: string;

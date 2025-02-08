@@ -3,17 +3,10 @@ import { OrganizationService } from './organization.service';
 import { OrganizationController } from './organization.controller';
 import { DatabaseModule } from '../../configs/database/database.module';
 import { Organization } from './entities/organization.entity';
-import { Job } from '../../modules/job/entities/job.entity';
-import { Individual } from '../../modules/individual/entities/individual.entity';
-import { Review } from '../../modules/job/entities/review.entity';
+import { Student } from '../individual/entities/student.entity';
 
 @Module({
-  imports: [DatabaseModule.forFeature([
-    Organization,
-    Job,
-    Individual,
-    Review
-  ])],
+  imports: [DatabaseModule.forFeature([Organization, Student])],
   controllers: [OrganizationController],
   providers: [OrganizationService],
 })

@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import { Individual } from '@src/modules/individual/entities/individual.entity';
+import { Student } from '@src/modules/individual/entities/student.entity';
 import { Notification } from './notification.entity';
 import { BaseModel } from '@src/libs/database/base.model';
 
@@ -8,8 +8,8 @@ export class NotificationStatus extends BaseModel {
   @Column()
   receiverId: string;
 
-  @ManyToOne(() => Individual, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
-  receiver: Individual;
+  @ManyToOne(() => Student, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  receiver: Student;
 
   @Column()
   notificationId: string;

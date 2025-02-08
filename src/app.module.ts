@@ -1,6 +1,6 @@
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { Module, ValidationPipe } from '@nestjs/common';
-import { IndividualModule } from './modules/individual/individual.module';
+import { StudentModule } from './modules/individual/student.module';
 import { SessionModule } from './modules/session/session.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { SecurityGroupModule } from './modules/security-group/security-group.module';
@@ -18,11 +18,8 @@ import { join } from 'path';
 import { OrganizationModule } from './modules/organization/organization.module';
 import { UserModule } from './modules/user/user.module';
 import { OtpModule } from './modules/otp/otp.module';
-import { JobModule } from './modules/job/job.module';
 import { PubSubModule } from './libs/redis-pubsub/pubsub.module';
 import { ChatModule } from './modules/chat/chat.module';
-import { TagModule } from './modules/tag/tag.module';
-import { RequestModule } from './modules/request/request.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { UploaderModule } from './libs/application/uploader/uploader.module';
 import { ProfileModule } from './modules/profile/profile.module';
@@ -40,18 +37,15 @@ import { ProfileModule } from './modules/profile/profile.module';
     QueueModule.register(),
     AuthModule,
     LoggerModule,
-    IndividualModule,
+    StudentModule,
     SessionModule,
     SecurityGroupModule,
     NotificationModule,
     OrganizationModule,
     UserModule,
     OtpModule,
-    JobModule,
     PubSubModule,
     ChatModule,
-    TagModule,
-    RequestModule,
     PaymentModule,
     UploaderModule,
     ServeStaticModule.forRoot({

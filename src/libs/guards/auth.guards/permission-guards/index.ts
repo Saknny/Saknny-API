@@ -1,11 +1,11 @@
 import { AdminOnlyGuard } from './admin.guard';
 import { OrganizationOnlyGuard } from './organization.guard';
 import { AuthenticatedGuard } from './auth.guard';
-import { IndividualOnlyGuard } from './individual.guard';
+import { StudentOnlyGuard } from './student.guard';
 
 export const AuthGuards = {
   authenticated: AuthenticatedGuard,
   organization: OrganizationOnlyGuard,
-  individual: IndividualOnlyGuard,
+  student: StudentOnlyGuard,
   admin: AdminOnlyGuard,
 } as const;

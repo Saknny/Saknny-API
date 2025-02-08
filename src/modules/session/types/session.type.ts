@@ -1,7 +1,7 @@
 import { FCMTokenInput } from '../../fcm-token/types/fcm-token.Types';
-import { Individual } from '../../individual/entities/individual.entity';
+import { Student } from '@src/modules/individual/entities/student.entity';
 
 export interface sessionInputType {
-  user: Individual;
+  user: Student;
   FCMtoken: FCMTokenInput;
 }

@@ -1,26 +1,26 @@
 import {
-  Entity,
   Column,
+  Entity,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   OneToOne,
-  ManyToMany,
 } from 'typeorm';
 import { BaseModel } from '../../../libs/database/base.model';
-import { DeepPartial } from '../../../libs/types/deep-partial.type';
-import { SecurityGroup } from '../../security-group/entities/security-group.entity';
-import { FCMToken } from '../../fcm-token/entities/fcm-token.entity';
-import { NotificationStatus } from '../../notification/entities/notificationStatus.entity';
-import { Notification } from '../../notification/entities/notification.entity';
-import { UserRoleEnum } from '../enums/user.enum';
-import { Otp } from '../../otp/entities/otp.entity';
-import { Individual } from '../../individual/entities/individual.entity';
-import { Organization } from '../../organization/entities/organization.entity';
 import { LangEnum } from '../../../libs/enums/language-code.enum';
-import { Message } from '../../chat/entities/message.entity';
+import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { ChatUser } from '../../chat/entities/chat-user.entity';
 import { Chat } from '../../chat/entities/chat.entity';
+import { Message } from '../../chat/entities/message.entity';
+import { FCMToken } from '../../fcm-token/entities/fcm-token.entity';
+import { Student } from '@src/modules/individual/entities/student.entity';
+import { Notification } from '../../notification/entities/notification.entity';
+import { NotificationStatus } from '../../notification/entities/notificationStatus.entity';
+import { Organization } from '../../organization/entities/organization.entity';
+import { Otp } from '../../otp/entities/otp.entity';
 import { Profile } from '../../profile/entities/profile.entity';
+import { SecurityGroup } from '../../security-group/entities/security-group.entity';
+import { UserRoleEnum } from '../enums/user.enum';
 
 @Entity()
 export class User extends BaseModel {
@@ -82,8 +82,8 @@ export class User extends BaseModel {
   @OneToOne(() => Organization, (org) => org.user, { eager: true })
   organization: Organization;
 
-  @OneToOne(() => Individual, (individual) => individual.user, { eager: true })
-  individual: Individual;
+  @OneToOne(() => Student, (Student) => Student.user, { eager: true })
+  student: Student;
 
   @OneToMany(() => ChatUser, (chatUser) => chatUser.user)
   chatUsers: ChatUser[];

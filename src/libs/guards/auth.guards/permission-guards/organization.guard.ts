@@ -26,7 +26,7 @@ export class OrganizationOnlyGuard implements IAuthGuard {
 
     if (
       !user ||
-      user.role !== UserRoleEnum.ORGANIZATION ||
+      user.role !== UserRoleEnum.PROVIDER ||
       !user?.organization?.onboardingCompleted
     )
       throw unauthorizedException;

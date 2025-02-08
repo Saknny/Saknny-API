@@ -6,14 +6,14 @@ import { FCMTokenModule } from '../fcm-token/fcm-token.module';
 import { Notification } from './entities/notification.entity';
 import { NotificationStatus } from './entities/notificationStatus.entity';
 import { BullModule } from '@nestjs/bull';
-import { Individual } from '../individual/entities/individual.entity';
+import { Student } from '../individual/entities/student.entity';
 
 @Module({
   imports: [
     BullModule.registerQueue({
       name: 'notification',
     }),
-    DatabaseModule.forFeature([Individual, Notification, NotificationStatus]),
+    DatabaseModule.forFeature([Student, Notification, NotificationStatus]),
     FCMTokenModule,
   ],
   controllers: [NotificationController],

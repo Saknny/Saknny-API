@@ -23,16 +23,16 @@ export class UserTransformer {
 
   validateOnboardingDataByRole(role: string, data: CompleteUserProfileInput) {
     const profile =
-      role === UserRoleEnum.INDIVIDUAL && data.individualProfile
-        ? { ...data.individualProfile, onboardingCompleted: true }
-        : role === UserRoleEnum.ORGANIZATION && data.organizationProfile
+      role === UserRoleEnum.STUDENT && data.studentProfile
+        ? { ...data.studentProfile, onboardingCompleted: true }
+        : role === UserRoleEnum.PROVIDER && data.organizationProfile
           ? { ...data.organizationProfile, onboardingCompleted: true }
           : null;
 
     if (profile) return profile;
 
     const error =
-      role === UserRoleEnum.INDIVIDUAL
+      role === UserRoleEnum.STUDENT
         ? ErrorCodeEnum.INDIVIDUAL_PROFILE_REQUIRED
         : ErrorCodeEnum.ORGANIZATION_PROFILE_REQUIRED;
     throw new BaseHttpException(error);

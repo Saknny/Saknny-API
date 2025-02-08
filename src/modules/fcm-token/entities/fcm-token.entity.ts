@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, OneToOne } from 'typeorm';
 import { FCMTokenStatusEnum } from '../enums/fcm-token.enum';
 import { BaseModel } from '../../../libs/database/base.model';
-import { DeviceEnum } from '../../individual/enums/individual.enum';
+import { DeviceEnum } from '@src/modules/individual/enums/student.enum';
 import { Session } from '../../session/entities/session.entity';
 import { User } from '../../user/entities/user.entity';
 

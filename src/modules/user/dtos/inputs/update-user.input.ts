@@ -5,15 +5,15 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { CompleteIndividualProfileInput } from '../../../individual/dtos/inputs/individual.input';
+import { CompleteStudentProfileInput } from '@src/modules/individual/dtos/inputs/student.input';
 import { CompleteOrganizationProfileInput } from '../../../organization/dtos/inputs/update-organization.input';
 import { Type } from 'class-transformer';
 
 export class CompleteUserProfileInput {
   @IsOptional()
   @ValidateNested()
-  @Type(() => CompleteIndividualProfileInput)
-  individualProfile: CompleteIndividualProfileInput;
+  @Type(() => CompleteStudentProfileInput)
+  studentProfile: CompleteStudentProfileInput;
 
   @IsOptional()
   @ValidateNested()

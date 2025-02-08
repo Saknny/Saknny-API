@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class SetupFullTextSearchForJobsAndIndividuals1736208787973
+export class SetupFullTextSearchForJobsAndStudents1736208787973
   implements MigrationInterface
 {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -14,9 +14,9 @@ export class SetupFullTextSearchForJobsAndIndividuals1736208787973
         ALTER TABLE "job"
         ADD COLUMN IF NOT EXISTS "jobSearchVector" tsvector;
 
-        -- Add the "individualSearchVector" column to the "individual" table
-        ALTER TABLE "individual"
-        ADD COLUMN IF NOT EXISTS "individualSearchVector" tsvector;
+        -- Add the "studentSearchVector" column to the "student" table
+        ALTER TABLE "student"
+        ADD COLUMN IF NOT EXISTS "studentSearchVector" tsvector;
 
         -- Backfill the "jobSearchVector" column
         UPDATE "job"
@@ -37,9 +37,9 @@ export class SetupFullTextSearchForJobsAndIndividuals1736208787973
             'A'
           );
 
-        -- Backfill the "individualSearchVector" column
-        UPDATE "individual"
-        SET "individualSearchVector" = 
+        -- Backfill the "studentSearchVector" column
+        UPDATE "student"
+        SET "studentSearchVector" = 
           setweight(to_tsvector('english', coalesce("firstName", '')), 'A') ||
           setweight(to_tsvector('english', coalesce("lastName", '')), 'A') ||
           setweight(to_tsvector('english', coalesce("bio", '')), 'B');
@@ -49,10 +49,10 @@ export class SetupFullTextSearchForJobsAndIndividuals1736208787973
         ON "job"
         USING GIN ("jobSearchVector");
 
-        -- Create a GIN index for the "individualSearchVector" column
-        CREATE INDEX IF NOT EXISTS individual_search_vector_idx
-        ON "individual"
-        USING GIN ("individualSearchVector");
+        -- Create a GIN index for the "studentSearchVector" column
+        CREATE INDEX IF NOT EXISTS student_search_vector_idx
+        ON "student"
+        USING GIN ("studentSearchVector");
 
         -- Create the job_unique_words view including tags
         CREATE VIEW job_unique_words AS
@@ -72,20 +72,20 @@ export class SetupFullTextSearchForJobsAndIndividuals1736208787973
             INNER JOIN tag ON tag.id = tag_jobs_job."tagId"
         ) AS combined_words;
 
-        -- Create the individual_unique_words view for individuals
-        CREATE VIEW individual_unique_words AS
+        -- Create the student_unique_words view for students
+        CREATE VIEW student_unique_words AS
         SELECT DISTINCT word
         FROM (
-            -- Get words from individual first and last name
-            SELECT unnest(string_to_array(lower(individual."firstName"), ' ')) AS word 
-            FROM public.individual
+            -- Get words from student first and last name
+            SELECT unnest(string_to_array(lower(student."firstName"), ' ')) AS word 
+            FROM public.student
             UNION
-            SELECT unnest(string_to_array(lower(individual."lastName"), ' ')) AS word 
-            FROM public.individual
+            SELECT unnest(string_to_array(lower(student."lastName"), ' ')) AS word 
+            FROM public.student
             UNION
-            -- Get words from individual bio
-            SELECT unnest(string_to_array(lower(individual."bio"), ' ')) AS word
-            FROM public.individual
+            -- Get words from student bio
+            SELECT unnest(string_to_array(lower(student."bio"), ' ')) AS word
+            FROM public.student
         ) AS combined_words;
 
         -- Drop and recreate the trigger function for jobs
@@ -118,11 +118,11 @@ export class SetupFullTextSearchForJobsAndIndividuals1736208787973
         BEFORE INSERT OR UPDATE ON "job"
         FOR EACH ROW EXECUTE FUNCTION job_tsvector_trigger();
 
-        -- Drop and recreate the trigger function for individuals
-        DROP FUNCTION IF EXISTS individual_tsvector_trigger;
-        CREATE FUNCTION individual_tsvector_trigger() RETURNS trigger AS $$
+        -- Drop and recreate the trigger function for students
+        DROP FUNCTION IF EXISTS student_tsvector_trigger;
+        CREATE FUNCTION student_tsvector_trigger() RETURNS trigger AS $$
         BEGIN
-          NEW."individualSearchVector" := 
+          NEW."studentSearchVector" := 
             setweight(to_tsvector('english', coalesce(NEW."firstName", '')), 'A') ||
             setweight(to_tsvector('english', coalesce(NEW."lastName", '')), 'A') ||
             setweight(to_tsvector('english', coalesce(NEW."bio", '')), 'B');
@@ -130,11 +130,11 @@ export class SetupFullTextSearchForJobsAndIndividuals1736208787973
         END;
         $$ LANGUAGE plpgsql;
 
-        -- Attach the trigger to the "individual" table
-        DROP TRIGGER IF EXISTS tsvectorupdate_individual ON "individual";
-        CREATE TRIGGER tsvectorupdate_individual
-        BEFORE INSERT OR UPDATE ON "individual"
-        FOR EACH ROW EXECUTE FUNCTION individual_tsvector_trigger();
+        -- Attach the trigger to the "student" table
+        DROP TRIGGER IF EXISTS tsvectorupdate_student ON "student";
+        CREATE TRIGGER tsvectorupdate_student
+        BEFORE INSERT OR UPDATE ON "student"
+        FOR EACH ROW EXECUTE FUNCTION student_tsvector_trigger();
       `);
 
       await queryRunner.commitTransaction();
@@ -150,23 +150,23 @@ export class SetupFullTextSearchForJobsAndIndividuals1736208787973
       await queryRunner.query(`
         -- Drop the triggers first to remove dependencies on their associated functions
         DROP TRIGGER IF EXISTS tsvectorupdate_job ON "job";
-        DROP TRIGGER IF EXISTS tsvectorupdate_individual ON "individual";
+        DROP TRIGGER IF EXISTS tsvectorupdate_student ON "student";
   
         -- Now drop the associated trigger functions
         DROP FUNCTION IF EXISTS job_tsvector_trigger;
-        DROP FUNCTION IF EXISTS individual_tsvector_trigger;
+        DROP FUNCTION IF EXISTS student_tsvector_trigger;
   
         -- Drop the GIN indexes
         DROP INDEX IF EXISTS job_search_vector_idx;
-        DROP INDEX IF EXISTS individual_search_vector_idx;
+        DROP INDEX IF EXISTS student_search_vector_idx;
   
-        -- Drop the "job_unique_words" and "individual_unique_words" views
+        -- Drop the "job_unique_words" and "student_unique_words" views
         DROP VIEW IF EXISTS job_unique_words;
-        DROP VIEW IF EXISTS individual_unique_words;
+        DROP VIEW IF EXISTS student_unique_words;
 
         -- Drop the columns
         ALTER TABLE "job" DROP COLUMN IF EXISTS "jobSearchVector";
-        ALTER TABLE "individual" DROP COLUMN IF EXISTS "individualSearchVector";
+        ALTER TABLE "student" DROP COLUMN IF EXISTS "studentSearchVector";
   
         -- Remove the pg_trgm extension
         DROP EXTENSION IF EXISTS pg_trgm;
@@ -180,7 +180,7 @@ export class SetupFullTextSearchForJobsAndIndividuals1736208787973
   }
 }
 
-// DROP FUNCTION individual_tsvector_trigger() CASCADE;
+// DROP FUNCTION student_tsvector_trigger() CASCADE;
 // DROP FUNCTION job_tsvector_trigger() CASCADE;
 // DROP VIEW IF EXISTS job_unique_words;
-// DROP VIEW IF EXISTS individual_unique_words;
+// DROP VIEW IF EXISTS student_unique_words;

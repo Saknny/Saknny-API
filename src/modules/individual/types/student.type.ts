@@ -1,6 +1,6 @@
 import { UserVerificationCodeUseCaseEnum } from '../../user/enums/user.enum';
-import { DeviceEnum } from '../enums/individual.enum';
-import { Individual } from '@src/modules/individual/entities/individual.entity';
+import { DeviceEnum } from '../enums/student.enum';
+import { Student } from '../entities/student.entity';
 
 export class FcmTokensType {
   android?: string;
@@ -20,7 +20,7 @@ export interface VerificationCodeAndExpirationDate {
 }
 
 export interface ValidVerificationCodeOrErrorInput {
-  user: Individual;
+  user: Student;
   verificationCode: string;
   useCase: UserVerificationCodeUseCaseEnum;
 }

@@ -58,12 +58,12 @@ export class ChatService {
       .leftJoinAndSelect('chat.users', 'users')
       .leftJoinAndSelect('chat.chatUsers', 'chatUsers')
       .leftJoinAndSelect('chatUsers.user', 'user')
-      .leftJoinAndSelect('users.individual', 'individual')
+      .leftJoinAndSelect('users.student', 'student')
       .leftJoinAndSelect('users.organization', 'organization')
       .where('chatUsers.userId = :userId', { userId: user.id })
       .andWhere(
         new Brackets((qb) => {
-          qb.where('individual.fullName ILIKE :searchKey', {
+          qb.where('student.fullName ILIKE :searchKey', {
             searchKey: `%${searchKey}%`,
           }).orWhere('organization.name ILIKE :searchKey', {
             searchKey: `%${searchKey}%`,

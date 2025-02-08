@@ -14,13 +14,13 @@ import { passwordRegex } from '@libs/regex/lang.regex';
 import { ErrorCodeEnum } from '@libs/application/exceptions/error-code.enum';
 
 export class SignupInput {
-  @ValidateIf((o) => o.role === UserRoleEnum.INDIVIDUAL)
+  @ValidateIf((o) => o.role === UserRoleEnum.STUDENT)
   @IsString()
   @MinLength(2)
   @MaxLength(15)
   firstName: string;
 
-  @ValidateIf((o) => o.role === UserRoleEnum.INDIVIDUAL)
+  @ValidateIf((o) => o.role === UserRoleEnum.STUDENT)
   @IsString()
   @MinLength(2)
   @MaxLength(15)
@@ -51,5 +51,5 @@ export class SignupInput {
 
   @IsNotEmpty()
   @IsEnum(UserRoleEnum)
-  role: UserRoleEnum = UserRoleEnum.INDIVIDUAL;
+  role: UserRoleEnum = UserRoleEnum.STUDENT;
 }

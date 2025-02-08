@@ -6,23 +6,21 @@ import { FindOptionsWhere } from 'typeorm';
 import { ErrorCodeEnum } from '../../libs/application/exceptions/error-code.enum';
 import { BaseHttpException } from '../../libs/application/exceptions/base-http-exception';
 import { CompleteUserProfileInput } from './dtos/inputs/update-user.input';
-import { Individual } from '../individual/entities/individual.entity';
+import { Student } from '../individual/entities/student.entity';
 import { Organization } from '../organization/entities/organization.entity';
 import { UserTransformer } from './transformer/user.transformer';
 import { UserRoleEnum } from './enums/user.enum';
-import { IndividualTransformer } from '../individual/transformer/individual.transformer';
 
 @Injectable()
 export class UserService {
   constructor(
-    private readonly individualTransformer: IndividualTransformer,
     private readonly userTransformer: UserTransformer,
     @InjectBaseRepository(User)
     private readonly userRepo: BaseRepository<User>,
     @InjectBaseRepository(Organization)
     private readonly orgRepo: BaseRepository<Organization>,
-    @InjectBaseRepository(Individual)
-    private readonly individualRepo: BaseRepository<Individual>,
+    @InjectBaseRepository(Student)
+    private readonly studentRepo: BaseRepository<Student>,
   ) {}
 
   async getVerifiedUserIdByEmail(email: string) {
@@ -56,8 +54,8 @@ export class UserService {
     const data = this.userTransformer.validateOnboardingDataByRole(role, input);
 
     const repositoryMap = {
-      [UserRoleEnum.ORGANIZATION]: this.orgRepo,
-      [UserRoleEnum.INDIVIDUAL]: this.individualRepo,
+      [UserRoleEnum.PROVIDER]: this.orgRepo,
+      [UserRoleEnum.STUDENT]: this.studentRepo,
     };
     const repository = repositoryMap[role];
 
@@ -67,11 +65,7 @@ export class UserService {
         data,
       );
 
-      if (role === UserRoleEnum.INDIVIDUAL) {
-        await this.individualTransformer.createIndividualSpecialty(
-          updatedProfile,
-          input.individualProfile.specialtyInfo,
-        );
+      if (role === UserRoleEnum.STUDENT) {
       }
     }
 

@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { DeviceEnum } from '../../../individual/enums/individual.enum';
+import { DeviceEnum } from '@src/modules/individual/enums/student.enum';
 
 export class FCMTokenInput {
   @IsString()

@@ -5,15 +5,15 @@ import { DatabaseModule } from '../../configs/database/database.module';
 import { User } from './entities/user.entity';
 import { HelperModule } from '../../libs/utils/helper/helper.module';
 import { UserTransformer } from './transformer/user.transformer';
-import { Individual } from '../individual/entities/individual.entity';
+import { Student } from '../individual/entities/student.entity';
 import { Organization } from '../organization/entities/organization.entity';
-import { IndividualModule } from '../individual/individual.module';
+import { StudentModule } from '../individual/student.module';
 
 @Module({
   imports: [
-    DatabaseModule.forFeature([User, Individual, Organization]),
+    DatabaseModule.forFeature([User, Student, Organization]),
     HelperModule,
-    IndividualModule,
+    StudentModule,
   ],
   controllers: [UserController],
   providers: [UserService, UserTransformer],
