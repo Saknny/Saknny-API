@@ -6,7 +6,7 @@ import { IContextAuthService } from '@src/libs/application/context/context-auth.
 import { AuthOpts } from '@src/libs/decorators/auth.decorator';
 import { UserRoleEnum } from '../../../../modules/user/enums/user.enum';
 
-export class OrganizationOnlyGuard implements IAuthGuard {
+export class ProviderOnlyGuard implements IAuthGuard {
   constructor(
     public readonly authOpts: AuthOpts,
     public readonly authService: IContextAuthService,
@@ -27,7 +27,7 @@ export class OrganizationOnlyGuard implements IAuthGuard {
     if (
       !user ||
       user.role !== UserRoleEnum.PROVIDER ||
-      !user?.organization?.onboardingCompleted
+      !user?.provider?.onboardingCompleted
     )
       throw unauthorizedException;
 

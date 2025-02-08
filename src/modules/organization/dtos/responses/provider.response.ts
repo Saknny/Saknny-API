@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 
-export class OrganizationShortInfo {
+export class ProviderShortInfo {
   @Expose()
   name: string;
 
@@ -8,7 +8,7 @@ export class OrganizationShortInfo {
   logo: string;
 }
 
-export class OrganizationResponse extends OrganizationShortInfo {
+export class ProviderResponse extends ProviderShortInfo {
   @Expose()
   bio: string;
 
@@ -28,7 +28,7 @@ export class OrganizationResponse extends OrganizationShortInfo {
   phone: string;
 }
 
-export class OrganizationWithExposeIdFullResponse extends OrganizationResponse {
+export class OrganizationWithExposeIdFullResponse extends ProviderResponse {
   @Expose()
   id: string;
 }

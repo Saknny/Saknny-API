@@ -15,7 +15,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ResponseInterceptor } from './libs/interceptors/response.interceptor';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { OrganizationModule } from './modules/organization/organization.module';
+import { ProviderModule } from './modules/organization/provider.module';
 import { UserModule } from './modules/user/user.module';
 import { OtpModule } from './modules/otp/otp.module';
 import { PubSubModule } from './libs/redis-pubsub/pubsub.module';
@@ -41,7 +41,7 @@ import { ProfileModule } from './modules/profile/profile.module';
     SessionModule,
     SecurityGroupModule,
     NotificationModule,
-    OrganizationModule,
+    ProfileModule,
     UserModule,
     OtpModule,
     PubSubModule,

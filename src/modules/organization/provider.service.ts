@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectBaseRepository } from '../../libs/decorators/inject-base-repository.decorator';
-import { Organization } from './entities/organization.entity';
+import { Provider } from './entities/provider.entity';
 import { BaseRepository } from '../../libs/types/base-repository';
 
 @Injectable()
 export class OrganizationService {
   constructor(
-    @InjectBaseRepository(Organization)
-    private readonly organizationRepo: BaseRepository<Organization>,
+    @InjectBaseRepository(Provider)
+    private readonly organizationRepo: BaseRepository<Provider>,
   ) {}
 }

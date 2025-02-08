@@ -1,12 +1,15 @@
 import { IsEnum, IsPhoneNumber, IsString, IsUrl } from 'class-validator';
 import { CountryEnum } from '../../../../libs/enums/countries.enum';
 
-export class CompleteOrganizationProfileInput {
+export class CompleteProviderProfileInput {
   @IsString()
   bio: string;
 
   @IsString()
-  name: string;
+  firstName: string;
+
+  @IsString()
+  lastName: string;
 
   @IsString()
   logo?: string;

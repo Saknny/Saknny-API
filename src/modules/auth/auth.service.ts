@@ -9,7 +9,7 @@ import { TokenPayload } from '../../libs/types/auth-token-payload.type';
 import { BaseRepository } from '../../libs/types/base-repository';
 import { HelperService } from '../../libs/utils/helper/helper.service';
 import { Student } from '../individual/entities/student.entity';
-import { Organization } from '../organization/entities/organization.entity';
+import { Provider } from '../organization/entities/provider.entity';
 import { OtpUseCaseEnum } from '../otp/enums/otp.enum';
 import { OtpService } from '../otp/otp.service';
 import { Session } from '../session/entities/session.entity';
@@ -33,8 +33,8 @@ export class AuthService {
     private readonly userRepo: BaseRepository<User>,
     @InjectBaseRepository(Student)
     private readonly studentRepo: BaseRepository<Student>,
-    @InjectBaseRepository(Organization)
-    private readonly organizationRepo: BaseRepository<Organization>,
+    @InjectBaseRepository(Provider)
+    private readonly providerRepo: BaseRepository<Provider>,
   ) {}
 
   async signup(input: SignupInput) {
@@ -46,7 +46,7 @@ export class AuthService {
     const user = await this.userRepo.createOne(data);
 
     if (role === UserRoleEnum.PROVIDER)
-      await this.organizationRepo.createOne({ user });
+      await this.providerRepo.createOne({ user, lastName, firstName });
 
     if (role === UserRoleEnum.STUDENT)
       await this.studentRepo.createOne({ user, lastName, firstName });

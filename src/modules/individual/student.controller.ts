@@ -28,7 +28,7 @@ export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
   @Get()
-  @Auth({ allow: 'organization' })
+  @Auth({ allow: 'provider' })
   @Serialize(PaginatorResponse, StudentWithIdResponse)
   async geStudents(
     @Query('filter') jobStudentInput: FilterStudentsInput,
@@ -39,7 +39,7 @@ export class StudentController {
   }
 
   @Get('/:studentId')
-  @Auth({ allow: 'organization' })
+  @Auth({ allow: 'provider' })
   @Serialize(StudentWithIdResponse)
   async getStudent(@Param() { studentId }: StudentIdInput) {
     // return await this.studentService.getStudent(studentId);

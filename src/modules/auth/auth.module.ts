@@ -9,7 +9,7 @@ import { HelperModule } from '../../libs/utils/helper/helper.module';
 import { FCMTokenModule } from '../fcm-token/fcm-token.module';
 import { Student } from '../individual/entities/student.entity';
 import { StudentModule } from '../individual/student.module';
-import { Organization } from '../organization/entities/organization.entity';
+import { Provider } from '../organization/entities/provider.entity';
 import { Otp } from '../otp/entities/otp.entity';
 import { OtpModule } from '../otp/otp.module';
 import { SessionModule } from '../session/session.module';
@@ -29,7 +29,7 @@ import { AuthService } from './auth.service';
         return options;
       },
     }),
-    DatabaseModule.forFeature([Student, Organization, Otp, User]),
+    DatabaseModule.forFeature([Student, Provider, Otp, User]),
     StudentModule,
     ContextModule,
     SessionModule,

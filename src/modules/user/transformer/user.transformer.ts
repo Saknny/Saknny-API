@@ -25,8 +25,8 @@ export class UserTransformer {
     const profile =
       role === UserRoleEnum.STUDENT && data.studentProfile
         ? { ...data.studentProfile, onboardingCompleted: true }
-        : role === UserRoleEnum.PROVIDER && data.organizationProfile
-          ? { ...data.organizationProfile, onboardingCompleted: true }
+        : role === UserRoleEnum.PROVIDER && data.providerProfile
+          ? { ...data.providerProfile, onboardingCompleted: true }
           : null;
 
     if (profile) return profile;

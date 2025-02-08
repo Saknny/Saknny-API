@@ -2,7 +2,7 @@ import { Expose, Transform } from 'class-transformer';
 import { FCMTokenStatusEnum } from '../../../fcm-token/enums/fcm-token.enum';
 import { UserRoleEnum } from '../../enums/user.enum';
 import { StudentResponse } from '@src/modules/individual/dtos/responses/student.response';
-import { OrganizationResponse } from '../../../organization/dtos/responses/organization.response';
+import { ProviderResponse } from '@src/modules/organization/dtos/responses/provider.response';
 
 export class UserResponse {
   @Expose()
@@ -27,10 +27,10 @@ export class UserResponse {
 
   @Expose()
   @Transform(({ obj }) => {
-    const { role, organization, student } = obj;
+    const { role, provider, student } = obj;
     const roleToOnboardingMapping = {
       [UserRoleEnum.STUDENT]: student?.onboardingCompleted,
-      [UserRoleEnum.PROVIDER]: organization?.onboardingCompleted,
+      [UserRoleEnum.PROVIDER]: provider?.onboardingCompleted,
     };
     return roleToOnboardingMapping[role] ?? false;
   })
@@ -40,7 +40,7 @@ export class UserResponse {
   student: StudentResponse;
 
   @Expose()
-  organization: OrganizationResponse;
+  provider: ProviderResponse;
 }
 
 export class UserIdResponse {

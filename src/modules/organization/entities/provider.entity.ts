@@ -4,8 +4,8 @@ import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
 
 @Entity()
-export class Organization extends BaseModel {
-  constructor(input?: DeepPartial<Organization>) {
+export class Provider extends BaseModel {
+  constructor(input?: DeepPartial<Provider>) {
     super(input);
   }
 
@@ -15,8 +15,11 @@ export class Organization extends BaseModel {
   @Column({ nullable: true })
   bio: string;
 
-  @Column({ nullable: true })
-  name: string;
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
 
   @Column({ nullable: true })
   location: string;
@@ -39,7 +42,7 @@ export class Organization extends BaseModel {
   @Column()
   userId: string;
 
-  @OneToOne(() => User, (user) => user.organization, { onDelete: 'CASCADE' })
+  @OneToOne(() => User, (user) => user.provider, { onDelete: 'CASCADE' })
   @JoinColumn()
   user: User;
 }

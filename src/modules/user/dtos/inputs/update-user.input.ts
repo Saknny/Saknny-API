@@ -6,7 +6,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { CompleteStudentProfileInput } from '@src/modules/individual/dtos/inputs/student.input';
-import { CompleteOrganizationProfileInput } from '../../../organization/dtos/inputs/update-organization.input';
+import { CompleteProviderProfileInput } from '@src/modules/organization/dtos/inputs/update-provider.input';
 import { Type } from 'class-transformer';
 
 export class CompleteUserProfileInput {
@@ -17,8 +17,8 @@ export class CompleteUserProfileInput {
 
   @IsOptional()
   @ValidateNested()
-  @Type(() => CompleteOrganizationProfileInput)
-  organizationProfile: CompleteOrganizationProfileInput;
+  @Type(() => CompleteProviderProfileInput)
+  providerProfile: CompleteProviderProfileInput;
 }
 
 export class UpdateUserInfo {

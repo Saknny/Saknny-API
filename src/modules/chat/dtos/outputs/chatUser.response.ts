@@ -9,7 +9,7 @@ export class ChatUserResponse {
   @Transform(({ obj }) => {
     return obj.role === UserRoleEnum.STUDENT
       ? obj.student?.fullName
-      : obj.organization?.name;
+      : obj.provider?.name;
   })
   name: string;
 
@@ -17,7 +17,7 @@ export class ChatUserResponse {
   @Transform(({ obj }) =>
     obj.role === UserRoleEnum.STUDENT
       ? obj.student?.profilePicture
-      : obj.organization?.logo,
+      : obj.provider?.logo,
   )
   profilePicture: string;
 

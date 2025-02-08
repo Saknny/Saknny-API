@@ -6,12 +6,12 @@ import { User } from './entities/user.entity';
 import { HelperModule } from '../../libs/utils/helper/helper.module';
 import { UserTransformer } from './transformer/user.transformer';
 import { Student } from '../individual/entities/student.entity';
-import { Organization } from '../organization/entities/organization.entity';
+import { Provider } from '../organization/entities/provider.entity';
 import { StudentModule } from '../individual/student.module';
 
 @Module({
   imports: [
-    DatabaseModule.forFeature([User, Student, Organization]),
+    DatabaseModule.forFeature([User, Student, Provider]),
     HelperModule,
     StudentModule,
   ],
