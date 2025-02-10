@@ -6,7 +6,11 @@ import {
   Patch,
   Query,
   UseGuards,
+  Req,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express'
 import { StudentService } from './student.service';
 import { PaginatorInput } from '../../libs/application/paginator/paginator.input';
 import { PaginatorResponse } from '../../libs/application/paginator/paginator.response';
@@ -21,7 +25,7 @@ import { JwtAuthenticationGuard } from '../../libs/guards/strategy.guards/jwt.gu
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
 import { User } from '../user/entities/user.entity';
 import { UpdateStudentInput } from './dtos/inputs/update-student.input';
-
+import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 @Controller('students')
 @UseGuards(JwtAuthenticationGuard)
 export class StudentController {
@@ -53,5 +57,39 @@ export class StudentController {
     @Body() body: UpdateStudentInput,
   ) {
     // return await this.studentService.updateStudent(user, body);
+  }
+  @Patch('/complete-profile')
+  @Auth({ allow: 'student' })
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'idCardImage', maxCount: 1 },
+      { name: 'profilePicture', maxCount: 1 },
+    ]),
+  )
+  async completeProfile(
+    @currentUser() user: User,
+    @UploadedFiles()
+    files: {
+      idCardImage?: Express.Multer.File[];
+      profilePicture?: Express.Multer.File[];
+    },
+    @Body() completeProfileDto: CompleteProfileDto,
+    @Req() request: Request,
+  ) {
+    const idCardImagePath = files.idCardImage
+      ? `/uploads/${files.idCardImage[0].filename}`
+      : undefined;
+    const profilePicturePath = files.profilePicture
+      ? `/uploads/${files.profilePicture[0].filename}`
+      : undefined;
+
+    const updatedStudent = await this.studentService.completeProfile(
+      user.id,
+      completeProfileDto,
+      idCardImagePath,
+      profilePicturePath,
+    );
+
+    return { message: 'Profile completed successfully!', student: updatedStudent };
   }
 }
