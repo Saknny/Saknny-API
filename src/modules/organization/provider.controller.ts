@@ -1,7 +1,16 @@
 import { Controller } from '@nestjs/common';
-import { OrganizationService } from './provider.service';
+import { ProviderService } from './provider.service';
 
 @Controller('provider')
-export class OrganizationController {
-  constructor(private readonly organizationService: OrganizationService) {}
+export class ProviderController {
+  constructor(private readonly providerService: ProviderService) {
+    /*
+    complete profile:
+      - image
+      - phone 
+      - document
+      - 
+    */
+   
+  }
 }

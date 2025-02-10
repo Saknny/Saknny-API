@@ -9,12 +9,6 @@ export class Provider extends BaseModel {
     super(input);
   }
 
-  @Column({ type: 'text', nullable: true })
-  logo: string;
-
-  @Column({ nullable: true })
-  bio: string;
-
   @Column()
   firstName: string;
 
@@ -22,22 +16,11 @@ export class Provider extends BaseModel {
   lastName: string;
 
   @Column({ nullable: true })
-  location: string;
-
-  @Column({ nullable: true })
-  instagram?: string;
-
-  @Column({ nullable: true })
-  tiktok?: string;
-
-  @Column({ nullable: true })
-  website?: string;
-
-  @Column({ nullable: true })
   phone: string;
 
+
   @Column({ type: Boolean, default: false })
-  onboardingCompleted: boolean;
+  isVerified: boolean;
 
   @Column()
   userId: string;
@@ -45,4 +28,19 @@ export class Provider extends BaseModel {
   @OneToOne(() => User, (user) => user.provider, { onDelete: 'CASCADE' })
   @JoinColumn()
   user: User;
+
+  @Column('jsonb')
+  socialLinks: {
+    instagram?: string;
+    facebook?: string;
+    twitter?: string;
+    linkedin?: string;
+  };
+
+  // Documents 
+  @Column()
+  idCard:string;
+
+  @Column()
+  image:string
 }

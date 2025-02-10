@@ -4,9 +4,9 @@ import { Provider } from './entities/provider.entity';
 import { BaseRepository } from '../../libs/types/base-repository';
 
 @Injectable()
-export class OrganizationService {
+export class ProviderService {
   constructor(
     @InjectBaseRepository(Provider)
-    private readonly organizationRepo: BaseRepository<Provider>,
+    private readonly providerRepo: BaseRepository<Provider>,
   ) {}
 }
