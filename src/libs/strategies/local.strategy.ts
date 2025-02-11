@@ -20,10 +20,14 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(req: Request, email: string, password: string): Promise<any> {
-    const { role } = req.body as LoginInput;
-    if (!isEnum(role, UserRoleEnum))
-      throw new BaseHttpException(ErrorCodeEnum.BAD_ROLE_TYPE);
-    const user = await this.authService.validateUser(email, password, role);
+    // const { role } = req.body as LoginInput;
+
+    // if (!isEnum(role, UserRoleEnum)) {
+    //   throw new BaseHttpException(ErrorCodeEnum.BAD_ROLE_TYPE);
+    // }
+
+    const user = await this.authService.validateUser(email, password);
+
     if (!user) throw new BaseHttpException(ErrorCodeEnum.UNAUTHORIZED);
     else return user;
   }

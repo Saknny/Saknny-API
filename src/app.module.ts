@@ -1,5 +1,5 @@
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
-import { Module, ValidationPipe } from '@nestjs/common';
+import { MiddlewareConsumer, Module, ValidationPipe } from '@nestjs/common';
 import { StudentModule } from './modules/individual/student.module';
 import { SessionModule } from './modules/session/session.module';
 import { NotificationModule } from './modules/notification/notification.module';
@@ -23,6 +23,9 @@ import { ChatModule } from './modules/chat/chat.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { UploaderModule } from './libs/application/uploader/uploader.module';
 import { ProfileModule } from './modules/profile/profile.module';
+import { ContextAuthService } from './libs/application/context/context-auth.service';
+import { AdminModule } from './modules/admin/admin.module';
+import { AuthMiddleware } from './libs/middlewares/auth.middleware';
 
 @Module({
   imports: [
@@ -38,6 +41,7 @@ import { ProfileModule } from './modules/profile/profile.module';
     AuthModule,
     ProviderModule,
     LoggerModule,
+    AdminModule,
     StudentModule,
     SessionModule,
     SecurityGroupModule,
@@ -72,4 +76,8 @@ import { ProfileModule } from './modules/profile/profile.module';
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
   ],
 })
-export class AppModule { }
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes('*'); // Apply to all routes
+  }
+}

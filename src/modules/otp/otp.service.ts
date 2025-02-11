@@ -70,7 +70,9 @@ export class OtpService {
       { id: userId },
       ErrorCodeEnum.NOT_FOUND,
     );
+
     const otp = await this.createOtp(user, useCase);
+
     const recipientEmail = user.unVerifiedEmail || user.verifiedEmail;
 
     const useCaseMapping = {
@@ -79,6 +81,7 @@ export class OtpService {
       [OtpUseCaseEnum.VERIFY_ACCOUNT]:
         UserVerificationCodeUseCaseEnum.ACCOUNT_VERIFICATION,
     };
+
     const template = useCaseMapping[useCase];
 
     await this.mailService.send({

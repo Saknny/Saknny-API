@@ -51,6 +51,7 @@ import {
     @IsUrl()
     linkedin?: string;
 
+
     @IsOptional()
     @IsString()
     phone?: string;
