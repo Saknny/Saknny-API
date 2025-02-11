@@ -46,7 +46,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
   async login(@Body() _: LoginInput, @currentUser() user: currentUserType) {
-    if (user.unVerifiedEmail && !user.verifiedEmail) return { user };
+    // if (user.unVerifiedEmail && !user.verifiedEmail) return { user };
     const session = await this.sessionService.create(user);
     return await this.authService.appendAuthTokenToResponse(user, session);
   }

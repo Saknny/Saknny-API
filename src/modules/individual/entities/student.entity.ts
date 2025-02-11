@@ -19,7 +19,14 @@ export class Student extends BaseModel {
 
 
   @Column({ nullable: true })
-  socialAccount: string;
+  facebook: string;
+
+  @Column({ nullable: true })
+  instagram: string;
+
+  @Column({ nullable: true })
+  linkedin: string;
+
 
   @Column({ nullable: true })
   location: string;

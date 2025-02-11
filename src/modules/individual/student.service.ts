@@ -37,6 +37,9 @@ export class StudentService {
     student.level = completeProfileDto.level;
     student.socialPerson = completeProfileDto.socialPerson;
     student.hobbies = completeProfileDto.hobbies;
+    student.instagram=completeProfileDto.instagram;
+    student.facebook=completeProfileDto.facebook;
+    student.linkedin=completeProfileDto.linkedin;
 
     return this.studentRepo.save(student);
   }
