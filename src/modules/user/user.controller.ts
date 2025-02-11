@@ -45,9 +45,5 @@ export class UserController {
     return await this.userService.deleteCurrentUser(user);
   }
 
-  //BUG: remember to delete this endpoint
-  @Delete('/all')
-  async deleteALLUser() {
-    return await this.userService.deleteAllUser();
-  }
+
 }
