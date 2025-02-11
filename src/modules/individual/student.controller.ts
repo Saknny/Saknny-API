@@ -35,23 +35,23 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express'
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
-  @Get()
-  @Auth({ allow: 'provider' })
-  @Serialize(PaginatorResponse, StudentWithIdResponse)
-  async geStudents(
-    @Query('filter') jobStudentInput: FilterStudentsInput,
-    @Query('paginate') paginate: PaginatorInput,
-  ) {
-    if (!paginate) paginate = { page: 1, limit: 15 };
-    // return await this.studentService.searchStudents(jobStudentInput, paginate);
-  }
+  // @Get()
+  // @Auth({ allow: 'provider' })
+  // @Serialize(PaginatorResponse, StudentWithIdResponse)
+  // async geStudents(
+  //   @Query('filter') jobStudentInput: FilterStudentsInput,
+  //   @Query('paginate') paginate: PaginatorInput,
+  // ) {
+  //   if (!paginate) paginate = { page: 1, limit: 15 };
+  //   // return await this.studentService.searchStudents(jobStudentInput, paginate);
+  // }
 
-  @Get('/:studentId')
-  @Auth({ allow: 'provider' })
-  @Serialize(StudentWithIdResponse)
-  async getStudent(@Param() { studentId }: StudentIdInput) {
-    // return await this.studentService.getStudent(studentId);
-  }
+  // @Get('/:studentId')
+  // @Auth({ allow: 'provider' })
+  // @Serialize(StudentWithIdResponse)
+  // async getStudent(@Param() { studentId }: StudentIdInput) {
+  //   // return await this.studentService.getStudent(studentId);
+  // }
 
   @Patch('/:id/me')
   @UseInterceptors(
@@ -77,7 +77,6 @@ export class StudentController {
   ) {
     // return await this.studentService.updateStudent(user, body);
   }
-
   
   
  
@@ -138,3 +137,4 @@ export class StudentController {
   }
 
 }
+
