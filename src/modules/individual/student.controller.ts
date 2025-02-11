@@ -29,7 +29,9 @@ import { UpdateStudentInput } from './dtos/inputs/update-student.input';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express'
 @Controller('students')
-@UseGuards(JwtAuthenticationGuard)
+
+@Auth({ allow: 'authenticated' })
+
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
@@ -75,4 +77,64 @@ export class StudentController {
   ) {
     // return await this.studentService.updateStudent(user, body);
   }
+
+  
+  
+ 
+
+  @Patch('/complete-profile/:id')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'idCardImage', maxCount: 1 },
+        { name: 'profilePicture', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './uploads', // 📂 Save files in 'uploads' folder
+          filename: (req, file, callback) => {
+            const uniqueSuffix =
+              Date.now() + '-' + Math.round(Math.random() * 1e9);
+            callback(
+              null,
+              file.fieldname + '-' + uniqueSuffix + extname(file.originalname),
+            );
+          },
+        }),
+      },
+    ),
+  )
+  async completeProfile(
+    @Req() request: Request,
+    @Param('id') id: string, // 🔹 Take ID as a parameter
+    @UploadedFiles()
+    files: {
+      idCardImage?: Express.Multer.File[];
+      profilePicture?: Express.Multer.File[];
+    },
+    @Body() completeProfileDto: CompleteProfileDto,
+  ) {
+    console.log('Headers:', request.headers);
+    console.log('Student ID:', id); // 🔹 Log the provided ID
+
+    const idCardImagePath = files.idCardImage
+      ? `/uploads/${files.idCardImage[0].filename}`
+      : undefined;
+    const profilePicturePath = files.profilePicture
+      ? `/uploads/${files.profilePicture[0].filename}`
+      : undefined;
+
+    const updatedStudent = await this.studentService.completeProfile(
+      id,
+      completeProfileDto,
+      idCardImagePath,
+      profilePicturePath,
+    );
+
+    return {
+      message: 'Profile completed successfully!',
+      student: updatedStudent,
+    };
+  }
+
 }

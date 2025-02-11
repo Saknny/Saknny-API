@@ -59,6 +59,5 @@ import {
     @IsOptional()
     @IsString()
     university?: string;
-
   }
   

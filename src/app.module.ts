@@ -23,10 +23,9 @@ import { ChatModule } from './modules/chat/chat.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { UploaderModule } from './libs/application/uploader/uploader.module';
 import { ProfileModule } from './modules/profile/profile.module';
+import { ContextAuthService } from './libs/application/context/context-auth.service';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuthMiddleware } from './libs/middlewares/auth.middleware';
-import { ContextAuthService } from './libs/application/context/context-auth.service';
-
 
 @Module({
   imports: [

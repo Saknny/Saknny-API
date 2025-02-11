@@ -12,11 +12,7 @@ export const currentUser = createParamDecorator(
     if (!user) throw new BaseHttpException(ErrorCodeEnum.UNAUTHORIZED);
 
     if (fieldName) return user[fieldName];
-<<<<<<< HEAD
-
-=======
     console.log('User:',user);
->>>>>>> updateStudent
     return user;
   },
 );
