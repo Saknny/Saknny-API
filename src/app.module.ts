@@ -23,6 +23,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { UploaderModule } from './libs/application/uploader/uploader.module';
 import { ProfileModule } from './modules/profile/profile.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ProfileModule } from './modules/profile/profile.module';
     AuthModule,
     ProviderModule,
     LoggerModule,
+    AdminModule,
     StudentModule,
     SessionModule,
     SecurityGroupModule,

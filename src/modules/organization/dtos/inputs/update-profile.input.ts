@@ -3,8 +3,9 @@ import 'reflect-metadata';
 
 
 
-export class CompleteProviderProfileInput {
+export class UpdateProviderProfileInput {
 
+    @IsOptional()
     idCard: any;
 
     @IsOptional()

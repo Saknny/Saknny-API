@@ -3,16 +3,7 @@ import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
 
-export class SocialLinks {
 
-  instagram?: string;
-
-  facebook?: string;
-
-  twitter?: string;
-
-  linkedin?: string;
-}
 
 @Entity()
 export class Provider extends BaseModel {
