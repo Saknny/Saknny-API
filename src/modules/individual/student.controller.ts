@@ -6,7 +6,13 @@ import {
   Patch,
   Query,
   UseGuards,
+  Req,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { FileFieldsInterceptor } from '@nestjs/platform-express'
 import { StudentService } from './student.service';
 import { PaginatorInput } from '../../libs/application/paginator/paginator.input';
 import { PaginatorResponse } from '../../libs/application/paginator/paginator.response';
@@ -21,9 +27,9 @@ import { JwtAuthenticationGuard } from '../../libs/guards/strategy.guards/jwt.gu
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
 import { User } from '../user/entities/user.entity';
 import { UpdateStudentInput } from './dtos/inputs/update-student.input';
-
+import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 @Controller('students')
-@UseGuards(JwtAuthenticationGuard)
+// @UseGuards(JwtAuthenticationGuard)
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
@@ -45,13 +51,87 @@ export class StudentController {
     // return await this.studentService.getStudent(studentId);
   }
 
-  @Patch('/me')
-  @Auth({ allow: 'student' })
-  @Serialize(StudentWithIdResponse)
+  @Patch('/:id/me')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'idCardImage', maxCount: 1 },
+        { name: 'profilePicture', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './uploads', // Save files in the "uploads" folder
+          filename: (req, file, callback) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+            callback(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
+          },
+        }),
+      },
+    ),
+  )
   async updateStudent(
-    @currentUser() user: User,
-    @Body() body: UpdateStudentInput,
+    @Param('id') id: string,
+    @UploadedFiles() files: { idCardImage?: Express.Multer.File[]; profilePicture?: Express.Multer.File[] },
+    @Body() body: UpdateStudentInput
   ) {
-    // return await this.studentService.updateStudent(user, body);
+    console.log("Received body:", body);
+    console.log("Received files:", files);
+  
+    const idCardImagePath = files.idCardImage ? `/uploads/${files.idCardImage[0].filename}` : undefined;
+    const profilePicturePath = files.profilePicture ? `/uploads/${files.profilePicture[0].filename}` : undefined;
+  
+    return await this.studentService.updateStudent(id, body, idCardImagePath, profilePicturePath);
   }
+  
+  
+  
+  @Patch('/complete-profile/:id')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'idCardImage', maxCount: 1 },
+        { name: 'profilePicture', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './uploads', // 📂 Save files in 'uploads' folder
+          filename: (req, file, callback) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+            callback(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
+          },
+        }),
+      },
+    ),
+  )
+  async completeProfile(
+    @Req() request: Request,
+    @Param('id') id: string, // 🔹 Take ID as a parameter
+    @UploadedFiles()
+    files: {
+      idCardImage?: Express.Multer.File[];
+      profilePicture?: Express.Multer.File[];
+    },
+    @Body() completeProfileDto: CompleteProfileDto,
+  ) {
+    console.log('Headers:', request.headers);
+    console.log('Student ID:', id); // 🔹 Log the provided ID
+  
+    const idCardImagePath = files.idCardImage
+      ? `/uploads/${files.idCardImage[0].filename}`
+      : undefined;
+    const profilePicturePath = files.profilePicture
+      ? `/uploads/${files.profilePicture[0].filename}`
+      : undefined;
+  
+    const updatedStudent = await this.studentService.completeProfile(
+      id,
+      completeProfileDto,
+      idCardImagePath,
+      profilePicturePath,
+    );
+  
+    return { message: 'Profile completed successfully!', student: updatedStudent };
+  }
+  
+  
 }
