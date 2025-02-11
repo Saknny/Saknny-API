@@ -50,5 +50,15 @@ import {
     @IsOptional()
     @IsUrl()
     linkedin?: string;
+
+
+    @IsOptional()
+    @IsString()
+    phone?: string;
+
+    @IsOptional()
+    @IsString()
+    university?: string;
+
   }
   

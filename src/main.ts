@@ -58,11 +58,16 @@ async function bootstrap(): Promise<void> {
 
   setTemplateEngine(app);
   if (get('NODE_ENV').asString() === 'production') setupRateLimiter(app);
+<<<<<<< HEAD
 
   app.use(express.json()); // Ensure JSON support
 
   app.use(express.urlencoded({ extended: true })); // Ensure form data parsing
 
+=======
+  app.use(express.json()); // Ensure JSON support
+  app.use(express.urlencoded({ extended: true })); // Ensure form data parsing
+>>>>>>> updateStudent
   await app.listen(get('PORT').required().asString());
 }
 bootstrap();
