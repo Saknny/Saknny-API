@@ -9,6 +9,7 @@ import { existsSync, mkdirSync, writeFile } from 'fs';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import { join } from 'path';
+import * as express from 'express';
 
 function initializeLogging() {
   const logDir = 'logs';
@@ -54,7 +55,8 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('api');
   setupMiddlewares(app);
   if (get('NODE_ENV').asString() === 'production') setupRateLimiter(app);
-
+  app.use(express.json()); // Ensure JSON support
+  app.use(express.urlencoded({ extended: true })); // Ensure form data parsing
   await app.listen(get('PORT').required().asString());
 }
 bootstrap();

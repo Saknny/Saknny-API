@@ -17,20 +17,42 @@ export class Student extends BaseModel {
   @Column()
   lastName: string;
 
-  @Column({ type: Boolean, default: true })
-  isVisible: boolean;
 
   @Column({ nullable: true })
-  bio: string;
+  facebook: string;
 
   @Column({ nullable: true })
-  socialAccount: string;
+  instagram: string;
+
+  @Column({ nullable: true })
+  linkedin: string;
+
 
   @Column({ nullable: true })
   location: string;
 
   @Column({ type: Boolean, default: false })
   onboardingCompleted: boolean;
+  @Column({ nullable: true })
+  idCardImageUrl: string;
+
+  @Column({ nullable: true })
+  profilePictureUrl: string;
+
+  @Column({ nullable: true })
+  major: string;
+
+  @Column({ type: 'boolean', default: false })
+  smoking: boolean;
+
+  @Column({ type: 'enum', enum: [1, 2, 3, 4, 5, 6, 'master'], nullable: true })
+  level: number | 'master';
+
+  @Column({ type: 'boolean', default: false })
+  socialPerson: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  hobbies: string;
 
   @Column()
   userId: string;

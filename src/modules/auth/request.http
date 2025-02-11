@@ -1,0 +1,19 @@
+Post http://localhost:3000/api/auth/signup 
+Content-Type: application/json 
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "role": "STUDENT",
+  "password":"sraSara+12_"
+}
+###
+Post http://localhost:3000/api/auth/login 
+Content-Type: application/json 
+
+{
+    "email": "john.doe@example.com",
+    "password":"sraSara+12_",
+    "role":"STUDENT"
+}
