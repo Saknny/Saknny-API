@@ -1,7 +1,5 @@
 import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import { ContextAuthService } from '../application/context/context-auth.service';
-import { User } from '@src/modules/user/entities/user.entity';
+import { NextFunction, Request, Response } from 'express';
 import {
   IContextAuthService,
   IContextAuthServiceToken,
@@ -15,14 +13,19 @@ export class AuthMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
+    if (!req.headers.authorization) {
+      return next(); // Skip authentication if no Authorization header is present
+    }
+
     try {
-      const user: User = await this.authService.getUserFromReqHeaders(req);
+      const user = await this.authService.getUserFromReqHeaders(req);
       if (user) {
         (req as any).user = user; // Attach user to the request
       }
     } catch (error) {
       console.error('Auth Middleware Error:', error);
     }
+
     next();
   }
 }

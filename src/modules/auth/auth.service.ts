@@ -83,13 +83,16 @@ export class AuthService {
     return user;
   }
 
-  async validateUser(email: string, password: string, role: UserRoleEnum) {
+  async validateUser(email: string, password: string, role?: UserRoleEnum) {
     const user = await this.userService.getLoginUserOrError({
       $or: [{ verifiedEmail: email }, { unVerifiedEmail: email }],
       role,
     });
+
     if (!user.password) throw new BaseHttpException(ErrorCodeEnum.NO_PASSWORD);
+
     await this.matchPassword(password, user.password);
+
     return user;
   }
 
