@@ -25,6 +25,7 @@ import { UploaderModule } from './libs/application/uploader/uploader.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { AuthMiddleware } from './libs/middlewares/auth.middleware';
 import { ContextAuthService } from './libs/application/context/context-auth.service';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ContextAuthService } from './libs/application/context/context-auth.serv
     AuthModule,
     ProviderModule,
     LoggerModule,
+    AdminModule,
     StudentModule,
     SessionModule,
     SecurityGroupModule,
