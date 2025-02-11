@@ -1,9 +1,11 @@
 import { InjectBaseRepository } from '@libs/decorators/inject-base-repository.decorator';
 import { BaseRepository } from '@libs/types/base-repository';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Student } from './entities/student.entity';
 import { StudentTransformer } from './transformer/student.transformer';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
+import { UpdateStudentInput} from './dtos/inputs/update-student.input';
+
 @Injectable()
 export class StudentService {
   constructor(
@@ -40,7 +42,35 @@ export class StudentService {
     student.instagram=completeProfileDto.instagram;
     student.facebook=completeProfileDto.facebook;
     student.linkedin=completeProfileDto.linkedin;
+    student.phone=completeProfileDto.phone;
+    student.university=completeProfileDto.university;
 
     return this.studentRepo.save(student);
   }
+
+  async updateStudent(
+    userId: string,
+    body: UpdateStudentInput,
+    idCardImagePath?: string,
+    profilePicturePath?: string
+  ) {
+    console.log("Received body:", body);
+    const student = await this.studentRepo.findOne({ userId });
+  
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+  
+    Object.assign(student, body); // Update normal fields
+  
+    if (idCardImagePath) student.idCardImageUrl = idCardImagePath;
+    if (profilePicturePath) student.profilePictureUrl = profilePicturePath;
+  
+    await this.studentRepo.save(student);
+  
+    return student;
+  }
+  
+  
+
 }

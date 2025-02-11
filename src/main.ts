@@ -60,7 +60,6 @@ async function bootstrap(): Promise<void> {
   if (get('NODE_ENV').asString() === 'production') setupRateLimiter(app);
 
   app.use(express.json()); // Ensure JSON support
-
   app.use(express.urlencoded({ extended: true })); // Ensure form data parsing
 
   await app.listen(get('PORT').required().asString());

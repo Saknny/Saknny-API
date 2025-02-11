@@ -24,13 +24,20 @@ export class Student extends BaseModel {
   @Column({ nullable: true })
   instagram: string;
 
+
   @Column({ nullable: true })
   linkedin: string;
 
 
   @Column({ nullable: true })
-  location: string;
+  linkedin: string;
 
+  @Column({ nullable: true })  
+  phone: string;
+
+  @Column({ nullable: true })  
+  university: string;
+  
   @Column({ type: Boolean, default: false })
   onboardingCompleted: boolean;
   @Column({ nullable: true })
