@@ -7,7 +7,8 @@ import { Student } from '../individual/entities/student.entity';
 
 @Module({
   imports: [DatabaseModule.forFeature([Provider, Student])],
+  exports: [ProviderService],
   controllers: [ProviderController],
   providers: [ProviderService],
 })
-export class ProviderModule {}
+export class ProviderModule { }

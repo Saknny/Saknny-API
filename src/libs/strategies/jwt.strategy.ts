@@ -30,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     const { user, session } =
       await this.authService.getUserAndSessionFromPayload(payload);
-
+    console.log('✅ Fetched User:', user); 
     return { ...user, session };
   }
 }

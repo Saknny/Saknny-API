@@ -15,6 +15,7 @@ export class AuthenticatedGuard implements IAuthGuard {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+
     if (!request?.user) throw this.unauthorizedException;
 
     return true;

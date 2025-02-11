@@ -21,7 +21,7 @@ export class UserService {
     private readonly orgRepo: BaseRepository<Provider>,
     @InjectBaseRepository(Student)
     private readonly studentRepo: BaseRepository<Student>,
-  ) { }
+  ) {}
 
   async getVerifiedUserIdByEmail(email: string) {
     const user = await this.userRepo.findOneOrError(
@@ -39,7 +39,9 @@ export class UserService {
       ErrorCodeEnum.INVALID_EMAIL_OR_PASSWORD,
       { securityGroup: true },
     );
+
     if (user.isBlocked) throw new BaseHttpException(ErrorCodeEnum.BLOCKED_USER);
+
     return user;
   }
 

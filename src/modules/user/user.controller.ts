@@ -16,6 +16,7 @@ import { currentUserType } from '../../libs/types/current-user.type';
 import { CompleteUserProfileInput } from './dtos/inputs/update-user.input';
 import { Transactional } from 'typeorm-transactional';
 import { UserEmailInput } from './dtos/inputs/user-filter.input';
+import { Auth } from '@src/libs/decorators/auth.decorator';
 
 @Controller('users')
 export class UserController {
@@ -28,7 +29,7 @@ export class UserController {
   }
 
   @Patch('onboarding')
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   @Serialize(UserResponse)
   @Transactional()
   async completeUserProfile(
@@ -39,14 +40,10 @@ export class UserController {
   }
 
   @Delete()
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   async deleteCurrentUser(@currentUser() user: currentUserType) {
     return await this.userService.deleteCurrentUser(user);
   }
 
-  //BUG: remember to delete this endpoint
-  @Delete('/all')
-  async deleteALLUser() {
-    return await this.userService.deleteAllUser();
-  }
+
 }

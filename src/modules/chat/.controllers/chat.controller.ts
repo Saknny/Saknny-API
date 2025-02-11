@@ -9,6 +9,7 @@ import { Serialize } from '../../../libs/interceptors/serialize.interceptor';
 import { PaginatorResponse } from '../../../libs/application/paginator/paginator.response';
 import { PaginatorInput } from '../../../libs/application/paginator/paginator.input';
 import { GetChatWithFriendsResponse } from '../dtos/outputs/chat.response';
+import { Auth } from '@src/libs/decorators/auth.decorator';
 
 @Controller('chats')
 export class ChatController {
@@ -18,7 +19,7 @@ export class ChatController {
   ) {}
 
   @Get()
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   @Serialize(PaginatorResponse, GetChatWithFriendsResponse)
   async getChats(
     @currentUser() user: User,
@@ -30,7 +31,7 @@ export class ChatController {
   }
 
   @Get('/:chatId')
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   @Serialize(GetChatWithFriendsResponse)
   async getChat(@Param() { chatId }: ChatIdInput, @currentUser() user: User) {
     return await this.chatService.getChatInfo(user, chatId);
