@@ -25,13 +25,14 @@ import { VerifyUserInput } from './dtos/inputs/verify-user.input';
 import { ResetPasswordInput } from './dtos/inputs/reset-password.input';
 import { UpdateEmailInput } from './dtos/inputs/update-email.input';
 import { UpdatePasswordInput } from './dtos/inputs/update-password.input';
+import { Auth } from '@src/libs/decorators/auth.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly sessionService: SessionService,
-  ) { }
+  ) {}
 
   @Post('signup')
   @Serialize(UserResponse)
@@ -72,7 +73,7 @@ export class AuthController {
   @Patch('update-email')
   @Serialize(AuthResponse)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   async updateEmail(
     @currentUser() user: currentUserType,
     @Body() updateEmailInput: UpdateEmailInput,
@@ -82,13 +83,16 @@ export class AuthController {
       updateEmailInput,
     );
     const session = await this.sessionService.create(updatedUser);
-    return await this.authService.appendAuthTokenToResponse(updatedUser, session);
+    return await this.authService.appendAuthTokenToResponse(
+      updatedUser,
+      session,
+    );
   }
 
   @Patch('update-password')
   @Serialize(AuthResponse)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   async updatePassword(
     @currentUser() user: currentUserType,
     @Body() updatePasswordInput: UpdatePasswordInput,
@@ -98,13 +102,16 @@ export class AuthController {
       updatePasswordInput,
     );
     const session = await this.sessionService.create(updatedUser);
-    return await this.authService.appendAuthTokenToResponse(updatedUser, session);
+    return await this.authService.appendAuthTokenToResponse(
+      updatedUser,
+      session,
+    );
   }
 
   @Get()
   @Serialize(UserResponse)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   async getMe(@currentUser() user: currentUserType) {
     return user;
   }
