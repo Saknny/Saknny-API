@@ -3,17 +3,22 @@ import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
 
+export class SocialLinks {
+
+  instagram?: string;
+
+  facebook?: string;
+
+  twitter?: string;
+
+  linkedin?: string;
+}
+
 @Entity()
 export class Provider extends BaseModel {
   constructor(input?: DeepPartial<Provider>) {
     super(input);
   }
-
-  @Column({ type: 'text', nullable: true })
-  logo: string;
-
-  @Column({ nullable: true })
-  bio: string;
 
   @Column()
   firstName: string;
@@ -22,22 +27,11 @@ export class Provider extends BaseModel {
   lastName: string;
 
   @Column({ nullable: true })
-  location: string;
-
-  @Column({ nullable: true })
-  instagram?: string;
-
-  @Column({ nullable: true })
-  tiktok?: string;
-
-  @Column({ nullable: true })
-  website?: string;
-
-  @Column({ nullable: true })
   phone: string;
 
+
   @Column({ type: Boolean, default: false })
-  onboardingCompleted: boolean;
+  isTrusted: boolean;
 
   @Column()
   userId: string;
@@ -45,4 +39,23 @@ export class Provider extends BaseModel {
   @OneToOne(() => User, (user) => user.provider, { onDelete: 'CASCADE' })
   @JoinColumn()
   user: User;
+
+  @Column({ nullable: true })
+  facebook: string;
+
+  @Column({ nullable: true })
+  instagram: string;
+
+  @Column({ nullable: true })
+  linkedin: string;
+
+ 
+
+  // Documents 
+  @Column({ nullable: true })
+  idCard: string;
+
+  @Column({ nullable: true })
+  image: string
 }
+

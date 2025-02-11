@@ -21,7 +21,7 @@ export class UserService {
     private readonly orgRepo: BaseRepository<Provider>,
     @InjectBaseRepository(Student)
     private readonly studentRepo: BaseRepository<Student>,
-  ) {}
+  ) { }
 
   async getVerifiedUserIdByEmail(email: string) {
     const user = await this.userRepo.findOneOrError(
