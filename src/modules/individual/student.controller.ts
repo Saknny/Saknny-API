@@ -32,7 +32,7 @@ import { UpdateStudentInput } from './dtos/inputs/update-student.input';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 @Controller('students')
 
-@Auth({ allow: 'authenticated' })
+// @Auth({ allow: 'authenticated' })
 
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
