@@ -3,6 +3,17 @@ import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
 
+export class SocialLinks {
+
+  instagram?: string;
+
+  facebook?: string;
+
+  twitter?: string;
+
+  linkedin?: string;
+}
+
 @Entity()
 export class Provider extends BaseModel {
   constructor(input?: DeepPartial<Provider>) {
@@ -20,7 +31,7 @@ export class Provider extends BaseModel {
 
 
   @Column({ type: Boolean, default: false })
-  isVerified: boolean;
+  isTrusted: boolean;
 
   @Column()
   userId: string;
@@ -29,18 +40,22 @@ export class Provider extends BaseModel {
   @JoinColumn()
   user: User;
 
-  @Column('jsonb')
-  socialLinks: {
-    instagram?: string;
-    facebook?: string;
-    twitter?: string;
-    linkedin?: string;
-  };
+  @Column({ nullable: true })
+  facebook: string;
+
+  @Column({ nullable: true })
+  instagram: string;
+
+  @Column({ nullable: true })
+  linkedin: string;
+
+ 
 
   // Documents 
-  @Column()
-  idCard:string;
+  @Column({ nullable: true })
+  idCard: string;
 
-  @Column()
-  image:string
+  @Column({ nullable: true })
+  image: string
 }
+

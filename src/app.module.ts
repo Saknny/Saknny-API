@@ -36,6 +36,7 @@ import { ProfileModule } from './modules/profile/profile.module';
     }),
     QueueModule.register(),
     AuthModule,
+    ProviderModule,
     LoggerModule,
     StudentModule,
     SessionModule,
@@ -71,4 +72,4 @@ import { ProfileModule } from './modules/profile/profile.module';
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
   ],
 })
-export class AppModule {}
+export class AppModule { }
