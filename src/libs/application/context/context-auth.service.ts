@@ -23,6 +23,7 @@ export class ContextAuthService implements IContextAuthService {
 
   public hasPermission(permission: string, user: User): boolean {
     if (!user || !user.securityGroup || !user.securityGroup.id) return false;
+
     return user.securityGroup.permissions.includes(permission);
   }
 
@@ -32,6 +33,7 @@ export class ContextAuthService implements IContextAuthService {
     if (req.headers.Authorization) auth = <string>req.headers.Authorization;
 
     const token = auth.split('Bearer ')[1] || null;
+
     if (!token) return null;
 
     try {
@@ -40,6 +42,7 @@ export class ContextAuthService implements IContextAuthService {
       const { user } = await this.getUserAndSessionFromPayload(payload);
 
       await this.updateUserLastSeen(user);
+
       return user;
     } catch {
       throw new BaseHttpException(ErrorCodeEnum.UNAUTHORIZED);
@@ -50,17 +53,20 @@ export class ContextAuthService implements IContextAuthService {
     payload: TokenPayload,
   ): Promise<{ user: User; session: Session }> {
     if (!payload) return null;
+
     const { userId, sessionId } = payload;
 
     const user = await this.findAndValidateUser(userId);
     const session = await this.findSessionOrThrow(sessionId);
 
     await this.updateUserLastSeen(user);
+
     return { user, session };
   }
 
   private async findAndValidateUser(userId: string): Promise<User> {
     if (!userId) throw new BaseHttpException(ErrorCodeEnum.UNAUTHORIZED);
+
     const user = await this.userRepo.findOne({
       where: { id: userId },
       relations: ['securityGroup', 'student', 'provider'],

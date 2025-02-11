@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { FileFieldsInterceptor } from '@nestjs/platform-express'
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { StudentService } from './student.service';
 import { PaginatorInput } from '../../libs/application/paginator/paginator.input';
 import { PaginatorResponse } from '../../libs/application/paginator/paginator.response';
@@ -29,7 +29,7 @@ import { User } from '../user/entities/user.entity';
 import { UpdateStudentInput } from './dtos/inputs/update-student.input';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 @Controller('students')
-// @UseGuards(JwtAuthenticationGuard)
+@Auth({ allow: 'authenticated' })
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
@@ -55,13 +55,12 @@ export class StudentController {
   @Auth({ allow: 'student' })
   @Serialize(StudentWithIdResponse)
   async updateStudent(
-   
     @currentUser() user: User,
     @Body() body: UpdateStudentInput,
   ) {
     // return await this.studentService.updateStudent(user, body);
   }
-  
+
   @Patch('/complete-profile/:id')
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -73,8 +72,12 @@ export class StudentController {
         storage: diskStorage({
           destination: './uploads', // 📂 Save files in 'uploads' folder
           filename: (req, file, callback) => {
-            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-            callback(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
+            const uniqueSuffix =
+              Date.now() + '-' + Math.round(Math.random() * 1e9);
+            callback(
+              null,
+              file.fieldname + '-' + uniqueSuffix + extname(file.originalname),
+            );
           },
         }),
       },
@@ -92,22 +95,24 @@ export class StudentController {
   ) {
     console.log('Headers:', request.headers);
     console.log('Student ID:', id); // 🔹 Log the provided ID
-  
+
     const idCardImagePath = files.idCardImage
       ? `/uploads/${files.idCardImage[0].filename}`
       : undefined;
     const profilePicturePath = files.profilePicture
       ? `/uploads/${files.profilePicture[0].filename}`
       : undefined;
-  
+
     const updatedStudent = await this.studentService.completeProfile(
       id,
       completeProfileDto,
       idCardImagePath,
       profilePicturePath,
     );
-  
-    return { message: 'Profile completed successfully!', student: updatedStudent };
+
+    return {
+      message: 'Profile completed successfully!',
+      student: updatedStudent,
+    };
   }
-  
 }

@@ -27,6 +27,7 @@ import { ChatIdInput } from '../dtos/inputs/filter-chat.input';
 import { CursorPaginatorInput } from '../../../libs/application/paginator/paginator.input';
 import { CursorBasedPaginatorResponse } from '../../../libs/application/paginator/paginator.response';
 import { MessageService } from '../.services/message.service';
+import { Auth } from '@src/libs/decorators/auth.decorator';
 
 @Controller('chats/:chatId/messages')
 export class MessageController {
@@ -36,7 +37,7 @@ export class MessageController {
   ) {}
 
   @Get()
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   @Serialize(CursorBasedPaginatorResponse, GetMessageResponse)
   async getChatMessages(
     @Param() { chatId }: ChatIdInput,
@@ -47,7 +48,7 @@ export class MessageController {
   }
 
   @Get('/:messageId')
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   @Serialize(GetMessageWithStatusResponse)
   async getMessageInfo(
     @Param() filterInput: MessageFilterInput,
@@ -57,7 +58,7 @@ export class MessageController {
   }
 
   @Post()
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   @Serialize(CreatedMessageResponse)
   async sendMessage(
     @Param() { chatId }: ChatIdInput,
@@ -68,7 +69,7 @@ export class MessageController {
   }
 
   @Patch('/:messageId')
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   async updateMessage(
     @Param() { messageId, chatId }: MessageFilterInput,
     @Body() { content }: UpdateMessageInput,
@@ -81,7 +82,7 @@ export class MessageController {
   }
 
   @Delete('/:messageId')
-  @UseGuards(JwtAuthenticationGuard)
+  @Auth({ allow: 'authenticated' })
   async deleteMessage(
     @Param() filterInput: MessageFilterInput,
     @currentUser() sender: User,
