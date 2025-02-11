@@ -73,6 +73,16 @@ export class AuthService {
     });
   }
 
+  async forgetPassword(email: string) {
+    const user = await this.userService.getLoginUserOrError({
+      $or: [{ verifiedEmail: email }, { unVerifiedEmail: email }],
+    });
+
+    await this.otpService.sendOtp(user.id, OtpUseCaseEnum.RESET_PASSWORD);
+
+    return user;
+  }
+
   async validateUser(email: string, password: string, role: UserRoleEnum) {
     const user = await this.userService.getLoginUserOrError({
       $or: [{ verifiedEmail: email }, { unVerifiedEmail: email }],

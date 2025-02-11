@@ -89,6 +89,13 @@ export class AuthController {
     );
   }
 
+  @Post('forget-password')
+  @Serialize(AuthResponse)
+  @HttpCode(HttpStatus.OK)
+  async forgetPassword(@Body() { email }: { email: string }) {
+    return await this.authService.forgetPassword(email);
+  }
+
   @Patch('update-password')
   @Serialize(AuthResponse)
   @HttpCode(HttpStatus.OK)
