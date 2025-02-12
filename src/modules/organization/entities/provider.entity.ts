@@ -40,7 +40,8 @@ export class Provider extends BaseModel {
   @Column({ nullable: true })
   linkedin: string;
 
- 
+  @Column({ nullable: true })
+  gender:string
 
   // Documents 
   @Column({ nullable: true })

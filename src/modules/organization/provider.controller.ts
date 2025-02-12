@@ -10,7 +10,7 @@ import { currentUserType } from '@src/libs/types/current-user.type';
 import { Auth } from '@src/libs/decorators/auth.decorator';
 
 
-@Auth({ allow: 'provider' })
+
 @Controller('provider')
 export class ProviderController {
   constructor(private readonly providerService: ProviderService) {

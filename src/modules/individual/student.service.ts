@@ -2,7 +2,6 @@ import { InjectBaseRepository } from '@libs/decorators/inject-base-repository.de
 import { BaseRepository } from '@libs/types/base-repository';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Student } from './entities/student.entity';
-import { StudentTransformer } from './transformer/student.transformer';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 import { UpdateStudentInput} from './dtos/inputs/update-student.input';
 
@@ -11,7 +10,7 @@ export class StudentService {
   constructor(
     @InjectBaseRepository(Student)
     private readonly studentRepo: BaseRepository<Student>,
-    private studentTransformer: StudentTransformer,
+
   ) {}
 
   async completeProfile(
@@ -61,7 +60,7 @@ export class StudentService {
       throw new NotFoundException('Student not found');
     }
   
-    Object.assign(student, body); // Update normal fields
+    Object.assign(student, body);
   
     if (idCardImagePath) student.idCardImageUrl = idCardImagePath;
     if (profilePicturePath) student.profilePictureUrl = profilePicturePath;

@@ -1,4 +1,4 @@
-import { IsBoolean, IsOptional, IsString,IsEnum, } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsEnum, isPhoneNumber, IsPhoneNumber, IsArray, } from 'class-validator';
 import { Transform } from 'class-transformer';
 export class UpdateStudentInput {
   @IsOptional()
@@ -8,6 +8,10 @@ export class UpdateStudentInput {
   @IsOptional()
   @IsString()
   lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
 
   @IsOptional()
   @IsString()
@@ -22,9 +26,8 @@ export class UpdateStudentInput {
   linkedin?: string;
 
   @IsOptional()
-  @IsEnum([1, 2, 3, 4, 5, 6, 'master'])
-  @Transform(({ value }) => (isNaN(value) ? value : Number(value))) // ✅ Convert number-like string to number
-  level?: number | 'master';
+  @IsString()
+  level?: string;
 
   @IsOptional()
   @IsString()
@@ -39,21 +42,23 @@ export class UpdateStudentInput {
   major?: string;
 
   @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true) // ✅ Convert string "true"/"false" to boolean
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   smoking?: boolean;
 
   @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true) // ✅ Convert string "true"/"false" to boolean
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   socialPerson?: boolean;
 
   @IsOptional()
-  @IsString()
-  hobbies?: string;
+  @IsArray()
+  @IsString({ each: true })
+  hobbies: string[];
+
 
   @IsOptional()
-  @IsString()
+  @IsPhoneNumber()
   phone?: string;
 
   @IsOptional()

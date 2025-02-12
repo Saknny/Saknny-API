@@ -12,6 +12,10 @@ export class UpdateProviderProfileInput {
     image: any;
 
     @IsOptional()
+    @IsString()
+    gender: string;
+
+    @IsOptional()
     @IsPhoneNumber(null)
     phone: string;
 

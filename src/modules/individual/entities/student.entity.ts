@@ -17,6 +17,8 @@ export class Student extends BaseModel {
   @Column()
   lastName: string;
 
+  @Column({ nullable: true })
+  gender: string;
 
   @Column({ nullable: true })
   facebook: string;
@@ -36,7 +38,8 @@ export class Student extends BaseModel {
   university: string;
 
   @Column({ type: Boolean, default: false })
-  onboardingCompleted: boolean;
+  isTrusted: boolean;
+
   @Column({ nullable: true })
   idCardImageUrl: string;
 
@@ -49,14 +52,14 @@ export class Student extends BaseModel {
   @Column({ type: 'boolean', default: false })
   smoking: boolean;
 
-  @Column({ type: 'enum', enum: [1, 2, 3, 4, 5, 6, 'master'], nullable: true })
-  level: number | 'master';
+  @Column({ nullable: true })
+  level: string;
 
   @Column({ type: 'boolean', default: false })
   socialPerson: boolean;
 
-  @Column({ type: 'text', nullable: true })
-  hobbies: string;
+  @Column('simple-array', { nullable: true })
+  hobbies: string[];
 
   @Column()
   userId: string;
