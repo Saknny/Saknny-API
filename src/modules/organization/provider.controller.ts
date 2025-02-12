@@ -1,10 +1,16 @@
 import { Controller, UseInterceptors, Param, UploadedFiles, Body, Post, Req, Patch } from '@nestjs/common';
 import { ProviderService } from './provider.service';
 import { CompleteProviderProfileInput } from './dtos/inputs/complete-profile.input';
-import { currentUser } from '@src/libs/decorators/currentUser.decorator';
+
 import { fileUploadInterceptor } from './interceptors/file-upload.interceptor';
 import { UpdateProfileInput } from '../profile/dtos/inputs/update-profile.input';
 import { UpdateProviderProfileInput } from './dtos/inputs/update-profile.input';
+import { currentUser } from '@src/libs/decorators/currentUser.decorator';
+import { currentUserType } from '@src/libs/types/current-user.type';
+import { Auth } from '@src/libs/decorators/auth.decorator';
+
+
+
 @Controller('provider')
 export class ProviderController {
   constructor(private readonly providerService: ProviderService) {
@@ -12,10 +18,10 @@ export class ProviderController {
 
 
 
-  @Post(':id/complete-profile')
+  @Post('complete-profile')
   @UseInterceptors(fileUploadInterceptor())
   async completeProfile(
-    @Param('id') id: string,
+    @currentUser() {id}:currentUserType,
     @UploadedFiles()
     files: {
       idCard?: Express.Multer.File[];
@@ -35,10 +41,10 @@ export class ProviderController {
     return { message: 'Profile completed successfully!', provider: updatedProvider };
   }
 
-  @Patch(':id/update-profile')
+  @Patch('update-profile')
   @UseInterceptors(fileUploadInterceptor())
   async updateProfile(
-    @Param('id') id: string,
+    @currentUser() {id}:currentUserType,
     @UploadedFiles()
     files: {
       idCard?: Express.Multer.File[];

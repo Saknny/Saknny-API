@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsPhoneNumber, IsString, IsUrl } from 'class-validator';
+import { IsEnum, IsOptional, IsPhoneNumber, isString, IsString, IsUrl } from 'class-validator';
 import 'reflect-metadata';
 
 
@@ -8,9 +8,12 @@ export class CompleteProviderProfileInput {
     idCard: any;
 
     @IsOptional()
-    image: any;
+    @IsString()
+    gender:string
 
     @IsOptional()
+    image: any;
+
     @IsPhoneNumber(null)
     phone: string;
 
