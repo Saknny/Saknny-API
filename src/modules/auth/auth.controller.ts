@@ -120,6 +120,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Auth({ allow: 'authenticated' })
   async getMe(@currentUser() user: currentUserType) {
+    console.log(user);
     return user;
   }
 }
