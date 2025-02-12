@@ -5,6 +5,7 @@ import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { IsEndDateAfterStartDate } from '../../../libs/utils/validators/is-endDate-after-startDate';
 import { User } from '../../user/entities/user.entity';
+import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity'; 
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
@@ -65,4 +66,8 @@ export class Student extends BaseModel {
   @OneToOne(() => User, (user) => user.student, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @OneToOne(() => Bed, (bed) => bed.id, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'bedId' })
+  bed: Bed;
 }

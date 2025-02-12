@@ -26,6 +26,9 @@ import { ProfileModule } from './modules/profile/profile.module';
 import { ContextAuthService } from './libs/application/context/context-auth.service';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuthMiddleware } from './libs/middlewares/auth.middleware';
+import { BedModule } from './modules/bed/bed.module';
+import { RoomModule } from './modules/room/room.module';
+import { ApartmentModule } from './modules/apartment/apartment.module';
 
 @Module({
   imports: [
@@ -53,6 +56,9 @@ import { AuthMiddleware } from './libs/middlewares/auth.middleware';
     ChatModule,
     PaymentModule,
     UploaderModule,
+    RoomModule,
+    BedModule,
+    ApartmentModule,
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'public'),
       serveStaticOptions: {
@@ -62,6 +68,9 @@ import { AuthMiddleware } from './libs/middlewares/auth.middleware';
       },
     }),
     ProfileModule,
+    BedModule,
+    RoomModule,
+    ApartmentModule,
   ],
   controllers: [],
   providers: [

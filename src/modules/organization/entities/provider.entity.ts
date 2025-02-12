@@ -1,9 +1,14 @@
-import { Entity, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
+import { 
+  Entity, 
+  Column, 
+  OneToOne, 
+  JoinColumn, 
+  OneToMany 
+} from 'typeorm';
 import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
-
-
+import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity'; 
 
 @Entity()
 export class Provider extends BaseModel {
@@ -20,16 +25,11 @@ export class Provider extends BaseModel {
   @Column({ nullable: true })
   phone: string;
 
-
   @Column({ type: Boolean, default: false })
   isTrusted: boolean;
 
   @Column()
   userId: string;
-
-  @OneToOne(() => User, (user) => user.provider, { onDelete: 'CASCADE' })
-  @JoinColumn()
-  user: User;
 
   @Column({ nullable: true })
   facebook: string;
@@ -41,13 +41,20 @@ export class Provider extends BaseModel {
   linkedin: string;
 
   @Column({ nullable: true })
-  gender:string
+  gender: string;
 
-  // Documents 
+  // Documents
   @Column({ nullable: true })
   idCard: string;
 
   @Column({ nullable: true })
-  image: string
-}
+  image: string;
 
+  @OneToOne(() => User, (user) => user.provider, { onDelete: 'CASCADE' })
+  @JoinColumn()
+  user: User;
+
+  
+  @OneToMany(() => Apartment, (apartment) => apartment.provider, { cascade: true })
+  apartments: Apartment[];
+}
