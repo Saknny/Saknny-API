@@ -5,9 +5,9 @@ import { DatabaseModule } from '../../configs/database/database.module';
 import { User } from './entities/user.entity';
 import { HelperModule } from '../../libs/utils/helper/helper.module';
 import { UserTransformer } from './transformer/user.transformer';
-import { Student } from '../individual/entities/student.entity';
-import { Provider } from '../organization/entities/provider.entity';
-import { StudentModule } from '../individual/student.module';
+import { Student } from '../student/entities/student.entity';
+import { Provider } from '../provider/entities/provider.entity';
+import { StudentModule } from '../student/student.module';
 
 @Module({
   imports: [
@@ -19,4 +19,4 @@ import { StudentModule } from '../individual/student.module';
   providers: [UserService, UserTransformer],
   exports: [UserService, UserTransformer],
 })
-export class UserModule {}
+export class UserModule { }

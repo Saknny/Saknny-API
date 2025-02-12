@@ -5,8 +5,8 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { CompleteStudentProfileInput } from '@src/modules/individual/dtos/inputs/student.input';
-import { CompleteProviderProfileInput } from '@src/modules/organization/dtos/inputs/complete-profile.input';
+import { CompleteStudentProfileInput } from '@src/modules/student/dtos/inputs/student.input';
+import { CompleteProviderProfileInput } from '@src/modules/provider/dtos/inputs/complete-profile.input';
 import { Type } from 'class-transformer';
 
 export class CompleteUserProfileInput {

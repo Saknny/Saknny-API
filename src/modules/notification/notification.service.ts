@@ -8,7 +8,7 @@ import { currentUserType } from '../../libs/types/current-user.type';
 import { FCMTokenInput } from '../fcm-token/dtos/inputs/fcm-token.input';
 import { FCMService } from '../fcm-token/fcm-token.service';
 import { QueueService } from '../../libs/queue/queue.service';
-import { Student } from '../individual/entities/student.entity';
+import { Student } from '../student/entities/student.entity';
 import { NotificationTypeEnum } from './enums/notification.enum';
 import { Notification } from './entities/notification.entity';
 import { NotificationMessage } from './types/notification.type';

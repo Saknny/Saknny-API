@@ -9,7 +9,7 @@ import {
     ManyToOne 
   } from 'typeorm';
   import { Room } from '@src/modules/room/entities/room.entity/room.entity';  
-  import { Provider } from '@src/modules/organization/entities/provider.entity'; 
+  import { Provider } from '@src/modules/provider/entities/provider.entity'; 
   import { BaseModel } from '@src/libs/database/base.model';  
   import { DeepPartial } from '@src/libs/types/deep-partial.type';
   @Entity()

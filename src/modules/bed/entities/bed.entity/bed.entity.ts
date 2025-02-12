@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne ,UpdateDate
   CreateDateColumn,
 DeleteDateColumn} from 'typeorm';
 import { Room } from '@src/modules/room/entities/room.entity/room.entity'; 
-import { Student } from '@src/modules/individual/entities/student.entity';
+import { Student } from '@src/modules/student/entities/student.entity';
 import { BaseModel } from '@src/libs/database/base.model';  
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
 @Entity()
