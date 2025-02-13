@@ -1,6 +1,6 @@
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { MiddlewareConsumer, Module, ValidationPipe } from '@nestjs/common';
-import { StudentModule } from './modules/individual/student.module';
+import { StudentModule } from './modules/student/student.module';
 import { SessionModule } from './modules/session/session.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { SecurityGroupModule } from './modules/security-group/security-group.module';
@@ -15,7 +15,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ResponseInterceptor } from './libs/interceptors/response.interceptor';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { ProviderModule } from './modules/organization/provider.module';
+import { ProviderModule } from './modules/provider/provider.module';
 import { UserModule } from './modules/user/user.module';
 import { OtpModule } from './modules/otp/otp.module';
 import { PubSubModule } from './libs/redis-pubsub/pubsub.module';

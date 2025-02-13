@@ -6,8 +6,8 @@ import { FindOptionsWhere } from 'typeorm';
 import { ErrorCodeEnum } from '../../libs/application/exceptions/error-code.enum';
 import { BaseHttpException } from '../../libs/application/exceptions/base-http-exception';
 import { CompleteUserProfileInput } from './dtos/inputs/update-user.input';
-import { Student } from '../individual/entities/student.entity';
-import { Provider } from '../organization/entities/provider.entity';
+import { Student } from '../student/entities/student.entity';
+import { Provider } from '../provider/entities/provider.entity';
 import { UserTransformer } from './transformer/user.transformer';
 import { UserRoleEnum } from './enums/user.enum';
 
@@ -21,7 +21,7 @@ export class UserService {
     private readonly orgRepo: BaseRepository<Provider>,
     @InjectBaseRepository(Student)
     private readonly studentRepo: BaseRepository<Student>,
-  ) {}
+  ) { }
 
   async getVerifiedUserIdByEmail(email: string) {
     const user = await this.userRepo.findOneOrError(
