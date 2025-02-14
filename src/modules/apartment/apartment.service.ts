@@ -79,32 +79,19 @@ export class ApartmentService {
     }
 
 
-    // async saveApartmentImages(id: string, imageFilenames: string[]): Promise<Apartment> {
-    //     const apartment = await this.apartmentRepository.findOne({ id });
 
-    //     if (!apartment) {
-    //         throw new NotFoundException('Apartment not found');
-    //     }
-
-    //     apartment.images = [...(apartment.images || []), ...imageFilenames];
-    //     apartment.isReviewed = false;
-    //     return this.apartmentRepository.save(apartment);
-    // }
     async saveApartmentImages(id: string, imageFilenames: string[]): Promise<Apartment> {
         const apartment = await this.apartmentRepository.findOne({ id })
         if (!apartment) {
             throw new NotFoundException('Apartment not found');
         }
 
-        // Create and assign images to the apartment
         const images = imageFilenames.map(filename =>
             this.imageRepo.create({ imageUrl: filename, apartment })
         );
 
-        // Save images first to correctly set the apartmentId
         await this.imageRepo.save(images);
 
-        // Reload images from DB to ensure they are correctly linked
         apartment.images = await this.imageRepo.find({
             where: { apartment: { id: apartment.id } },
         });
@@ -140,5 +127,6 @@ export class ApartmentService {
             },
         });
     }
+
 
 }
