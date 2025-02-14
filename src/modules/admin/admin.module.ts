@@ -7,12 +7,14 @@ import { Provider } from "../provider/entities/provider.entity";
 import { ProviderModule } from "../provider/provider.module";
 import { StudentModule } from "../student/student.module";
 import { Student } from "../student/entities/student.entity";
+import { ApartmentModule } from "../apartment/apartment.module";
 
 
 @Module({
   imports: [DatabaseModule.forFeature([Admin, Provider, Student]),
     ProviderModule
-    , StudentModule],
+    , StudentModule
+    , ApartmentModule],
   controllers: [AdminController],
   providers: [AdminService],
 })

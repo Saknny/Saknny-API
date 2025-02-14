@@ -25,34 +25,30 @@ export class ProviderService {
       throw new NotFoundException('provider not found');
     }
     Object.assign(provider, attrs);
-    return this.providerRepository.save(provider);
-  }
-
     if (attrs.idCard != null) {
       provider.isReviewed = false;
       provider.isTrusted = false;
+      return this.providerRepository.save(provider);
     }
-    return this.providerRepository.save(provider);
   }
 
 
+    async updateProviderApproval(id: string, isTrusted: boolean): Promise<Provider> {
+      const provider = await this.providerRepository.findOneBy({ id });
+      if (!provider) {
+        throw new NotFoundException(`Provider not found`);
+      }
+      provider.isTrusted = isTrusted;
+      return this.providerRepository.save(provider);
+    }
+  
+    async getUnReviewedProviders(): Promise<Provider[]> {
+      return this.providerRepository.find({
+        where: {
+          isReviewed: false
+        },
+      });
+    }
+}
 
   
-  async updateProviderApproval(id: string, isTrusted: boolean): Promise<Provider> {
-    const provider = await this.providerRepository.findOneBy({ id });
-    if (!provider) {
-      throw new NotFoundException(`Provider not found`);
-    }
-    provider.isTrusted = isTrusted;
-    return this.providerRepository.save(provider);
-  }
-
-  async getUnReviewedProviders(): Promise<Provider[]> {
-    return this.providerRepository.find({
-      where: {
-        isReviewed: false
-      },
-    });
-  }
-
-}
