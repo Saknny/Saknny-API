@@ -11,10 +11,6 @@ export class CreateRoomDto {
   @IsNotEmpty()
   @IsString()
   descriptionAr: string;
-
-  @IsArray()
-  @IsString({ each: true })
-  images: string[];
   
   @IsNotEmpty()
   @IsNumber()

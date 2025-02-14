@@ -6,13 +6,15 @@ import { Apartment } from './entities/apartment.entity/apartment.entity';
 import { Room } from '../room/entities/room.entity/room.entity';
 import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { ProviderModule } from '../provider/provider.module';
+import { ApartmentImage } from './entities/apartmentImage.entity';
 
 @Module({
-  imports: [DatabaseModule.forFeature([Apartment,Room,Bed])
-  ,ProviderModule],
+  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, ApartmentImage
+  ])
+    , ProviderModule],
   providers: [ApartmentService],
   controllers: [ApartmentController],
-  exports:[ApartmentService]
+  exports: [ApartmentService]
 
 })
-export class ApartmentModule {}
+export class ApartmentModule { }

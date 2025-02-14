@@ -3,7 +3,7 @@ import { BaseRepository } from '@libs/types/base-repository';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Student } from './entities/student.entity';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
-import { UpdateStudentInput} from './dtos/inputs/update-student.input';
+import { UpdateStudentInput } from './dtos/inputs/update-student.input';
 
 
 @Injectable()
@@ -17,6 +17,8 @@ export class StudentService {
     if (!student) {
       throw new NotFoundException('student not found');
     }
+    student.isReviewed = true;
+    await this.studentRepo.save(student);
     return student;
   }
 
@@ -26,7 +28,7 @@ export class StudentService {
     idCardImagePath?: string,
     profilePicturePath?: string,
   ): Promise<Student> {
-    const student = await this.studentRepo.findOne({ userId } );
+    const student = await this.studentRepo.findOne({ userId });
 
     if (!student) {
       throw new Error('Student not found');

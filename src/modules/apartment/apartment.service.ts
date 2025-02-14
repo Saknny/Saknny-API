@@ -8,6 +8,7 @@ import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
 import { Repository } from 'typeorm';
+import { ApartmentImage } from './entities/apartmentImage.entity';
 
 @Injectable()
 export class ApartmentService {
@@ -23,11 +24,13 @@ export class ApartmentService {
 
         @InjectRepository(Bed)
         private readonly bedRepository: BaseRepository<Bed>,
+        @InjectRepository(ApartmentImage)
+        private readonly imageRepo: BaseRepository<ApartmentImage>,
     ) { }
 
     async createApartment(providerId: string
         , createApartmentDto: CreateApartmentDto): Promise<Apartment> {
-        const { descriptionEn, descriptionAr, images, rooms } = createApartmentDto;
+        const { descriptionEn, descriptionAr, rooms } = createApartmentDto;
 
         // Find the provider
         const provider = await this.providerRepository.findOne({ userId: providerId });
@@ -39,7 +42,6 @@ export class ApartmentService {
         const apartment = this.apartmentRepository.create({
             descriptionEn,
             descriptionAr,
-            images,
             provider,
         });
 
@@ -47,12 +49,11 @@ export class ApartmentService {
 
         // Create rooms and beds
         for (const roomDto of rooms) {
-            const { descriptionEn, descriptionAr, images, bedCount, availableFor, hasAirConditioner, beds } = roomDto;
+            const { descriptionEn, descriptionAr, bedCount, availableFor, hasAirConditioner, beds } = roomDto;
 
             const room = this.roomRepository.create({
                 descriptionEn,
                 descriptionAr,
-                images,
                 bedCount,
                 availableFor,
                 hasAirConditioner,
@@ -63,11 +64,10 @@ export class ApartmentService {
 
             // Create beds for the room
             for (const bedDto of beds) {
-                const { descriptionEn, descriptionAr, image, price } = bedDto;
+                const { descriptionEn, descriptionAr, price } = bedDto;
                 const bed = this.bedRepository.create({
                     descriptionEn,
                     descriptionAr,
-                    image,
                     price,
                     room,
                 });
@@ -77,11 +77,50 @@ export class ApartmentService {
 
         return apartment;
     }
+
+
+    // async saveApartmentImages(id: string, imageFilenames: string[]): Promise<Apartment> {
+    //     const apartment = await this.apartmentRepository.findOne({ id });
+
+    //     if (!apartment) {
+    //         throw new NotFoundException('Apartment not found');
+    //     }
+
+    //     apartment.images = [...(apartment.images || []), ...imageFilenames];
+    //     apartment.isReviewed = false;
+    //     return this.apartmentRepository.save(apartment);
+    // }
+    async saveApartmentImages(id: string, imageFilenames: string[]): Promise<Apartment> {
+        const apartment = await this.apartmentRepository.findOne({ id })
+        if (!apartment) {
+            throw new NotFoundException('Apartment not found');
+        }
+
+        // Create and assign images to the apartment
+        const images = imageFilenames.map(filename =>
+            this.imageRepo.create({ imageUrl: filename, apartment })
+        );
+
+        // Save images first to correctly set the apartmentId
+        await this.imageRepo.save(images);
+
+        // Reload images from DB to ensure they are correctly linked
+        apartment.images = await this.imageRepo.find({
+            where: { apartment: { id: apartment.id } },
+        });
+
+        apartment.isReviewed = false;
+        return await this.apartmentRepository.save(apartment);
+    }
+
+
     async getById(id: string) {
         const apartment = await this.apartmentRepository.findOneBy({ id });
         if (!apartment) {
             throw new NotFoundException('apartment not found');
         }
+        apartment.isReviewed = true;
+        await this.apartmentRepository.save(apartment);
         return apartment
     }
 
