@@ -10,9 +10,6 @@ export class CreateApartmentDto {
   @IsString()
   descriptionAr: string;
 
-  @IsArray()
-  @IsString({ each: true })
-  images: string[];
 
   @IsArray()
   @ValidateNested({ each: true })

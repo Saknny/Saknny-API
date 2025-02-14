@@ -1,21 +1,22 @@
-import { 
-    Entity, 
-    PrimaryGeneratedColumn, 
-    Column, 
-    CreateDateColumn, 
-    UpdateDateColumn, 
-    DeleteDateColumn, 
-    OneToMany, 
-    ManyToOne 
-  } from 'typeorm';
-  import { Room } from '@src/modules/room/entities/room.entity/room.entity';  
-  import { Provider } from '@src/modules/provider/entities/provider.entity'; 
-  import { BaseModel } from '@src/libs/database/base.model';  
-  import { DeepPartial } from '@src/libs/types/deep-partial.type';
-  @Entity()
-  export class Apartment extends BaseModel {
-    constructor(input?: DeepPartial<Apartment>) {
-      super(input);
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  OneToMany,
+  ManyToOne
+} from 'typeorm';
+import { Room } from '@src/modules/room/entities/room.entity/room.entity';
+import { Provider } from '@src/modules/provider/entities/provider.entity';
+import { BaseModel } from '@src/libs/database/base.model';
+import { DeepPartial } from '@src/libs/types/deep-partial.type';
+import { ApartmentImage} from '../apartmentImage.entity';
+@Entity()
+export class Apartment extends BaseModel {
+  constructor(input?: DeepPartial<Apartment>) {
+    super(input);
   }
 
   @CreateDateColumn()
@@ -36,8 +37,12 @@ import {
   @Column("text")
   descriptionAr: string;
 
-  @Column("text", { array: true })
-  images: string[];
+  @OneToMany(() => ApartmentImage, (images) => images.apartment, {
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+    nullable: true
+  })
+  images: ApartmentImage[];
 
   @ManyToOne(() => Provider, (provider) => provider.apartments, {
     onDelete: "SET NULL",
@@ -55,5 +60,8 @@ import {
 
   @Column({ type: Boolean, default: false })
   isTrusted: boolean;
-  
+
+
+
+
 }

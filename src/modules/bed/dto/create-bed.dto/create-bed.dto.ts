@@ -9,9 +9,6 @@ export class CreateBedDto {
   @IsString()
   descriptionAr: string;
 
-  @IsNotEmpty()
-  @IsString()
-  image: string;
 
   @IsNumber()
   price: number;
