@@ -11,7 +11,13 @@ export class ProviderService {
     private readonly providerRepository: Repository<Provider>,
   ) { }
 
-
+  async getById(id: string) {
+    const provider = await this.providerRepository.findOneBy({ id });
+    if (!provider) {
+      throw new NotFoundException('provider not found');
+    }
+    return provider
+  }
 
   async updateProfile(userId: string, attrs: Partial<Provider>) {
     const provider = await this.providerRepository.findOneBy({ userId });
@@ -21,4 +27,32 @@ export class ProviderService {
     Object.assign(provider, attrs);
     return this.providerRepository.save(provider);
   }
+
+    if (attrs.idCard != null) {
+      provider.isReviewed = false;
+      provider.isTrusted = false;
+    }
+    return this.providerRepository.save(provider);
+  }
+
+
+
+  
+  async updateProviderApproval(id: string, isTrusted: boolean): Promise<Provider> {
+    const provider = await this.providerRepository.findOneBy({ id });
+    if (!provider) {
+      throw new NotFoundException(`Provider not found`);
+    }
+    provider.isTrusted = isTrusted;
+    return this.providerRepository.save(provider);
+  }
+
+  async getUnReviewedProviders(): Promise<Provider[]> {
+    return this.providerRepository.find({
+      where: {
+        isReviewed: false
+      },
+    });
+  }
+
 }

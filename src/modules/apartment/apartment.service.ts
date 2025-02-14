@@ -7,6 +7,9 @@ import { Room } from '../room/entities/room.entity/room.entity';
 import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
+import { Apartment } from './entities/apartment.entity/apartment.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 @Injectable()
 export class ApartmentService {
   constructor(
@@ -75,4 +78,29 @@ export class ApartmentService {
 
     return apartment;
   }
+  async getById(id: string) {
+        const apartment = await this.apartmentRepository.findOneBy({ id });
+        if (!apartment) {
+            throw new NotFoundException('apartment not found');
+        }
+        return apartment
+    }
+
+     async updateApartmentApproval(id: string, isTrusted: boolean): Promise<Apartment> {
+        const apartment = await this.apartmentRepository.findOneBy({ id });
+        if (!apartment) {
+          throw new NotFoundException(`apartment not found`);
+        }
+        apartment.isTrusted = isTrusted;
+        return this.apartmentRepository.save(apartment);
+      }
+    
+      async getUnReviewedApartments(): Promise<Apartment[]> {
+        return this.apartmentRepository.find({
+          where: {
+            isReviewed: false
+          },
+        });
+      }
+
 }

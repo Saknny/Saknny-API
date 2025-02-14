@@ -17,33 +17,43 @@ import {
     constructor(input?: DeepPartial<Apartment>) {
       super(input);
   }
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastViewedAt: Date | null;
+
+  @Column("text")
+  descriptionEn: string;
+
+  @Column("text")
+  descriptionAr: string;
+
+  @Column("text", { array: true })
+  images: string[];
+
+  @ManyToOne(() => Provider, (provider) => provider.apartments, {
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+    nullable: true
+  })
+  provider: Provider;
+
+  @OneToMany(() => Room, (room) => room.apartment)
+  rooms: Room[];
+
+
+  @Column({ type: Boolean, default: false })
+  isReviewed: boolean;
+
+  @Column({ type: Boolean, default: false })
+  isTrusted: boolean;
   
-    @CreateDateColumn()
-    createdAt: Date;
-  
-    @UpdateDateColumn()
-    updatedAt: Date;
-  
-    @DeleteDateColumn()
-    deletedAt: Date;
-  
-    @Column("text")
-    descriptionEn: string;
-  
-    @Column("text")
-    descriptionAr: string;
-  
-    @Column("text", { array: true })
-    images: string[];
-  
-    @ManyToOne(() => Provider, (provider) => provider.apartments, {
-      onDelete: "SET NULL",
-      onUpdate: "CASCADE",
-      nullable: true
-    })
-    provider: Provider;
-  
-    @OneToMany(() => Room, (room) => room.apartment)
-    rooms: Room[];
-  }
-  
+}
