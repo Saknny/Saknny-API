@@ -1,11 +1,10 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, UpdateDateColumn,
   CreateDateColumn,
-  DeleteDateColumn
-} from 'typeorm';
-import { Room } from '@src/modules/room/entities/room.entity/room.entity';
+DeleteDateColumn} from 'typeorm';
+import { Room } from '@src/modules/room/entities/room.entity/room.entity'; 
 import { Student } from '@src/modules/student/entities/student.entity';
-import { BaseModel } from '@src/libs/database/base.model';
+import { BaseModel } from '@src/libs/database/base.model';  
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
 @Entity()
 export class Bed extends BaseModel {

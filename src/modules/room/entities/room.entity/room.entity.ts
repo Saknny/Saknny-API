@@ -12,11 +12,6 @@ import {
   import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity'; 
   import { BaseModel } from '@src/libs/database/base.model';  
   import { DeepPartial } from '@src/libs/types/deep-partial.type';
-  export enum RoomTypeEnum {
-    SINGLE = 'SINGLE',
-    DOUBLE = 'DOUBLE',
-    SUITE = 'SUITE'
-  }
   
   @Entity()
   export class Room extends BaseModel {
@@ -48,7 +43,7 @@ import {
     @Column("text")
     descriptionAr: string;
   
-    @Column("number")
+    @Column()
     bedCount: number;
   
     @Column({ type: 'date', nullable: true })

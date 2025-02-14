@@ -11,8 +11,6 @@ export class ProviderService {
     private readonly providerRepository: Repository<Provider>,
   ) { }
 
-
-
   async getById(id: string) {
     const provider = await this.providerRepository.findOneBy({ id });
     if (!provider) {
@@ -27,6 +25,8 @@ export class ProviderService {
       throw new NotFoundException('provider not found');
     }
     Object.assign(provider, attrs);
+    return this.providerRepository.save(provider);
+  }
 
     if (attrs.idCard != null) {
       provider.isReviewed = false;
@@ -54,4 +54,5 @@ export class ProviderService {
       },
     });
   }
+
 }
