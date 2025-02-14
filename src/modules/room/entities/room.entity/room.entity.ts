@@ -12,6 +12,7 @@ import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
 import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity';
 import { BaseModel } from '@src/libs/database/base.model';
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
+import { RoomImage } from '../roomImage.entity';
 
 @Entity()
 export class Room extends BaseModel {
@@ -34,8 +35,12 @@ export class Room extends BaseModel {
   })
   apartment: Apartment;
 
-  @Column("text", { array: true, nullable: true })
-  images: string[];
+  @OneToMany(() => RoomImage, (images) => images.room, {
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+    nullable: true
+  })
+  images: RoomImage[];
 
   @Column("text")
   descriptionEn: string;

@@ -6,6 +6,7 @@ import { currentUserType } from '@src/libs/types/current-user.type';
 import { extname } from 'path';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+
 @Controller('apartment')
 export class ApartmentController {
   constructor(private readonly apartmentService: ApartmentService) {}
@@ -31,3 +32,4 @@ export class ApartmentController {
       return this.apartmentService.saveApartmentImages(id, imageFilenames);
   }
 }
+
