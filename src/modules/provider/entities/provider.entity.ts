@@ -28,6 +28,9 @@ export class Provider extends BaseModel {
   @Column({ type: Boolean, default: false })
   isTrusted: boolean;
 
+  @Column({ type: Boolean, default: false })
+  isReviewed: boolean;
+
   @Column()
   userId: string;
 

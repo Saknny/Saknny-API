@@ -39,6 +39,9 @@ export class Student extends BaseModel {
   @Column({ type: Boolean, default: false })
   isTrusted: boolean;
 
+  @Column({ type: Boolean, default: false })
+  isReviewed: boolean;
+
   @Column({ nullable: true })
   idCardImageUrl: string;
 
