@@ -1,12 +1,13 @@
-import { Controller, Post, Param, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Param, UploadedFiles, UseInterceptors, Patch, UploadedFile, NotFoundException, Delete } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { BedService } from './bed.service';
+import { bedImageUploadInterceptor } from './interceptors/interceptor.upload-file';
 
 @Controller('beds')
 export class BedController {
-    constructor(private readonly bedService: BedService) {}
+    constructor(private readonly bedService: BedService) { }
 
     @Post(':id/upload-images')
     @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 10 }], {
@@ -18,8 +19,27 @@ export class BedController {
             },
         }),
     }))
-    async uploadRoomImages(@Param('id') id: string, @UploadedFiles() files: { images?: Express.Multer.File[] }) {
+    async uploadBedImages(@Param('id') id: string, @UploadedFiles() files: { images?: Express.Multer.File[] }) {
         const imageFilenames = files.images?.map(file => file.filename) || [];
-        return this.bedService.saveRoomImages(id, imageFilenames);
+        return this.bedService.saveBedImages(id, imageFilenames);
+    }
+
+
+    @Patch(':id/update-image')
+    @UseInterceptors(bedImageUploadInterceptor())
+    async updateBedImage(
+        @Param('id') imageId: string,
+        @UploadedFile() file: Express.Multer.File
+    ) {
+        if (!file) {
+            throw new NotFoundException('No file uploaded');
+        }
+        return this.bedService.updateBedImage(imageId, file.filename);
+    }
+
+
+    @Delete(':id/delete-image')
+    async deleteBedImage(@Param('id') imageId: string) {
+        return this.bedService.deleteBedImage(imageId);
     }
 }
