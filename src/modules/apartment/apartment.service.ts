@@ -9,6 +9,8 @@ import { BaseRepository } from '@src/libs/types/base-repository';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
 import { Repository } from 'typeorm';
 import { ApartmentImage } from './entities/apartmentImage.entity';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 
 @Injectable()
 export class ApartmentService {
@@ -98,6 +100,50 @@ export class ApartmentService {
 
         apartment.isReviewed = false;
         return await this.apartmentRepository.save(apartment);
+    }
+
+
+    // ✅ Update an existing image
+    async updateApartmentImage(id: string, newFilename: string): Promise<ApartmentImage> {
+        const image = await this.imageRepo.findOne({ id }, ['apartment']);
+
+        if (!image) {
+            throw new NotFoundException('Image not found');
+        }
+
+        // 🔹 Delete old image from storage
+        const oldImagePath = join(__dirname, '../../uploads/apartments', image.imageUrl);
+        try {
+            await unlink(oldImagePath);
+        } catch (err) {
+            console.warn('Old image file not found or already deleted:', oldImagePath);
+        }
+
+        // 🔹 Update image URL in the database
+        image.imageUrl = newFilename;
+        return await this.imageRepo.save(image);
+    }
+
+    // ✅ Delete an image
+    async deleteApartmentImage(id: string): Promise<{ message: string }> {
+        const image = await this.imageRepo.findOne({ id }, ['apartment']);
+
+        if (!image) {
+            throw new NotFoundException('Image not found');
+        }
+
+        // 🔹 Remove image file from storage
+        const imagePath = join(__dirname, '../../uploads/apartments', image.imageUrl);
+        try {
+            await unlink(imagePath);
+        } catch (err) {
+            console.warn('Image file not found or already deleted:', imagePath);
+        }
+
+        // 🔹 Delete the image from the database
+        await this.imageRepo.delete(id);
+
+        return { message: 'Image deleted successfully' };
     }
 
 
