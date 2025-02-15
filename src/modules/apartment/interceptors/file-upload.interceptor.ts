@@ -1,26 +1,21 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import * as fs from 'fs';
 
-@Injectable()
-export class FileUploadInterceptor implements NestInterceptor {
-  private readonly fileInterceptor: NestInterceptor;
-
-  constructor(fieldName: string, destination: string, maxFiles = 10) {
-    this.fileInterceptor = new (FilesInterceptor(fieldName, maxFiles, {
-      storage: diskStorage({
-        destination: `./uploads/${destination}`,
-        filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-        },
-      }),
-    }))();
-  }
-
-  async intercept(context: ExecutionContext, next: CallHandler) {
-    await this.fileInterceptor.intercept(context, next);
-    return next.handle();
-  }
-}
+export const apartmentImageUploadInterceptor = () =>
+  FileInterceptor('image', {
+    storage: diskStorage({
+      destination: (req, file, callback) => {
+        const uploadPath = './uploads/apartments';
+        if (!fs.existsSync(uploadPath)) {
+          fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        callback(null, uploadPath);
+      },
+      filename: (req, file, callback) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        callback(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
+      },
+    }),
+  });

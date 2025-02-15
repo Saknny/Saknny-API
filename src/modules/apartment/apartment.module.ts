@@ -7,11 +7,18 @@ import { Room } from '../room/entities/room.entity/room.entity';
 import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { ProviderModule } from '../provider/provider.module';
 import { ApartmentImage } from './entities/apartmentImage.entity';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [DatabaseModule.forFeature([Apartment, Room, Bed, ApartmentImage
   ])
-    , ProviderModule],
+    , ProviderModule
+    , ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'), // Ensure this path exists
+      serveRoot: '/', // This means the files will be served at the root URL
+      exclude: ['/api*'], // Exclude API routes from static serving
+    }),],
   providers: [ApartmentService],
   controllers: [ApartmentController],
   exports: [ApartmentService]
