@@ -3,12 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Provider } from './entities/provider.entity';
 import { CompleteProviderProfileInput } from './dtos/inputs/complete-profile.input';
+import { Apartment } from '../apartment/entities/apartment.entity/apartment.entity';
 
 @Injectable()
 export class ProviderService {
   constructor(
     @InjectRepository(Provider)
     private readonly providerRepository: Repository<Provider>,
+    @InjectRepository(Apartment)
+    private readonly apartmentRepository: Repository<Apartment>
   ) { }
 
   async getById(id: string) {
@@ -75,6 +78,23 @@ export class ProviderService {
         isReviewed: false
       },
     });
+  }
+
+  //provider list all his apartments 
+  async getProviderApartments(providerId: string): Promise<Apartment[]> {
+    const provider = await this.providerRepository
+      .createQueryBuilder('provider')
+      .leftJoinAndSelect('provider.apartments', 'apartments')
+      .leftJoinAndSelect('apartments.rooms', 'rooms')
+      .leftJoinAndSelect('apartments.images', 'images')
+      .where('provider.id = :providerId', { providerId })
+      .getOne();
+  
+    if (!provider) {
+      throw new NotFoundException('Provider not found');
+    }
+  
+    return provider.apartments || [];
   }
 }
 
