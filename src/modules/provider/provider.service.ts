@@ -26,12 +26,36 @@ export class ProviderService {
     if (!provider) {
       throw new NotFoundException('provider not found');
     }
-    Object.assign(provider, attrs);
-    if (attrs.idCard != null) {
+    if (attrs.facebook) {
+      provider.facebook = attrs.facebook;
+    }
+    if (attrs.instagram) {
+      provider.instagram = attrs.instagram;
+    }
+    if (attrs.linkedin) {
+      provider.linkedin = attrs.linkedin;
+    }
+    if (attrs.idCard) {
+      provider.idCard = attrs.idCard;
       provider.isReviewed = false;
       provider.isTrusted = false;
     }
-    
+    if (attrs.image) {
+      provider.image = attrs.image;
+    }
+    if (attrs.gender) {
+      provider.gender = attrs.gender;
+    }
+    if (attrs.firstName) {
+      provider.firstName = attrs.firstName;
+    }
+    if (attrs.lastName) {
+      provider.lastName = attrs.lastName;
+    }
+    if (attrs.phone) {
+      provider.phone = attrs.phone;
+    }
+
     return this.providerRepository.save(provider);
   }
 

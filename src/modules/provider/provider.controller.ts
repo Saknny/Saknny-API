@@ -36,7 +36,6 @@ export class ProviderController {
 
     return { message: 'Profile completed successfully!', provider: updatedProvider };
   }
-
   @Patch('update-profile')
   @UseInterceptors(fileUploadInterceptor())
   async updateProfile(
@@ -48,16 +47,31 @@ export class ProviderController {
     },
     @Body() updateProfileDto: UpdateProviderProfileInput,
   ) {
+    console.log('📌 Received files:', files);
 
-    updateProfileDto.idCard = files.idCard ? `/uploads/${files.idCard[0].filename}` : undefined;
-    updateProfileDto.image = files.image ? `/uploads/${files.image[0].filename}` : undefined;
+    if (files.idCard && files.idCard.length > 0) {
+      console.log('✅ idCard file received:', files.idCard[0]);
+      console.log('📌 idCard Buffer Type:', typeof files.idCard[0].buffer); // Should be "object"
+      console.log('📌 idCard Buffer:', files.idCard[0].buffer); // Log the buffer
 
-    const updatedProvider = await this.providerService.updateProfile(
-      id,
-      updateProfileDto,
-    );
+      if (Buffer.isBuffer(files.idCard[0].buffer)) {
+        updateProfileDto.idCard = files.idCard[0].buffer.toString('base64'); // Convert to Base64
+      } else {
+        console.log('❌ idCard is NOT a Buffer! Something is wrong.');
+      }
+    }
 
-    return { message: 'Profile completed successfully!', provider: updatedProvider };
+    if (files.image && files.image.length > 0) {
+      console.log('✅ Image file received:', files.image[0]);
+      updateProfileDto.image = `/uploads/${files.image[0].filename}`;
+    } 
+    
+    console.log('📌 updateProfileDto BEFORE sending to service:', updateProfileDto);
+
+    const updatedProvider = await this.providerService.updateProfile(id, updateProfileDto);
+    return { message: 'Profile updated successfully!', provider: updatedProvider };
   }
+
+
 }
 
