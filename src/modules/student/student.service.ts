@@ -25,8 +25,6 @@ export class StudentService {
   async completeProfile(
     userId: string,
     completeProfileDto: CompleteProfileDto,
-    idCardImagePath?: string,
-    profilePicturePath?: string,
   ): Promise<Student> {
     const student = await this.studentRepo.findOne({ userId });
 
@@ -34,12 +32,12 @@ export class StudentService {
       throw new Error('Student not found');
     }
 
-    if (idCardImagePath) {
-      student.idCardImageUrl = idCardImagePath;
+    if (completeProfileDto.idCardImage) {
+      student.idCardImage = completeProfileDto.idCardImage;
     }
 
-    if (profilePicturePath) {
-      student.profilePictureUrl = profilePicturePath;
+    if (completeProfileDto.profilePicture) {
+      student.profilePictureUrl = completeProfileDto.profilePicture;
     }
 
     student.major = completeProfileDto.major;
@@ -59,26 +57,62 @@ export class StudentService {
 
   async updateStudent(
     userId: string,
-    body: UpdateStudentInput,
-    idCardImagePath?: string,
-    profilePicturePath?: string
+    attrs: Partial<Student>
   ) {
-    console.log("Received body:", body);
+
     const student = await this.studentRepo.findOne({ userId });
 
     if (!student) {
       throw new NotFoundException('Student not found');
     }
 
-    Object.assign(student, body);
-
-    if (idCardImagePath) {
-      student.idCardImageUrl = idCardImagePath;
+    if (attrs.facebook) {
+      student.facebook = attrs.facebook;
+    }
+    if (attrs.instagram) {
+      student.instagram = attrs.instagram;
+    }
+    if (attrs.linkedin) {
+      student.linkedin = attrs.linkedin;
+    }
+    if (attrs.idCardImage) {
+      student.idCardImage = attrs.idCardImage;
       student.isReviewed = false;
       student.isTrusted = false;
     }
-    if (profilePicturePath) student.profilePictureUrl = profilePicturePath;
-
+    if (attrs.profilePictureUrl) {
+      student.profilePictureUrl = attrs.profilePictureUrl;
+    }
+    if (attrs.gender) {
+      student.gender = attrs.gender;
+    }
+    if (attrs.firstName) {
+      student.firstName = attrs.firstName;
+    }
+    if (attrs.lastName) {
+      student.lastName = attrs.lastName;
+    }
+    if (attrs.phone) {
+      student.phone = attrs.phone;
+    }
+    if (attrs.major) {
+      student.major = attrs.major;
+    }
+    if (attrs.hobbies) {
+      student.hobbies = attrs.hobbies;
+    }
+    if (attrs.smoking) {
+      student.smoking = attrs.smoking;
+    }
+    if (attrs.level) {
+      student.level = attrs.level;
+    }
+    if (attrs.socialPerson) {
+      student.socialPerson = attrs.socialPerson;
+    }
+    if (attrs.university) {
+      student.university = attrs.university;
+    }
     await this.studentRepo.save(student);
 
     return student;

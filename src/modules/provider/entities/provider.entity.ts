@@ -1,14 +1,14 @@
-import { 
-  Entity, 
-  Column, 
-  OneToOne, 
-  JoinColumn, 
-  OneToMany 
+import {
+  Entity,
+  Column,
+  OneToOne,
+  JoinColumn,
+  OneToMany
 } from 'typeorm';
 import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
-import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity'; 
+import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity';
 
 @Entity()
 export class Provider extends BaseModel {
@@ -47,8 +47,8 @@ export class Provider extends BaseModel {
   @Column({ nullable: true })
   gender: string;
 
-  // Documents
-  @Column({ nullable: true })
+
+  @Column({ type: 'varchar', nullable: true })  // Store idCard as binary
   idCard: string;
 
   @Column({ nullable: true })
@@ -58,7 +58,7 @@ export class Provider extends BaseModel {
   @JoinColumn()
   user: User;
 
-  
+
   @OneToMany(() => Apartment, (apartment) => apartment.provider, { cascade: true })
   apartments: Apartment[];
 }

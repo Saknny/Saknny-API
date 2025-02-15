@@ -31,7 +31,7 @@ export class UpdateStudentInput {
 
   @IsOptional()
   @IsString()
-  idCardImageUrl?: string;
+  idCardImage?: any;
 
   @IsOptional()
   @IsString()
