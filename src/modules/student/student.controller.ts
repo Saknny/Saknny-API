@@ -24,10 +24,15 @@ export class StudentController {
     @UploadedFiles() files: { idCardImage?: Express.Multer.File[]; profilePicture?: Express.Multer.File[] },
     @Body() body: UpdateStudentInput
   ) {
-    const idCardImagePath = files.idCardImage ? `/uploads/${files.idCardImage[0].filename}` : undefined;
-    const profilePicturePath = files.profilePicture ? `/uploads/${files.profilePicture[0].filename}` : undefined;
+    if (files.idCardImage && files.idCardImage.length > 0) {
+      body.idCardImage = files.idCardImage[0].buffer.toString('base64');
+    }
+    if (files.profilePicture && files.profilePicture.length > 0) {
+      body.profilePictureUrl = `/uploads/${files.profilePicture[0].filename}`;
+    }
 
-    return await this.studentService.updateStudent(id, body, idCardImagePath, profilePicturePath);
+
+    return await this.studentService.updateStudent(id, body);
   }
 
 
@@ -44,14 +49,13 @@ export class StudentController {
     @Body() completeProfileDto: CompleteProfileDto,
   ) {
 
-    const idCardImagePath = files.idCardImage ? `/uploads/${files.idCardImage[0].filename}` : undefined;
-    const profilePicturePath = files.profilePicture ? `/uploads/${files.profilePicture[0].filename}` : undefined;
+
+    completeProfileDto.idCardImage = files.idCardImage[0].buffer.toString('base64');
+    completeProfileDto.profilePicture = files.profilePicture ? `/uploads/${files.profilePicture[0].filename}` : undefined;
 
     const updatedStudent = await this.studentService.completeProfile(
       id,
       completeProfileDto,
-      idCardImagePath,
-      profilePicturePath,
     );
 
     return { message: 'Profile completed successfully!', student: updatedStudent };

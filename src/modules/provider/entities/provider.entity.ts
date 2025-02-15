@@ -47,9 +47,9 @@ export class Provider extends BaseModel {
   @Column({ nullable: true })
   gender: string;
 
- 
-  @Column({ type: 'bytea', nullable: true })  // Store idCard as binary
-  idCard: Buffer;
+
+  @Column({ type: 'varchar', nullable: true })  // Store idCard as binary
+  idCard: string;
 
   @Column({ nullable: true })
   image: string;

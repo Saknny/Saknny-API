@@ -5,7 +5,7 @@ import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { IsEndDateAfterStartDate } from '../../../libs/utils/validators/is-endDate-after-startDate';
 import { User } from '../../user/entities/user.entity';
-import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity'; 
+import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
@@ -43,8 +43,8 @@ export class Student extends BaseModel {
   @Column({ type: Boolean, default: false })
   isReviewed: boolean;
 
-  @Column({ nullable: true })
-  idCardImageUrl: string;
+  @Column({ type: 'varchar', nullable: true })  // Store idCard as binary
+  idCardImage: string;
 
   @Column({ nullable: true })
   profilePictureUrl: string;
