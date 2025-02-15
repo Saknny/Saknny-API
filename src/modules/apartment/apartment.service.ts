@@ -7,7 +7,7 @@ import { Room } from '../room/entities/room.entity/room.entity';
 import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
-import { Repository } from 'typeorm';
+import { Not, Repository , IsNull} from 'typeorm';
 import { ApartmentImage } from './entities/apartmentImage.entity';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
@@ -174,5 +174,56 @@ export class ApartmentService {
         });
     }
 
+    async getRecentApartments(limit = 10): Promise<Apartment[]> {
+        return this.apartmentRepository.find({
+          order: { createdAt: 'DESC' },
+          take: limit,
+        });
+      }
+      
+     // Get recently viewed apartments (sorted by lastViewedAt)
+  async getRecentlyViewed(): Promise<Apartment[]> {
+    return this.apartmentRepository.find({
+      where: { lastViewedAt: Not(IsNull()) },
+      order: { lastViewedAt: 'DESC' },
+      take: 10, // Limit to 10 results
+    });
+  }
+
+  // Update lastViewedAt when an apartment is viewed
+  async updateLastViewed(id: string): Promise<Apartment> {
+    const apartment = await this.apartmentRepository.findOne( { id  });
+
+    if (!apartment) {
+      throw new Error('Apartment not found');
+    }
+
+    apartment.lastViewedAt = new Date();
+    return this.apartmentRepository.save(apartment);
+  }
+  //filter by price 
+  async getApartmentsByBedPrice(
+    minPrice: number,
+    maxPrice: number,
+    page: number,
+    limit: number
+  ): Promise<{ data: Apartment[]; total: number; page: number; totalPages: number }> {
+    const [data, total] = await this.apartmentRepository
+      .createQueryBuilder('apartment')
+      .leftJoinAndSelect('apartment.rooms', 'room')
+      .leftJoinAndSelect('room.beds', 'bed')
+      .where('bed.price BETWEEN :minPrice AND :maxPrice', { minPrice, maxPrice })
+      .take(limit) 
+      .skip((page - 1) * limit) // Offset for pagination
+      .getManyAndCount(); // Get data + total count
+  
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+  
 
 }

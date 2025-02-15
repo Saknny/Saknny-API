@@ -59,14 +59,14 @@ import { ApartmentModule } from './modules/apartment/apartment.module';
     RoomModule,
     BedModule,
     ApartmentModule,
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'public'),
-      serveStaticOptions: {
-        setHeaders: (res) => {
-          res.set('Cross-Origin-Resource-Policy', 'cross-origin');
-        },
-      },
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(process.cwd(), 'public'),
+    //   serveStaticOptions: {
+    //     setHeaders: (res) => {
+    //       res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    //     },
+    //   },
+    // }),
     ProfileModule,
     BedModule,
     RoomModule,

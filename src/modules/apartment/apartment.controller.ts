@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, NotFoundException, Param, Patch, Post, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, NotFoundException, Param, Patch, Post, UploadedFile, UploadedFiles, UseInterceptors ,Get,Query} from '@nestjs/common';
 import { ApartmentService } from './apartment.service';
 import { CreateApartmentDto } from './dto/create-apartment.dto/create-apartment.dto';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
@@ -7,6 +7,7 @@ import { extname } from 'path';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { apartmentImageUploadInterceptor } from './interceptors/file-upload.interceptor';
+import { Apartment } from './entities/apartment.entity/apartment.entity';
 
 @Controller('apartment')
 export class ApartmentController {
@@ -53,4 +54,40 @@ export class ApartmentController {
   async deleteApartmentImage(@Param('id') imageId: string) {
     return this.apartmentService.deleteApartmentImage(imageId);
   }
+
+  @Get('recent')
+  async getRecentApartments(@Query('limit') limit?: number) {
+    return this.apartmentService.getRecentApartments(limit);
+  }
+
+  // Get recently viewed apartments
+  @Get('recently-viewed')
+  async getRecentlyViewedApartments() {
+    return this.apartmentService.getRecentlyViewed();
+  }
+
+  // Update lastViewedAt for an apartment
+  @Patch(':id/view')
+  async updateLastViewed(@Param('id') id: string) {
+    return this.apartmentService.updateLastViewed(id);
+  }
+
+  //filter by price 
+  @Get('filter-by-bed-price')
+async getApartmentsByBedPrice(
+  @Query('minPrice') minPrice: number,
+  @Query('maxPrice') maxPrice: number,
+  @Query('page') page = 1, 
+  @Query('limit') limit = 10 
+): Promise<{ data: Apartment[]; total: number; page: number; totalPages: number }> {
+  return this.apartmentService.getApartmentsByBedPrice(
+    Number(minPrice),
+    Number(maxPrice),
+    Number(page),
+    Number(limit)
+  );
+}
+
+  
+  
 }
