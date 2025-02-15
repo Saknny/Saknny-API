@@ -18,8 +18,8 @@ export class BedController {
             },
         }),
     }))
-    async uploadBedImages(@Param('id') id: string, @UploadedFiles() files: { images?: Express.Multer.File[] }) {
+    async uploadRoomImages(@Param('id') id: string, @UploadedFiles() files: { images?: Express.Multer.File[] }) {
         const imageFilenames = files.images?.map(file => file.filename) || [];
-        return this.bedService.saveBedImages(id, imageFilenames);
+        return this.bedService.saveRoomImages(id, imageFilenames);
     }
 }
