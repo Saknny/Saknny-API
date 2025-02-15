@@ -30,8 +30,9 @@ export class ProviderService {
     if (attrs.idCard != null) {
       provider.isReviewed = false;
       provider.isTrusted = false;
-      return this.providerRepository.save(provider);
     }
+    
+    return this.providerRepository.save(provider);
   }
 
 

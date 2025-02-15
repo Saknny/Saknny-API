@@ -21,7 +21,7 @@ export class ProviderController {
   @Post('complete-profile')
   @UseInterceptors(fileUploadInterceptor())
   async completeProfile(
-    @currentUser() {id}:currentUserType,
+    @currentUser() { id }: currentUserType,
     @UploadedFiles()
     files: {
       idCard?: Express.Multer.File[];
@@ -29,14 +29,10 @@ export class ProviderController {
     },
     @Body() completeProfileDto: CompleteProviderProfileInput,
   ) {
-    completeProfileDto.idCard = files.idCard ? `/uploads/${files.idCard[0].filename}` : undefined;
-    completeProfileDto.image = files.image ? `/uploads/${files.image[0].filename}` : undefined;
 
-    const updatedProvider = await this.providerService.updateProfile(
-      id,
-      completeProfileDto
-
-    );
+    completeProfileDto.idCard = files.idCard[0].buffer.toString('base64'); // Store as binary
+    completeProfileDto.image = `/uploads/${files.image[0].filename}`;
+    const updatedProvider = await this.providerService.updateProfile(id, completeProfileDto);
 
     return { message: 'Profile completed successfully!', provider: updatedProvider };
   }
@@ -44,7 +40,7 @@ export class ProviderController {
   @Patch('update-profile')
   @UseInterceptors(fileUploadInterceptor())
   async updateProfile(
-    @currentUser() {id}:currentUserType,
+    @currentUser() { id }: currentUserType,
     @UploadedFiles()
     files: {
       idCard?: Express.Multer.File[];
