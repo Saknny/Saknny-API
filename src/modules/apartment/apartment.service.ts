@@ -7,10 +7,11 @@ import { Room } from '../room/entities/room.entity/room.entity';
 import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
-import { Not, Repository , IsNull} from 'typeorm';
+import { Not, Repository, IsNull } from 'typeorm';
 import { ApartmentImage } from './entities/apartmentImage.entity';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
+import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.dto';
 
 @Injectable()
 export class ApartmentService {
@@ -32,7 +33,7 @@ export class ApartmentService {
 
     async createApartment(providerId: string
         , createApartmentDto: CreateApartmentDto): Promise<Apartment> {
-        const { descriptionEn, descriptionAr, rooms } = createApartmentDto;
+        const { descriptionEn, descriptionAr, rooms, gender } = createApartmentDto;
 
         // Find the provider
         const provider = await this.providerRepository.findOne({ userId: providerId });
@@ -45,6 +46,7 @@ export class ApartmentService {
             descriptionEn,
             descriptionAr,
             provider,
+            gender,
         });
 
         await this.apartmentRepository.save(apartment);
@@ -80,7 +82,27 @@ export class ApartmentService {
         return apartment;
     }
 
+    async updateApartment(id: string, updateApartment: UpdateApartmentDto) {
+        const apartment = await this.apartmentRepository.findOne({ id })
+        if (!apartment) {
+            throw new NotFoundException('Apartment not found');
+        }
 
+
+        if (apartment.status == "UNBOOKED" && updateApartment.gender) {
+            apartment.gender = updateApartment.gender;
+        }
+
+        if (updateApartment.descriptionAr) {
+            apartment.descriptionAr = updateApartment.descriptionAr;
+        }
+
+        if (updateApartment.descriptionEn) {
+            apartment.descriptionEn = updateApartment.descriptionEn;
+        }
+
+        return await this.apartmentRepository.save(apartment);
+    }
 
     async saveApartmentImages(id: string, imageFilenames: string[]): Promise<Apartment> {
         const apartment = await this.apartmentRepository.findOne({ id })
@@ -176,54 +198,54 @@ export class ApartmentService {
 
     async getRecentApartments(limit = 10): Promise<Apartment[]> {
         return this.apartmentRepository.find({
-          order: { createdAt: 'DESC' },
-          take: limit,
+            order: { createdAt: 'DESC' },
+            take: limit,
         });
-      }
-      
-     // Get recently viewed apartments (sorted by lastViewedAt)
-  async getRecentlyViewed(): Promise<Apartment[]> {
-    return this.apartmentRepository.find({
-      where: { lastViewedAt: Not(IsNull()) },
-      order: { lastViewedAt: 'DESC' },
-      take: 10, // Limit to 10 results
-    });
-  }
-
-  // Update lastViewedAt when an apartment is viewed
-  async updateLastViewed(id: string): Promise<Apartment> {
-    const apartment = await this.apartmentRepository.findOne( { id  });
-
-    if (!apartment) {
-      throw new Error('Apartment not found');
     }
 
-    apartment.lastViewedAt = new Date();
-    return this.apartmentRepository.save(apartment);
-  }
-  //filter by price 
-  async getApartmentsByBedPrice(
-    minPrice: number,
-    maxPrice: number,
-    page: number,
-    limit: number
-  ): Promise<{ data: Apartment[]; total: number; page: number; totalPages: number }> {
-    const [data, total] = await this.apartmentRepository
-      .createQueryBuilder('apartment')
-      .leftJoinAndSelect('apartment.rooms', 'room')
-      .leftJoinAndSelect('room.beds', 'bed')
-      .where('bed.price BETWEEN :minPrice AND :maxPrice', { minPrice, maxPrice })
-      .take(limit) 
-      .skip((page - 1) * limit) // Offset for pagination
-      .getManyAndCount(); // Get data + total count
-  
-    return {
-      data,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-  
+    // Get recently viewed apartments (sorted by lastViewedAt)
+    async getRecentlyViewed(): Promise<Apartment[]> {
+        return this.apartmentRepository.find({
+            where: { lastViewedAt: Not(IsNull()) },
+            order: { lastViewedAt: 'DESC' },
+            take: 10, // Limit to 10 results
+        });
+    }
+
+    // Update lastViewedAt when an apartment is viewed
+    async updateLastViewed(id: string): Promise<Apartment> {
+        const apartment = await this.apartmentRepository.findOne({ id });
+
+        if (!apartment) {
+            throw new Error('Apartment not found');
+        }
+
+        apartment.lastViewedAt = new Date();
+        return this.apartmentRepository.save(apartment);
+    }
+    //filter by price 
+    async getApartmentsByBedPrice(
+        minPrice: number,
+        maxPrice: number,
+        page: number,
+        limit: number
+    ): Promise<{ data: Apartment[]; total: number; page: number; totalPages: number }> {
+        const [data, total] = await this.apartmentRepository
+            .createQueryBuilder('apartment')
+            .leftJoinAndSelect('apartment.rooms', 'room')
+            .leftJoinAndSelect('room.beds', 'bed')
+            .where('bed.price BETWEEN :minPrice AND :maxPrice', { minPrice, maxPrice })
+            .take(limit)
+            .skip((page - 1) * limit) // Offset for pagination
+            .getManyAndCount(); // Get data + total count
+
+        return {
+            data,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+        };
+    }
+
 
 }
