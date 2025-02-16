@@ -1,4 +1,4 @@
-import { Controller, UseInterceptors, Param, UploadedFiles, Body, Post, Req, Patch } from '@nestjs/common';
+import { Controller, UseInterceptors, Param, UploadedFiles, Body, Post, Req, Patch ,Get} from '@nestjs/common';
 import { ProviderService } from './provider.service';
 import { CompleteProviderProfileInput } from './dtos/inputs/complete-profile.input';
 
@@ -8,6 +8,7 @@ import { UpdateProviderProfileInput } from './dtos/inputs/update-profile.input';
 import { currentUser } from '@src/libs/decorators/currentUser.decorator';
 import { currentUserType } from '@src/libs/types/current-user.type';
 import { Auth } from '@src/libs/decorators/auth.decorator';
+import { Apartment } from '../apartment/entities/apartment.entity/apartment.entity';
 
 
 
@@ -70,6 +71,12 @@ export class ProviderController {
 
     const updatedProvider = await this.providerService.updateProfile(id, updateProfileDto);
     return { message: 'Profile updated successfully!', provider: updatedProvider };
+  }
+
+  //provider list all his apartments 
+  @Get(':providerId/apartments')
+  async getProviderApartments(@Param('providerId') providerId: string): Promise<Apartment[]> {
+    return this.providerService.getProviderApartments(providerId);
   }
 
 
