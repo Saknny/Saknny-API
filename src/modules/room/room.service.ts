@@ -33,7 +33,7 @@ export class RoomService {
 
         const room = this.roomRepository.create({
             ...createRoomDto,
-            apartment, 
+            apartment,
         });
 
         return await this.roomRepository.save(room);
@@ -51,16 +51,20 @@ export class RoomService {
         return await this.roomRepository.save(room);
     }
 
- 
+
     async deleteRoom(roomId: string): Promise<{ message: string }> {
         const room = await this.roomRepository.findOne({ id: roomId });
 
         if (!room) {
             throw new NotFoundException('Room not found');
         }
-
-        await this.roomRepository.remove(room);
-        return { message: 'Room deleted successfully' };
+        if (room.status == "UNBOOKED") {
+            await this.roomRepository.remove(room);
+            return { message: 'Room deleted successfully' };
+        }
+        else {
+            return { message: 'Room can not be deleted ' };
+        }
     }
 
     async saveRoomImages(id: string, imageFilenames: string[]): Promise<Room> {
@@ -116,6 +120,7 @@ export class RoomService {
         } catch (err) {
             console.warn('Image file not found or already deleted:', imagePath);
         }
+
         await this.imageRepo.delete(id);
 
         return { message: 'Image deleted successfully' };

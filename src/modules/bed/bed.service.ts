@@ -25,9 +25,9 @@ export class BedService {
     ) { }
 
 
-     // 🔹 Create a new bed
-     async createBed(roomId: string, createBedDto: CreateBedDto): Promise<Bed> {
-        const room = await this.roomRepo.findOne({ id: roomId } );
+    // 🔹 Create a new bed
+    async createBed(roomId: string, createBedDto: CreateBedDto): Promise<Bed> {
+        const room = await this.roomRepo.findOne({ id: roomId });
 
         if (!room) {
             throw new NotFoundException('Room not found');
@@ -35,38 +35,43 @@ export class BedService {
 
         const bed = this.bedRepository.create({
             ...createBedDto,
-            room, 
+            room,
         });
 
         return await this.bedRepository.save(bed);
     }
 
-   
+
     async updateBed(bedId: string, updateBedDto: UpdateBedDto): Promise<Bed> {
-        const bed = await this.bedRepository.findOne({ id: bedId } );
+        const bed = await this.bedRepository.findOne({ id: bedId });
 
         if (!bed) {
             throw new NotFoundException('Bed not found');
         }
 
-        Object.assign(bed, updateBedDto); 
+        Object.assign(bed, updateBedDto);
         return await this.bedRepository.save(bed);
     }
 
- 
+
     async deleteBed(bedId: string): Promise<{ message: string }> {
-        const bed = await this.bedRepository.findOne( { id: bedId } );
+        const bed = await this.bedRepository.findOne({ id: bedId });
 
         if (!bed) {
             throw new NotFoundException('Bed not found');
         }
+        if (bed.status == 'AVAILABLE') {
+            await this.bedRepository.remove(bed);
+            return { message: 'Bed deleted successfully' };
+        }
 
-        await this.bedRepository.remove(bed);
-        return { message: 'Bed deleted successfully' };
+        return { message: 'Bed can not be deleted ' };
+
+
     }
 
 
-    
+
     async saveBedImages(id: string, imageFilenames: string[]): Promise<Bed> {
         const bed = await this.bedRepository.findOne({ id }, ['room', 'room.apartment']);
 
