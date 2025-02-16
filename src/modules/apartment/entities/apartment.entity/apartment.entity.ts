@@ -12,7 +12,7 @@ import { Room } from '@src/modules/room/entities/room.entity/room.entity';
 import { Provider } from '@src/modules/provider/entities/provider.entity';
 import { BaseModel } from '@src/libs/database/base.model';
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
-import { ApartmentImage} from '../apartmentImage.entity';
+import { ApartmentImage } from '../apartmentImage.entity';
 @Entity()
 export class Apartment extends BaseModel {
   constructor(input?: DeepPartial<Apartment>) {
@@ -61,7 +61,12 @@ export class Apartment extends BaseModel {
   @Column({ type: Boolean, default: false })
   isTrusted: boolean;
 
+  @Column({ nullable: true })
+  gender: string;
 
+
+  @Column({default:"UNBOOKED"})
+  status:string;
 
 
 }

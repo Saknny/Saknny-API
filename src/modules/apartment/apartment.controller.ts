@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, NotFoundException, Param, Patch, Post, UploadedFile, UploadedFiles, UseInterceptors ,Get,Query} from '@nestjs/common';
+import { Body, Controller, Delete, NotFoundException, Param, Patch, Post, UploadedFile, UploadedFiles, UseInterceptors, Get, Query } from '@nestjs/common';
 import { ApartmentService } from './apartment.service';
 import { CreateApartmentDto } from './dto/create-apartment.dto/create-apartment.dto';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
@@ -8,17 +8,26 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { apartmentImageUploadInterceptor } from './interceptors/file-upload.interceptor';
 import { Apartment } from './entities/apartment.entity/apartment.entity';
+import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.dto';
 
 @Controller('apartment')
 export class ApartmentController {
   constructor(private readonly apartmentService: ApartmentService) { }
 
   @Post("create")
-
   async createApartment(@currentUser() { id }: currentUserType,
     @Body() createApartmentDto: CreateApartmentDto) {
+      console.log(createApartmentDto);
     return this.apartmentService.createApartment(id, createApartmentDto);
   }
+
+  @Patch(":id/update")
+  async updateApartment(@Param('id') id:string ,
+    @Body() updateApartmentDto: UpdateApartmentDto) {
+      console.log(updateApartmentDto);
+    return this.apartmentService.updateApartment(id, updateApartmentDto);
+  }
+
   @Post(':id/upload-images')
   @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 10 }], {
     storage: diskStorage({
@@ -33,8 +42,6 @@ export class ApartmentController {
     const imageFilenames = files.images?.map(file => file.filename) || [];
     return this.apartmentService.saveApartmentImages(id, imageFilenames);
   }
-
-
 
 
   @Patch(':id/update-image')
@@ -74,20 +81,20 @@ export class ApartmentController {
 
   //filter by price 
   @Get('filter-by-bed-price')
-async getApartmentsByBedPrice(
-  @Query('minPrice') minPrice: number,
-  @Query('maxPrice') maxPrice: number,
-  @Query('page') page = 1, 
-  @Query('limit') limit = 10 
-): Promise<{ data: Apartment[]; total: number; page: number; totalPages: number }> {
-  return this.apartmentService.getApartmentsByBedPrice(
-    Number(minPrice),
-    Number(maxPrice),
-    Number(page),
-    Number(limit)
-  );
-}
+  async getApartmentsByBedPrice(
+    @Query('minPrice') minPrice: number,
+    @Query('maxPrice') maxPrice: number,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10
+  ): Promise<{ data: Apartment[]; total: number; page: number; totalPages: number }> {
+    return this.apartmentService.getApartmentsByBedPrice(
+      Number(minPrice),
+      Number(maxPrice),
+      Number(page),
+      Number(limit)
+    );
+  }
 
-  
-  
+
+
 }

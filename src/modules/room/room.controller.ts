@@ -1,13 +1,35 @@
-import { Controller, Post, Param, UploadedFiles, UseInterceptors, Patch, UploadedFile, NotFoundException, Delete } from '@nestjs/common';
+import { Controller, Post, Param, UploadedFiles, UseInterceptors, Patch, UploadedFile, NotFoundException, Delete, Body } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { RoomService } from './room.service';
 import { roomImageUploadInterceptor } from './interceptors/interceptor.upload-file';
+import { CreateRoomDto } from './dto/create-room.dto/create-room.dto';
+import { UpdateRoomDto } from './dto/update-room.dto/update-room.dto';
 
 @Controller('room')
 export class RoomController {
     constructor(private readonly roomService: RoomService) { }
+
+
+
+    @Post(':id/create')
+    async createRoom(@Param('id') apartmentId: string,
+        @Body() createRoomDto: CreateRoomDto) {
+        return this.roomService.createRoom(apartmentId, createRoomDto);
+    }
+
+    @Patch(':id/update')
+    async updateRoom(@Param('id') roomId: string,
+        @Body() updateRoomDto: UpdateRoomDto) {
+        return this.roomService.updateRoom(roomId, updateRoomDto);
+    }
+
+    @Delete(':id/delete')
+    async deleteRoom(@Param('id') roomId: string) {
+        return this.roomService.deleteRoom(roomId);
+    }
+
 
     @Post(':id/upload-images')
     @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 10 }], {

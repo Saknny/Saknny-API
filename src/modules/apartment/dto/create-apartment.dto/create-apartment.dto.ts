@@ -15,4 +15,8 @@ export class CreateApartmentDto {
   @ValidateNested({ each: true })
   @Type(() => CreateRoomDto)
   rooms: CreateRoomDto[];
+
+  @IsOptional()
+  @IsString()
+  gender: string;
 }

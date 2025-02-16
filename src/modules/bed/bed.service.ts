@@ -7,6 +7,9 @@ import { Apartment } from '../apartment/entities/apartment.entity/apartment.enti
 import { BedImage } from './entities/bedImage.entity';
 import { join } from 'path';
 import { unlink } from 'fs/promises';
+import { Room } from '../room/entities/room.entity/room.entity';
+import { CreateBedDto } from './dto/create-bed.dto/create-bed.dto';
+import { UpdateBedDto } from './dto/update-bed.dto/update-bed.dto';
 
 @Injectable()
 export class BedService {
@@ -17,7 +20,56 @@ export class BedService {
         private readonly apartmentRepository: BaseRepository<Apartment>,
         @InjectRepository(BedImage)
         private readonly imageRepo: BaseRepository<BedImage>,
+        @InjectRepository(Room)
+        private readonly roomRepo: BaseRepository<Room>,
     ) { }
+
+
+    // 🔹 Create a new bed
+    async createBed(roomId: string, createBedDto: CreateBedDto): Promise<Bed> {
+        const room = await this.roomRepo.findOne({ id: roomId });
+
+        if (!room) {
+            throw new NotFoundException('Room not found');
+        }
+
+        const bed = this.bedRepository.create({
+            ...createBedDto,
+            room,
+        });
+
+        return await this.bedRepository.save(bed);
+    }
+
+
+    async updateBed(bedId: string, updateBedDto: UpdateBedDto): Promise<Bed> {
+        const bed = await this.bedRepository.findOne({ id: bedId });
+
+        if (!bed) {
+            throw new NotFoundException('Bed not found');
+        }
+
+        Object.assign(bed, updateBedDto);
+        return await this.bedRepository.save(bed);
+    }
+
+
+    async deleteBed(bedId: string): Promise<{ message: string }> {
+        const bed = await this.bedRepository.findOne({ id: bedId });
+
+        if (!bed) {
+            throw new NotFoundException('Bed not found');
+        }
+        if (bed.status == 'AVAILABLE') {
+            await this.bedRepository.remove(bed);
+            return { message: 'Bed deleted successfully' };
+        }
+
+        return { message: 'Bed can not be deleted ' };
+
+
+    }
+
 
 
     async saveBedImages(id: string, imageFilenames: string[]): Promise<Bed> {

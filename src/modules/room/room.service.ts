@@ -8,6 +8,8 @@ import { Apartment } from '../apartment/entities/apartment.entity/apartment.enti
 import { RoomImage } from './entities/roomImage.entity';
 import { join } from 'path';
 import { unlink } from 'fs/promises';
+import { CreateRoomDto } from './dto/create-room.dto/create-room.dto';
+import { UpdateRoomDto } from './dto/update-room.dto/update-room.dto';
 
 @Injectable()
 export class RoomService {
@@ -21,6 +23,49 @@ export class RoomService {
         private readonly imageRepo: BaseRepository<RoomImage>,
 
     ) { }
+
+    async createRoom(apartmentId: string, createRoomDto: CreateRoomDto): Promise<Room> {
+        const apartment = await this.apartmentRepo.findOne({ id: apartmentId });
+
+        if (!apartment) {
+            throw new NotFoundException('Apartment not found');
+        }
+
+        const room = this.roomRepository.create({
+            ...createRoomDto,
+            apartment,
+        });
+
+        return await this.roomRepository.save(room);
+    }
+
+
+    async updateRoom(roomId: string, updateRoomDto: UpdateRoomDto): Promise<Room> {
+        const room = await this.roomRepository.findOne({ id: roomId });
+
+        if (!room) {
+            throw new NotFoundException('Room not found');
+        }
+
+        Object.assign(room, updateRoomDto);
+        return await this.roomRepository.save(room);
+    }
+
+
+    async deleteRoom(roomId: string): Promise<{ message: string }> {
+        const room = await this.roomRepository.findOne({ id: roomId });
+
+        if (!room) {
+            throw new NotFoundException('Room not found');
+        }
+        if (room.status == "UNBOOKED") {
+            await this.roomRepository.remove(room);
+            return { message: 'Room deleted successfully' };
+        }
+        else {
+            return { message: 'Room can not be deleted ' };
+        }
+    }
 
     async saveRoomImages(id: string, imageFilenames: string[]): Promise<Room> {
         const room = await this.roomRepository.findOne({ id }, ['apartment']);
@@ -75,6 +120,7 @@ export class RoomService {
         } catch (err) {
             console.warn('Image file not found or already deleted:', imagePath);
         }
+
         await this.imageRepo.delete(id);
 
         return { message: 'Image deleted successfully' };

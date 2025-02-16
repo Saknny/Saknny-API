@@ -11,7 +11,7 @@ export class CreateRoomDto {
   @IsNotEmpty()
   @IsString()
   descriptionAr: string;
-  
+
   @IsNotEmpty()
   @IsNumber()
   bedCount: number;

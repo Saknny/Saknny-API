@@ -59,4 +59,8 @@ export class Room extends BaseModel {
 
   @OneToMany(() => Bed, (bed) => bed.room)
   beds: Bed[];
+
+
+  @Column({ default: 'UNBOOKED' })
+  status: string;
 }
