@@ -7,9 +7,9 @@ import { DatabaseModule } from '../../configs/database/database.module';
 import { ContextModule } from '../../libs/application/context/context.module';
 import { HelperModule } from '../../libs/utils/helper/helper.module';
 import { FCMTokenModule } from '../fcm-token/fcm-token.module';
-import { Student } from '../individual/entities/student.entity';
-import { StudentModule } from '../individual/student.module';
-import { Provider } from '../organization/entities/provider.entity';
+import { Student } from '../student/entities/student.entity';
+import { StudentModule } from '../student/student.module';
+import { Provider } from '../provider/entities/provider.entity';
 import { Otp } from '../otp/entities/otp.entity';
 import { OtpModule } from '../otp/otp.module';
 import { SessionModule } from '../session/session.module';
@@ -42,4 +42,4 @@ import { AuthService } from './auth.service';
   providers: [AuthService, LocalStrategy, JwtStrategy],
   controllers: [AuthController],
 })
-export class AuthModule {}
+export class AuthModule { }

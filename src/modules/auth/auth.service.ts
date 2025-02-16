@@ -8,8 +8,8 @@ import { InjectBaseRepository } from '../../libs/decorators/inject-base-reposito
 import { TokenPayload } from '../../libs/types/auth-token-payload.type';
 import { BaseRepository } from '../../libs/types/base-repository';
 import { HelperService } from '../../libs/utils/helper/helper.service';
-import { Student } from '../individual/entities/student.entity';
-import { Provider } from '../organization/entities/provider.entity';
+import { Student } from '../student/entities/student.entity';
+import { Provider } from '../provider/entities/provider.entity';
 import { OtpUseCaseEnum } from '../otp/enums/otp.enum';
 import { OtpService } from '../otp/otp.service';
 import { Session } from '../session/entities/session.entity';
@@ -35,7 +35,7 @@ export class AuthService {
     private readonly studentRepo: BaseRepository<Student>,
     @InjectBaseRepository(Provider)
     private readonly providerRepo: BaseRepository<Provider>,
-  ) {}
+  ) { }
 
   async signup(input: SignupInput) {
     const { firstName, lastName, email, role } = input;
@@ -73,13 +73,26 @@ export class AuthService {
     });
   }
 
-  async validateUser(email: string, password: string, role: UserRoleEnum) {
+  async forgetPassword(email: string) {
+    const user = await this.userService.getLoginUserOrError({
+      $or: [{ verifiedEmail: email }, { unVerifiedEmail: email }],
+    });
+
+    await this.otpService.sendOtp(user.id, OtpUseCaseEnum.RESET_PASSWORD);
+
+    return user;
+  }
+
+  async validateUser(email: string, password: string, role?: UserRoleEnum) {
     const user = await this.userService.getLoginUserOrError({
       $or: [{ verifiedEmail: email }, { unVerifiedEmail: email }],
       role,
     });
+
     if (!user.password) throw new BaseHttpException(ErrorCodeEnum.NO_PASSWORD);
+
     await this.matchPassword(password, user.password);
+
     return user;
   }
 

@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import { Student } from '@src/modules/individual/entities/student.entity';
+import { Student } from '@src/modules/student/entities/student.entity';
 import { Notification } from './notification.entity';
 import { BaseModel } from '@src/libs/database/base.model';
 

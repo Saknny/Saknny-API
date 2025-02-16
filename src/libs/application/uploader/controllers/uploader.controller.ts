@@ -21,7 +21,6 @@ export class UploaderController {
   @UploadFileSingle('file', ENUM_FILE_TYPE.IMAGE, true)
   @Post('images')
   @Auth({ allow: 'authenticated' })
-  @UseGuards(JwtAuthenticationGuard)
   async uploadImage(
     @UploadedFile() file: FileType,
     @Body() _: UploadFileInput,
@@ -33,7 +32,6 @@ export class UploaderController {
   @UploadFileSingle('file', ENUM_FILE_TYPE.VIDEO, true)
   @Post('videos')
   @Auth({ allow: 'authenticated' })
-  @UseGuards(JwtAuthenticationGuard)
   async uploadVideo(
     @UploadedFile() file: FileType,
     @Body() _: UploadFileInput,

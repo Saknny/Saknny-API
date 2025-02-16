@@ -1,8 +1,8 @@
 import { Expose, Transform } from 'class-transformer';
 import { FCMTokenStatusEnum } from '../../../fcm-token/enums/fcm-token.enum';
 import { UserRoleEnum } from '../../enums/user.enum';
-import { StudentResponse } from '@src/modules/individual/dtos/responses/student.response';
-import { ProviderResponse } from '@src/modules/organization/dtos/responses/provider.response';
+import { StudentResponse } from '@src/modules/student/dtos/responses/student.response';
+import { ProviderResponse } from '@src/modules/provider/dtos/responses/provider.response';
 
 export class UserResponse {
   @Expose()

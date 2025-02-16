@@ -1,6 +1,6 @@
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
-import { Module, ValidationPipe } from '@nestjs/common';
-import { StudentModule } from './modules/individual/student.module';
+import { MiddlewareConsumer, Module, ValidationPipe } from '@nestjs/common';
+import { StudentModule } from './modules/student/student.module';
 import { SessionModule } from './modules/session/session.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { SecurityGroupModule } from './modules/security-group/security-group.module';
@@ -15,7 +15,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ResponseInterceptor } from './libs/interceptors/response.interceptor';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { ProviderModule } from './modules/organization/provider.module';
+import { ProviderModule } from './modules/provider/provider.module';
 import { UserModule } from './modules/user/user.module';
 import { OtpModule } from './modules/otp/otp.module';
 import { PubSubModule } from './libs/redis-pubsub/pubsub.module';
@@ -23,6 +23,12 @@ import { ChatModule } from './modules/chat/chat.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { UploaderModule } from './libs/application/uploader/uploader.module';
 import { ProfileModule } from './modules/profile/profile.module';
+import { ContextAuthService } from './libs/application/context/context-auth.service';
+import { AdminModule } from './modules/admin/admin.module';
+import { AuthMiddleware } from './libs/middlewares/auth.middleware';
+import { BedModule } from './modules/bed/bed.module';
+import { RoomModule } from './modules/room/room.module';
+import { ApartmentModule } from './modules/apartment/apartment.module';
 
 @Module({
   imports: [
@@ -38,6 +44,7 @@ import { ProfileModule } from './modules/profile/profile.module';
     AuthModule,
     ProviderModule,
     LoggerModule,
+    AdminModule,
     StudentModule,
     SessionModule,
     SecurityGroupModule,
@@ -49,15 +56,21 @@ import { ProfileModule } from './modules/profile/profile.module';
     ChatModule,
     PaymentModule,
     UploaderModule,
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'public'),
-      serveStaticOptions: {
-        setHeaders: (res) => {
-          res.set('Cross-Origin-Resource-Policy', 'cross-origin');
-        },
-      },
-    }),
+    RoomModule,
+    BedModule,
+    ApartmentModule,
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(process.cwd(), 'public'),
+    //   serveStaticOptions: {
+    //     setHeaders: (res) => {
+    //       res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    //     },
+    //   },
+    // }),
     ProfileModule,
+    BedModule,
+    RoomModule,
+    ApartmentModule,
   ],
   controllers: [],
   providers: [
@@ -72,4 +85,8 @@ import { ProfileModule } from './modules/profile/profile.module';
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
   ],
 })
-export class AppModule { }
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes('*'); // Apply to all routes
+  }
+}

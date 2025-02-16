@@ -6,7 +6,7 @@ import { FCMTokenModule } from '../fcm-token/fcm-token.module';
 import { Notification } from './entities/notification.entity';
 import { NotificationStatus } from './entities/notificationStatus.entity';
 import { BullModule } from '@nestjs/bull';
-import { Student } from '../individual/entities/student.entity';
+import { Student } from '../student/entities/student.entity';
 
 @Module({
   imports: [
@@ -19,4 +19,4 @@ import { Student } from '../individual/entities/student.entity';
   controllers: [NotificationController],
   providers: [NotificationService],
 })
-export class NotificationModule {}
+export class NotificationModule { }

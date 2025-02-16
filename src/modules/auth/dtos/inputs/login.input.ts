@@ -19,6 +19,6 @@ export class LoginInput {
   @IsNotEmpty()
   password: string;
 
-  @IsEnum(UserRoleEnum)
-  role: UserRoleEnum;
+  // @IsEnum(UserRoleEnum)
+  // role: UserRoleEnum;
 }
