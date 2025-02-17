@@ -1,4 +1,4 @@
-import { Controller, Post, Param, UploadedFiles, UseInterceptors, Patch, UploadedFile, NotFoundException, Delete, Body } from '@nestjs/common';
+import { Controller, Post, Param, UploadedFiles, UseInterceptors, Patch, UploadedFile, NotFoundException, Delete, Body, forwardRef, Inject } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -6,10 +6,19 @@ import { RoomService } from './room.service';
 import { roomImageUploadInterceptor } from './interceptors/interceptor.upload-file';
 import { CreateRoomDto } from './dto/create-room.dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto/update-room.dto';
+import { PendingRequestService } from '../request/pendingRequest.service';
+import { currentUser } from '@src/libs/decorators/currentUser.decorator';
+import { currentUserType } from '@src/libs/types/current-user.type';
+import { Type } from '../request/entities/enum/type.enum';
+import { EntityType } from '../request/entities/enum/entityType.enum';
+import { ReferenceType } from '../request/entities/enum/referenceType.enum';
 
 @Controller('room')
 export class RoomController {
-    constructor(private readonly roomService: RoomService) { }
+    constructor(private readonly roomService: RoomService,
+        @Inject(forwardRef(() => PendingRequestService))
+        private readonly pendingRequestService: PendingRequestService
+    ) { }
 
 
 
@@ -41,21 +50,23 @@ export class RoomController {
             },
         }),
     }))
-    async uploadRoomImages(@Param('id') id: string, @UploadedFiles() files: { images?: Express.Multer.File[] }) {
+    async uploadRoomImages(@Param('id') id: string, @UploadedFiles() files: { images?: Express.Multer.File[] }
+        , @currentUser() user: currentUserType) {
         const imageFilenames = files.images?.map(file => file.filename) || [];
-        return this.roomService.saveRoomImages(id, imageFilenames);
+        return this.pendingRequestService.uploadImageRequest(user.id, id, Type.UPLOAD_ROOM, ReferenceType.ROOM_IMAGE, EntityType.ROOM, imageFilenames);
     }
 
     @Patch(':id/update-image')
     @UseInterceptors(roomImageUploadInterceptor())
     async updateRoomImage(
         @Param('id') imageId: string,
-        @UploadedFile() file: Express.Multer.File
+        @UploadedFile() file: Express.Multer.File,
+        @currentUser() user: currentUserType
     ) {
         if (!file) {
             throw new NotFoundException('No file uploaded');
         }
-        return this.roomService.updateRoomImage(imageId, file.filename);
+        return this.pendingRequestService.uploadImageRequest(user.id, imageId, Type.UPDATE_ROOM, ReferenceType.ROOM_IMAGE, EntityType.ROOM, file.filename);
     }
 
 

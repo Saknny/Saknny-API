@@ -65,8 +65,11 @@ export class Apartment extends BaseModel {
   gender: string;
 
 
-  @Column({default:"UNBOOKED"})
-  status:string;
+  @Column({ default: "UNBOOKED" })
+  status: string;
 
+
+  @Column({nullable:true})
+  document: string;
 
 }

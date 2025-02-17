@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ApartmentService } from './apartment.service';
 import { ApartmentController } from './apartment.controller';
 import { DatabaseModule } from '@src/configs/database/database.module';
@@ -9,16 +9,19 @@ import { ProviderModule } from '../provider/provider.module';
 import { ApartmentImage } from './entities/apartmentImage.entity';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { PendingRequestModule } from '../request/pendingRequest.module';
+import { Provider } from '../provider/entities/provider.entity';
 
 @Module({
-  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, ApartmentImage
+  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, ApartmentImage , Provider
   ])
-    , ProviderModule
+   
     , ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // Ensure this path exists
       serveRoot: '/', // This means the files will be served at the root URL
       exclude: ['/api*'], // Exclude API routes from static serving
-    }),],
+    }),
+  forwardRef(() => PendingRequestModule)],
   providers: [ApartmentService],
   controllers: [ApartmentController],
   exports: [ApartmentService]

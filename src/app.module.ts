@@ -29,6 +29,7 @@ import { AuthMiddleware } from './libs/middlewares/auth.middleware';
 import { BedModule } from './modules/bed/bed.module';
 import { RoomModule } from './modules/room/room.module';
 import { ApartmentModule } from './modules/apartment/apartment.module';
+import { PendingRequestModule } from './modules/request/pendingRequest.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { ApartmentModule } from './modules/apartment/apartment.module';
     BedModule,
     RoomModule,
     ApartmentModule,
+    PendingRequestModule
   ],
   controllers: [],
   providers: [

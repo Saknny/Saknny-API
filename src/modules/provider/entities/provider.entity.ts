@@ -9,6 +9,7 @@ import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
 import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity';
+import { PendingRequest } from '@src/modules/request/entities/pendingRequest.entity';
 
 @Entity()
 export class Provider extends BaseModel {
@@ -61,4 +62,8 @@ export class Provider extends BaseModel {
 
   @OneToMany(() => Apartment, (apartment) => apartment.provider, { cascade: true })
   apartments: Apartment[];
+
+  @OneToMany(() => PendingRequest, (pendingRequests) => pendingRequests.provider, { cascade: true })
+  pendingRequests: PendingRequest[];
+
 }

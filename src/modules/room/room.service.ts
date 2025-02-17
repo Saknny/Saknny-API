@@ -88,8 +88,9 @@ export class RoomService {
     }
 
     async updateRoomImage(id: string, newFilename: string): Promise<RoomImage> {
+        
         const image = await this.imageRepo.findOne({ id }, ['room']);
-
+       
         if (!image) {
             throw new NotFoundException('Image not found');
         }
