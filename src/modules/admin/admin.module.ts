@@ -8,13 +8,15 @@ import { ProviderModule } from "../provider/provider.module";
 import { StudentModule } from "../student/student.module";
 import { Student } from "../student/entities/student.entity";
 import { ApartmentModule } from "../apartment/apartment.module";
+import { PendingRequestModule } from "../request/pendingRequest.module";
 
 
 @Module({
   imports: [DatabaseModule.forFeature([Admin, Provider, Student]),
     ProviderModule
     , StudentModule
-    , ApartmentModule],
+    , ApartmentModule
+  , PendingRequestModule],
   controllers: [AdminController],
   providers: [AdminService],
 })

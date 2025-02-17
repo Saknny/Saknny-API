@@ -74,7 +74,7 @@ export class BedService {
 
     async saveBedImages(id: string, imageFilenames: string[]): Promise<Bed> {
         const bed = await this.bedRepository.findOne({ id }, ['room', 'room.apartment']);
-
+        console.log(bed);
         if (!bed) {
             throw new NotFoundException('Bed not found');
         }
