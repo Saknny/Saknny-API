@@ -21,18 +21,18 @@ export class StudentController {
   @UseInterceptors(fileUploadInterceptor())
   async updateStudent(
     @currentUser() { id }: currentUserType,
-    @UploadedFiles() files: { idCardImage?: Express.Multer.File[]; profilePicture?: Express.Multer.File[] },
+    @UploadedFiles() files: { idCard?: Express.Multer.File[]; image?: Express.Multer.File[] },
     @Body() body: UpdateStudentInput
   ) {
-    if (files.idCardImage && files.idCardImage.length > 0) {
-      body.idCardImage = files.idCardImage[0].buffer.toString('base64');
+    if (files.idCard && files.idCard.length > 0) {
+      body.idCard = files.idCard[0].buffer.toString('base64');
     }
-    if (files.profilePicture && files.profilePicture.length > 0) {
-      body.profilePictureUrl = `/uploads/${files.profilePicture[0].filename}`;
+    if (files.image && files.image.length > 0) {
+      body.image = `/uploads/${files.image[0].filename}`;
     }
 
 
-    return await this.studentService.updateStudent(id, body);
+    // return await this.studentService.updateStudent(id, body);
   }
 
 
@@ -43,22 +43,22 @@ export class StudentController {
     @currentUser() { id }: currentUserType,
     @UploadedFiles()
     files: {
-      idCardImage?: Express.Multer.File[];
-      profilePicture?: Express.Multer.File[];
+      idCard?: Express.Multer.File[];
+      image?: Express.Multer.File[];
     },
     @Body() completeProfileDto: CompleteProfileDto,
   ) {
 
 
-    completeProfileDto.idCardImage = files.idCardImage[0].buffer.toString('base64');
-    completeProfileDto.profilePicture = files.profilePicture ? `/uploads/${files.profilePicture[0].filename}` : undefined;
+    completeProfileDto.idCard = files.idCard[0].buffer.toString('base64');
+    completeProfileDto.image = files.image ? `/uploads/${files.image[0].filename}` : undefined;
 
-    const updatedStudent = await this.studentService.completeProfile(
-      id,
-      completeProfileDto,
-    );
+    // const updatedStudent = await this.studentService.completeProfile(
+    //   id,
+    //   completeProfileDto,
+    // );
 
-    return { message: 'Profile completed successfully!', student: updatedStudent };
+    // return { message: 'Profile completed successfully!', student: updatedStudent };
   }
 
 }

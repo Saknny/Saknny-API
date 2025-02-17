@@ -125,7 +125,17 @@ export class ApartmentService {
     }
 
 
-    // ✅ Update an existing image
+    async uploadDocuments(id: string, document: string) {
+        const apartment = await this.apartmentRepository.findOne({ id })
+        if (!apartment) {
+            throw new NotFoundException('Apartment not found');
+        }
+
+        apartment.document = document;
+        return await this.apartmentRepository.save(apartment);
+    }
+
+   
     async updateApartmentImage(id: string, newFilename: string): Promise<ApartmentImage> {
         const image = await this.imageRepo.findOne({ id }, ['apartment']);
 
@@ -141,12 +151,12 @@ export class ApartmentService {
             console.warn('Old image file not found or already deleted:', oldImagePath);
         }
 
-        // 🔹 Update image URL in the database
+   
         image.imageUrl = newFilename;
         return await this.imageRepo.save(image);
     }
 
-    // ✅ Delete an image
+ 
     async deleteApartmentImage(id: string): Promise<{ message: string }> {
         const image = await this.imageRepo.findOne({ id }, ['apartment']);
 
@@ -154,7 +164,7 @@ export class ApartmentService {
             throw new NotFoundException('Image not found');
         }
 
-        // 🔹 Remove image file from storage
+     
         const imagePath = join(__dirname, '../../uploads/apartments', image.imageUrl);
         try {
             await unlink(imagePath);
@@ -162,7 +172,7 @@ export class ApartmentService {
             console.warn('Image file not found or already deleted:', imagePath);
         }
 
-        // 🔹 Delete the image from the database
+    
         await this.imageRepo.delete(id);
 
         return { message: 'Image deleted successfully' };
@@ -203,7 +213,7 @@ export class ApartmentService {
         });
     }
 
-    // Get recently viewed apartments (sorted by lastViewedAt)
+
     async getRecentlyViewed(): Promise<Apartment[]> {
         return this.apartmentRepository.find({
             where: { lastViewedAt: Not(IsNull()) },
@@ -212,7 +222,7 @@ export class ApartmentService {
         });
     }
 
-    // Update lastViewedAt when an apartment is viewed
+
     async updateLastViewed(id: string): Promise<Apartment> {
         const apartment = await this.apartmentRepository.findOne({ id });
 

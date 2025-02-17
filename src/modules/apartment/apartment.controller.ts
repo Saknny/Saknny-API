@@ -13,6 +13,7 @@ import { PendingRequestService } from '../request/pendingRequest.service';
 import { EntityType } from '../request/entities/enum/entityType.enum';
 import { ReferenceType } from '../request/entities/enum/referenceType.enum';
 import { Type } from '../request/entities/enum/type.enum';
+import { fileUploadInterceptor } from './interceptors/document.interceptor';
 
 @Controller('apartment')
 export class ApartmentController {
@@ -26,6 +27,19 @@ export class ApartmentController {
     @Body() createApartmentDto: CreateApartmentDto) {
     console.log(createApartmentDto);
     return this.apartmentService.createApartment(id, createApartmentDto);
+  }
+
+  @Post(':id/Apartment-document')
+  @UseInterceptors(fileUploadInterceptor())
+  async apartmentDocument(
+    @Param('id') id: string,
+    @UploadedFiles()
+    files: {
+      document?: Express.Multer.File[]
+    }
+  ) {
+    const document = files.document[0].buffer.toString('base64');
+    return this.apartmentService.uploadDocuments(id, document)
   }
 
   @Patch(":id/update")

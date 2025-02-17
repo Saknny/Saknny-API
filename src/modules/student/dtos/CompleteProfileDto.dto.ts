@@ -13,10 +13,10 @@ import { Transform } from 'class-transformer';
 export class CompleteProfileDto {
 
 
-  idCardImage?: any;
+  idCard?: any;
 
   @IsOptional()
-  profilePicture?: any;
+  image?: any;
 
   @IsOptional()
   @IsString()

@@ -32,12 +32,12 @@ export class StudentService {
       throw new Error('Student not found');
     }
 
-    if (completeProfileDto.idCardImage) {
-      student.idCardImage = completeProfileDto.idCardImage;
+    if (completeProfileDto.idCard) {
+      student.idCard = completeProfileDto.idCard;
     }
 
-    if (completeProfileDto.profilePicture) {
-      student.profilePictureUrl = completeProfileDto.profilePicture;
+    if (completeProfileDto.image) {
+      student.image = completeProfileDto.image;
     }
 
     student.major = completeProfileDto.major;
@@ -75,13 +75,13 @@ export class StudentService {
     if (attrs.linkedin) {
       student.linkedin = attrs.linkedin;
     }
-    if (attrs.idCardImage) {
-      student.idCardImage = attrs.idCardImage;
+    if (attrs.idCard) {
+      student.idCard = attrs.idCard;
       student.isReviewed = false;
       student.isTrusted = false;
     }
-    if (attrs.profilePictureUrl) {
-      student.profilePictureUrl = attrs.profilePictureUrl;
+    if (attrs.image) {
+      student.image = attrs.image;
     }
     if (attrs.gender) {
       student.gender = attrs.gender;

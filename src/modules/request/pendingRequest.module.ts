@@ -9,6 +9,8 @@ import { ImageApproval } from "./entities/imageApproval.entity";
 import { ApartmentModule } from '@src/modules/apartment/apartment.module';
 import { BedModule } from "../bed/bed.module";
 import { RoomModule } from "../room/room.module";
+import { ProviderModule } from "../provider/provider.module";
+import { PendingProfile } from "./entities/PendingProfile.Entity";
 
 console.log("PendingRequestModule Imports:", [
     ApartmentModule,
@@ -17,10 +19,11 @@ console.log("PendingRequestModule Imports:", [
 ]);
 
 @Module({
-    imports: [DatabaseModule.forFeature([PendingRequest, Provider, ImageApproval,])
+    imports: [DatabaseModule.forFeature([PendingRequest, Provider, ImageApproval, PendingProfile])
         , forwardRef(() => ApartmentModule),
     forwardRef(() => RoomModule),
-    forwardRef(() => BedModule)],
+    forwardRef(() => BedModule),
+    forwardRef(() => ProviderModule)],
 
     providers: [PendingRequestService],
     controllers: [],

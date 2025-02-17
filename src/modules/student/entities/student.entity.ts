@@ -44,10 +44,10 @@ export class Student extends BaseModel {
   isReviewed: boolean;
 
   @Column({ type: 'varchar', nullable: true })  // Store idCard as binary
-  idCardImage: string;
+  idCard: string;
 
   @Column({ nullable: true })
-  profilePictureUrl: string;
+  image: string;
 
   @Column({ nullable: true })
   major: string;

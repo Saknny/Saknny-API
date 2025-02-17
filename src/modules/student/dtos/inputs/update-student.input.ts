@@ -31,11 +31,11 @@ export class UpdateStudentInput {
 
   @IsOptional()
   @IsString()
-  idCardImage?: any;
+  idCard?: any;
 
   @IsOptional()
   @IsString()
-  profilePictureUrl?: string;
+  image?: string;
 
   @IsOptional()
   @IsString()

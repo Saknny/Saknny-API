@@ -13,12 +13,15 @@ import { ReferenceType } from "./entities/enum/referenceType.enum";
 import { ApartmentService } from "../apartment/apartment.service";
 import { RoomService } from "../room/room.service";
 import { BedService } from "../bed/bed.service";
+import { PendingProfile } from "./entities/PendingProfile.Entity";
 
 @Injectable()
 export class PendingRequestService {
     constructor(
         @InjectRepository(PendingRequest)
         private readonly pendingRequestRepo: BaseRepository<PendingRequest>,
+        @InjectRepository(PendingProfile)
+        private readonly pendingProfileRepo: BaseRepository<PendingProfile>,
         @InjectRepository(ImageApproval)
         private readonly imageApprovalRepo: BaseRepository<ImageApproval>,
         @InjectRepository(Provider)
@@ -175,8 +178,46 @@ export class PendingRequestService {
         return await this.pendingRequestRepo.find({ where: { status: Status.PENDING } });// relation
     }
 
+
+    async submitProfileUpdate(userId: string, entityType: EntityType, profileData: any) {
+
+        const formattedData = {
+            gender: profileData.gender || null,
+            phone: profileData.phone || null,
+            instagram: profileData.instagram || null,
+            facebook: profileData.facebook || null,
+            linkedin: profileData.linkedin || null,
+            image: profileData.image || null, 
+            idCard: profileData.idCard || null,  
+        };
+        console.log(formattedData);
+
+
+        let request = await this.pendingRequestRepo
+            .createQueryBuilder("pendingRequest") // ✅ Define alias correctly
+            .leftJoinAndSelect("pendingRequest.pendingProfile", "pendingProfile") // ✅ Correct alias for the relation
+            .where("pendingRequest.providerId = :userId", { userId }) // ✅ Ensure you use the correct user column
+            .andWhere("pendingRequest.type = :type", { type: Type.PROFILE_COMPLETE })
+            .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
+            .getOne();
+
+
+
+        console.log(request);
+        if (request) {
+            await this.pendingProfileRepo.update({ pendingRequest: request }, { data: formattedData });
+        } else {
+
+            request = this.pendingRequestRepo.create({ type: Type.PROFILE_UPDATE });
+            await this.pendingRequestRepo.save(request);
+
+            const pendingProfile = this.pendingProfileRepo.create({ pendingRequest: request, data: formattedData });
+            await this.pendingProfileRepo.save(pendingProfile);
+        }
+
+        return { message: "Profile update submitted for approval" };
+    }
+
+
 }
 
-// upload
-// get all images that is approved
-// entity type

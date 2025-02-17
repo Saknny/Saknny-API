@@ -10,11 +10,12 @@ import { ApartmentImage } from './entities/apartmentImage.entity';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { PendingRequestModule } from '../request/pendingRequest.module';
+import { Provider } from '../provider/entities/provider.entity';
 
 @Module({
-  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, ApartmentImage
+  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, ApartmentImage , Provider
   ])
-    , ProviderModule
+   
     , ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // Ensure this path exists
       serveRoot: '/', // This means the files will be served at the root URL

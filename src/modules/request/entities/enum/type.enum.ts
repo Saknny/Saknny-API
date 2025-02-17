@@ -11,4 +11,7 @@ export enum Type {
     DELETE_ROOM = "delete room",
     DELETE_BED = "delete bed",
 
+    PROFILE_COMPLETE = "PROFILE COMPLETE",
+    PROFILE_UPDATE = "PROFILE UPDATE",
+
 }

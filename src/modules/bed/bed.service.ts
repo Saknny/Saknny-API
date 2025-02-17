@@ -130,4 +130,5 @@ export class BedService {
 
         return { message: 'Image deleted successfully' };
     }
+    
 }

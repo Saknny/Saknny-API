@@ -12,51 +12,47 @@ export class ImageApproval extends BaseModel {
         super(input);
     }
 
-
     @Column({
         type: "enum",
-        enum: Status, default: Status.PENDING,
+        enum: Status,
+        default: Status.PENDING,
+        nullable: true, // ✅ Allows NULL values
     })
-    status: Status;
+    status?: Status;
 
+    @Column({ nullable: true }) // ✅ Allows NULL values
+    referenceId?: string;
 
-    @Column()
-    referenceId: string;
-
-    // roomImage  , ...
-    @Column()
-    referenceType: string;
-
+    @Column({ nullable: true }) // ✅ Allows NULL values
+    referenceType?: string;
 
     @Column({
         type: "enum",
         enum: Type,
+        nullable: true, // ✅ Allows NULL values
     })
-    type: Type;
-
+    type?: Type;
 
     @Column({
         type: "enum",
         enum: EntityType,
+        nullable: true, // ✅ Allows NULL values
     })
-    entityType: EntityType;
+    entityType?: EntityType;
 
+    @Column({ nullable: true }) // ✅ Allows NULL values
+    url?: string;
 
-    @Column()
-    url: string;
+    @Column({ nullable: true }) // ✅ Allows NULL values
+    reason?: string;
 
-    @Column({ nullable: true })
-    reason: string;
-
-
-    @Column({ nullable: true })
-    description: string;
-
+    @Column({ nullable: true }) // ✅ Allows NULL values
+    description?: string;
 
     @ManyToOne(() => PendingRequest, (pendingRequest) => pendingRequest.imageApprovals, {
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE'
+        onDelete: "SET NULL", // ✅ Allows ImageApproval to exist if PendingRequest is deleted
+        onUpdate: "CASCADE",
+        nullable: true,
     })
-    pendingRequest: PendingRequest;
-
+    pendingRequest?: PendingRequest; // ✅ Made optional
 }
