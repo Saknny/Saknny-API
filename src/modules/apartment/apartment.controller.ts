@@ -39,7 +39,8 @@ export class ApartmentController {
     }
   ) {
     const document = files.document[0].buffer.toString('base64');
-    return this.apartmentService.uploadDocuments(id, document)
+    return await this.pendingRequestService.uploadDocumentRequest(id, document)
+    // return this.apartmentService.uploadDocuments(id, document)
   }
 
   @Patch(":id/update")

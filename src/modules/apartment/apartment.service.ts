@@ -12,6 +12,7 @@ import { ApartmentImage } from './entities/apartmentImage.entity';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.dto';
+import { ApartmentDocument } from './entities/document.entity';
 
 @Injectable()
 export class ApartmentService {
@@ -29,6 +30,9 @@ export class ApartmentService {
         private readonly bedRepository: BaseRepository<Bed>,
         @InjectRepository(ApartmentImage)
         private readonly imageRepo: BaseRepository<ApartmentImage>,
+
+        @InjectRepository(ApartmentDocument)
+        private readonly apartmentDocumentRepo: BaseRepository<ApartmentDocument>,
     ) { }
 
     async createApartment(providerId: string
@@ -131,11 +135,14 @@ export class ApartmentService {
             throw new NotFoundException('Apartment not found');
         }
 
-        apartment.document = document;
+
+        const apartmentDocument = await this.apartmentDocumentRepo.create({ document, apartment })
+        await this.apartmentDocumentRepo.save(apartmentDocument);
+        apartment.document = apartmentDocument;
         return await this.apartmentRepository.save(apartment);
     }
 
-   
+
     async updateApartmentImage(id: string, newFilename: string): Promise<ApartmentImage> {
         const image = await this.imageRepo.findOne({ id }, ['apartment']);
 
@@ -151,12 +158,12 @@ export class ApartmentService {
             console.warn('Old image file not found or already deleted:', oldImagePath);
         }
 
-   
+
         image.imageUrl = newFilename;
         return await this.imageRepo.save(image);
     }
 
- 
+
     async deleteApartmentImage(id: string): Promise<{ message: string }> {
         const image = await this.imageRepo.findOne({ id }, ['apartment']);
 
@@ -164,7 +171,7 @@ export class ApartmentService {
             throw new NotFoundException('Image not found');
         }
 
-     
+
         const imagePath = join(__dirname, '../../uploads/apartments', image.imageUrl);
         try {
             await unlink(imagePath);
@@ -172,7 +179,7 @@ export class ApartmentService {
             console.warn('Image file not found or already deleted:', imagePath);
         }
 
-    
+
         await this.imageRepo.delete(id);
 
         return { message: 'Image deleted successfully' };

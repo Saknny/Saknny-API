@@ -16,6 +16,8 @@ import { BedService } from "../bed/bed.service";
 import { PendingProfile } from "./entities/PendingProfile.Entity";
 import { StudentService } from "../student/student.service";
 import { ProviderService } from "../provider/provider.service";
+import { ApartmentDocument } from "../apartment/entities/document.entity";
+import { PendingDocument } from "./entities/pendingDocument.entity";
 
 @Injectable()
 export class PendingRequestService {
@@ -28,6 +30,10 @@ export class PendingRequestService {
         private readonly imageApprovalRepo: BaseRepository<ImageApproval>,
         @InjectRepository(Provider)
         private readonly providerRepo: BaseRepository<Provider>,
+
+        @InjectRepository(PendingDocument)
+        private readonly pendingDocumentRepo: BaseRepository<PendingDocument>,
+
         @Inject(forwardRef(() => ApartmentService))
         private readonly apartmentService: ApartmentService,
 
@@ -106,6 +112,7 @@ export class PendingRequestService {
         const request = await this.pendingRequestRepo
             .createQueryBuilder('request')
             .leftJoinAndSelect('request.pendingProfile', 'pendingProfile')
+            .leftJoinAndSelect('request.pendingDocument', 'pendingDocument')
             .where('request.id = :id', { id })
             .getOne();
 
@@ -167,6 +174,10 @@ export class PendingRequestService {
             } else {
                 this.studentService.updateStudent(pendingProfile.userId, pendingProfile.data);
             }
+        } else if (request.type == Type.DOCUMENT_UPLOAD) {
+            const apartmentDocument = await this.pendingDocumentRepo.findOne({ id: request.pendingDocument.id });
+            this.apartmentService.uploadDocuments(apartmentDocument.entityId, apartmentDocument.document);
+
         }
 
 
@@ -209,7 +220,7 @@ export class PendingRequestService {
 
     async submitProfileUpdate(userId: string, entityType: EntityType, profileData: any, requestType: Type) {
 
-        console.log(profileData)
+        // console.log(profileData)
         const formattedData = {
             gender: profileData?.gender ?? null,
             phone: profileData?.phone ?? null,
@@ -228,10 +239,10 @@ export class PendingRequestService {
             firstName: profileData?.firstName ?? null,
         };
 
-        console.log('After');
-        console.log(formattedData);
+        // console.log('After');
+        // console.log(formattedData);
 
-        console.log(userId)
+        // console.log(userId)
         let request = await this.pendingRequestRepo
             .createQueryBuilder("pendingRequest")
             .leftJoinAndSelect("pendingRequest.pendingProfile", "pendingProfile")
@@ -259,6 +270,33 @@ export class PendingRequestService {
         }
 
         return { message: "Profile update submitted for approval" };
+    }
+
+
+
+    async uploadDocumentRequest(apartmentId: string, document: string) {
+        let request = await this.pendingRequestRepo
+            .createQueryBuilder("pendingRequest")
+            .leftJoinAndSelect("pendingRequest.pendingDocument", "pendingDocument")
+            .where("pendingDocument.entityId = :apartmentId", { apartmentId })
+            .andWhere("pendingRequest.type = :type", { type: Type.UPLOAD_APARTMENT })
+            .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
+            .getOne();
+
+
+        if (request) {
+            const apartmentDocument = await this.pendingDocumentRepo.findOne({ id: request.pendingDocument.id })
+            apartmentDocument.document = document;
+            await this.pendingDocumentRepo.save(apartmentDocument);
+        } else {
+
+            const apartmentDocument = this.pendingDocumentRepo.create({ document, entityId: apartmentId });
+            await this.pendingDocumentRepo.save(apartmentDocument);
+
+            request = this.pendingRequestRepo.create({ type: Type.DOCUMENT_UPLOAD, pendingDocument: apartmentDocument });
+            await this.pendingRequestRepo.save(request);
+
+        }
     }
 
 

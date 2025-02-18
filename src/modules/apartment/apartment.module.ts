@@ -11,9 +11,10 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { PendingRequestModule } from '../request/pendingRequest.module';
 import { Provider } from '../provider/entities/provider.entity';
+import { ApartmentDocument } from './entities/document.entity';
 
 @Module({
-  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, ApartmentImage , Provider
+  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, ApartmentImage , Provider , ApartmentDocument
   ])
    
     , ServeStaticModule.forRoot({
