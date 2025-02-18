@@ -4,6 +4,8 @@ import {
   Patch,
   UseInterceptors,
   UploadedFiles,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
@@ -11,11 +13,17 @@ import { UpdateStudentInput } from './dtos/inputs/update-student.input';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 import { currentUserType } from '@src/libs/types/current-user.type';
 import { fileUploadInterceptor } from './interceptors/file-upload.interceptor';
+import { PendingRequestService } from '../request/pendingRequest.service';
+import { EntityType } from '../request/entities/enum/entityType.enum';
+import { Type } from '../request/entities/enum/type.enum';
 
 
 @Controller('students')
 export class StudentController {
-  constructor(private readonly studentService: StudentService) { }
+  constructor(private readonly studentService: StudentService,
+    @Inject(forwardRef(() => PendingRequestService))
+    private readonly pendingRequestService: PendingRequestService
+  ) { }
 
   @Patch('me')
   @UseInterceptors(fileUploadInterceptor())
@@ -31,7 +39,7 @@ export class StudentController {
       body.image = `/uploads/${files.image[0].filename}`;
     }
 
-
+    return await this.pendingRequestService.submitProfileUpdate(id, EntityType.STUDENT, body, Type.PROFILE_UPDATE)
     // return await this.studentService.updateStudent(id, body);
   }
 
@@ -53,12 +61,8 @@ export class StudentController {
     completeProfileDto.idCard = files.idCard[0].buffer.toString('base64');
     completeProfileDto.image = files.image ? `/uploads/${files.image[0].filename}` : undefined;
 
-    // const updatedStudent = await this.studentService.completeProfile(
-    //   id,
-    //   completeProfileDto,
-    // );
+    return await this.pendingRequestService.submitProfileUpdate(id, EntityType.STUDENT, completeProfileDto, Type.PROFILE_COMPLETE)
 
-    // return { message: 'Profile completed successfully!', student: updatedStudent };
   }
 
 }

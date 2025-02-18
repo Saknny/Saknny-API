@@ -26,6 +26,10 @@ export class StudentService {
     userId: string,
     completeProfileDto: CompleteProfileDto,
   ): Promise<Student> {
+    console.log('.......................')
+    console.log(userId);
+    console.log(completeProfileDto);
+
     const student = await this.studentRepo.findOne({ userId });
 
     if (!student) {
@@ -50,8 +54,7 @@ export class StudentService {
     student.linkedin = completeProfileDto.linkedin;
     student.phone = completeProfileDto.phone;
     student.university = completeProfileDto.university;
-    student.isReviewed = false;
-    student.isTrusted = false;
+
     return this.studentRepo.save(student);
   }
 
@@ -77,8 +80,6 @@ export class StudentService {
     }
     if (attrs.idCard) {
       student.idCard = attrs.idCard;
-      student.isReviewed = false;
-      student.isTrusted = false;
     }
     if (attrs.image) {
       student.image = attrs.image;

@@ -1,6 +1,7 @@
 import { PendingRequest } from "./pendingRequest.entity";
 import { BaseModel } from "@src/libs/database/base.model";
 import { Column, DeepPartial, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from "typeorm";
+import { EntityType } from "./enum/entityType.enum";
 
 @Entity()
 export class PendingProfile extends BaseModel {
@@ -13,18 +14,22 @@ export class PendingProfile extends BaseModel {
         onUpdate: 'CASCADE',
         nullable: true
     })
-    @JoinColumn({ name: "pendingRequestId" }) 
-    pendingRequest?: PendingRequest; // ✅ Made optional
+    @JoinColumn({ name: "pendingRequestId" })
+    pendingRequest?: PendingRequest;
 
-    @Column({ nullable: true }) // ✅ Allows NULL values
+    @Column({ nullable: true })
     userId?: string;
 
-    @Column({ type: "jsonb", nullable: true }) // ✅ Allows NULL values
+    @Column({ type: "jsonb", nullable: true })
     data?: any; // Can be null if no data is provided
 
-    @Column({ nullable: true }) // ✅ Allows NULL values
+    @Column({ nullable: true })
     reason?: string;
 
-    @Column({ nullable: true }) // ✅ Allows NULL values
+    @Column({ nullable: true })
     description?: string;
+
+
+    @Column({ nullable: true  , type: "enum",  enum: EntityType})
+    entityType?: EntityType;
 }

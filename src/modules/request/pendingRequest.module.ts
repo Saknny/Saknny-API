@@ -11,6 +11,7 @@ import { BedModule } from "../bed/bed.module";
 import { RoomModule } from "../room/room.module";
 import { ProviderModule } from "../provider/provider.module";
 import { PendingProfile } from "./entities/PendingProfile.Entity";
+import { StudentModule } from "../student/student.module";
 
 console.log("PendingRequestModule Imports:", [
     ApartmentModule,
@@ -23,7 +24,8 @@ console.log("PendingRequestModule Imports:", [
         , forwardRef(() => ApartmentModule),
     forwardRef(() => RoomModule),
     forwardRef(() => BedModule),
-    forwardRef(() => ProviderModule)],
+    forwardRef(() => ProviderModule),
+    forwardRef(() => StudentModule),],
 
     providers: [PendingRequestService],
     controllers: [],
