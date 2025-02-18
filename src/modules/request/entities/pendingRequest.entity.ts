@@ -5,6 +5,7 @@ import { Provider } from "@src/modules/provider/entities/provider.entity";
 import { Status } from "./enum/status.enum";
 import { Type } from "./enum/type.enum";
 import { PendingProfile } from "./PendingProfile.Entity";
+import { PendingDocument } from "./pendingDocument.entity";
 
 @Entity()
 export class PendingRequest extends BaseModel {
@@ -54,4 +55,13 @@ export class PendingRequest extends BaseModel {
     })
     @JoinColumn({ name: "pendingProfileId" }) // ✅ Ensure foreign key is managed correctly
     pendingProfile?: PendingProfile;
+
+
+    @OneToOne(() => PendingDocument, (pendingDocument) => pendingDocument, {
+        onDelete: "SET NULL", // ✅ Set NULL instead of CASCADE
+        onUpdate: "CASCADE",
+        nullable: true,
+    })
+    @JoinColumn({ name: "pendingDocumentId" }) // ✅ Ensure foreign key is managed correctly
+    pendingDocument?: PendingDocument;
 }

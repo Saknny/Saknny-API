@@ -7,13 +7,13 @@ import * as fs from 'fs';
 export const fileUploadInterceptor = () =>
     FileFieldsInterceptor(
         [
-            { name: 'idCardImage', maxCount: 1 }, // Store in memory as binary
-            { name: 'profilePicture', maxCount: 1 },  // Store in filesystem
+            { name: 'idCard', maxCount: 1 }, // Store in memory as binary
+            { name: 'image', maxCount: 1 },  // Store in filesystem
         ],
         {
             storage: multer.memoryStorage(), // Default: Store all files in memory
             fileFilter: (req, file, callback) => {
-                if (file.fieldname === 'profilePicture') {
+                if (file.fieldname === 'image') {
 
                     const uploadPath = './uploads';
                     if (!fs.existsSync(uploadPath)) {
@@ -26,7 +26,7 @@ export const fileUploadInterceptor = () =>
                         Math.random() * 1e9
                     )}${extname(file.originalname)}`;
                     file.path = `${uploadPath}/${file.filename}`;
-                } else if (file.fieldname === 'idCardImages') {
+                } else if (file.fieldname === 'idCard') {
                     // Store idCard in memory
                     console.log(`📥 Storing idCard in memory: ${file.originalname}`);
                 }

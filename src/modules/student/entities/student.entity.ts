@@ -40,7 +40,7 @@ export class Student extends BaseModel {
   isTrusted: boolean;
 
 
-  @Column({ type: Boolean, default: false })
+  @Column({ type: Boolean, default: false  })
   isReviewed: boolean;
 
   @Column({ type: 'varchar', nullable: true })  // Store idCard as binary
@@ -52,13 +52,13 @@ export class Student extends BaseModel {
   @Column({ nullable: true })
   major: string;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false , nullable: true  })
   smoking: boolean;
 
   @Column({ nullable: true })
   level: string;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false  , nullable: true })
   socialPerson: boolean;
 
   @Column('simple-array', { nullable: true })

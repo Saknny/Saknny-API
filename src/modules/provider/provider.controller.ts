@@ -11,6 +11,7 @@ import { Auth } from '@src/libs/decorators/auth.decorator';
 import { Apartment } from '../apartment/entities/apartment.entity/apartment.entity';
 import { PendingRequestService } from '../request/pendingRequest.service';
 import { EntityType } from '../request/entities/enum/entityType.enum';
+import { Type } from '../request/entities/enum/type.enum';
 
 
 
@@ -39,7 +40,8 @@ export class ProviderController {
 
     completeProfileDto.idCard = files.idCard[0].buffer.toString('base64'); // Store as binary
     completeProfileDto.image = `/uploads/${files.image[0].filename}`;
-    return await this.pendingRequestService.submitProfileUpdate(id , EntityType.PROVIDER , completeProfileDto)
+    console.log('my id ' , id);
+    return await this.pendingRequestService.submitProfileUpdate(id , EntityType.PROVIDER , completeProfileDto  ,Type.PROFILE_COMPLETE)
     // return { message: 'Profile completed successfully!', provider: updatedProvider };
   }
 
@@ -66,10 +68,9 @@ export class ProviderController {
     if (files.image && files.image.length > 0) {
       updateProfileDto.image = `/uploads/${files.image[0].filename}`;
     }
-    // const updatedProvider = await this.providerService.updateProfile(id, updateProfileDto);
-    // return { message: 'Profile updated successfully!', provider: updatedProvider };
+
     console.log('controller');
-    // return await this.pendingRequestService.submitProfileUpdate(id , EntityType.PROVIDER , updateProfileDto) 
+    return await this.pendingRequestService.submitProfileUpdate(id , EntityType.PROVIDER , updateProfileDto , Type.PROFILE_UPDATE) 
   }
 
 

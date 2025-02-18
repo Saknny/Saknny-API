@@ -5,6 +5,13 @@ import 'reflect-metadata';
 
 export class UpdateProviderProfileInput {
 
+
+    @IsOptional()
+    firstName: string;
+
+    @IsOptional()
+    lastName: string;
+
     @IsOptional()
     idCard: any;
 

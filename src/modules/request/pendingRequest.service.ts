@@ -14,6 +14,10 @@ import { ApartmentService } from "../apartment/apartment.service";
 import { RoomService } from "../room/room.service";
 import { BedService } from "../bed/bed.service";
 import { PendingProfile } from "./entities/PendingProfile.Entity";
+import { StudentService } from "../student/student.service";
+import { ProviderService } from "../provider/provider.service";
+import { ApartmentDocument } from "../apartment/entities/document.entity";
+import { PendingDocument } from "./entities/pendingDocument.entity";
 
 @Injectable()
 export class PendingRequestService {
@@ -26,6 +30,10 @@ export class PendingRequestService {
         private readonly imageApprovalRepo: BaseRepository<ImageApproval>,
         @InjectRepository(Provider)
         private readonly providerRepo: BaseRepository<Provider>,
+
+        @InjectRepository(PendingDocument)
+        private readonly pendingDocumentRepo: BaseRepository<PendingDocument>,
+
         @Inject(forwardRef(() => ApartmentService))
         private readonly apartmentService: ApartmentService,
 
@@ -34,6 +42,10 @@ export class PendingRequestService {
 
         @Inject(forwardRef(() => BedService))
         private readonly bedService: BedService,
+        @Inject(forwardRef(() => ProviderService))
+        private readonly providerService: ProviderService,
+        @Inject(forwardRef(() => StudentService))
+        private readonly studentService: StudentService,
     ) { }
 
     async uploadImageRequest(userId: string, id: string, requestType: Type,
@@ -56,7 +68,7 @@ export class PendingRequestService {
             .andWhere("pendingRequest.status = :status", { status: Status.PENDING }) // Filter by status
             .getOne(); // Get the first matching record
 
-        console.log(request);
+        // console.log(request);
 
         if (request) {
 
@@ -97,7 +109,13 @@ export class PendingRequestService {
     }
 
     async updateRequestApproval(id: string, body: RequestApprovalDto) {
-        const request = await this.pendingRequestRepo.findOne({ id });
+        const request = await this.pendingRequestRepo
+            .createQueryBuilder('request')
+            .leftJoinAndSelect('request.pendingProfile', 'pendingProfile')
+            .leftJoinAndSelect('request.pendingDocument', 'pendingDocument')
+            .where('request.id = :id', { id })
+            .getOne();
+
         if (!request) {
             throw new NotFoundException('record not found');
         }
@@ -139,6 +157,27 @@ export class PendingRequestService {
                     await this.bedService.updateBedImage(images[0].referenceId, images[0].url)
                 }
             }
+        } else if (request.type == Type.PROFILE_COMPLETE) {
+            const pendingProfile = await this.pendingProfileRepo.findOne({ id: request.pendingProfile.id });
+
+            if (pendingProfile.entityType == EntityType.PROVIDER) {
+                this.providerService.updateProfile(pendingProfile.userId, pendingProfile.data);
+            } else {
+                console.log("here")
+                console.log(pendingProfile.data);
+                this.studentService.completeProfile(pendingProfile.userId, pendingProfile.data);
+            }
+        } else if (request.type == Type.PROFILE_UPDATE) {
+            const pendingProfile = await this.pendingProfileRepo.findOne({ id: request.pendingProfile.id });
+            if (pendingProfile.entityType == EntityType.PROVIDER) {
+                this.providerService.updateProfile(pendingProfile.userId, pendingProfile.data);
+            } else {
+                this.studentService.updateStudent(pendingProfile.userId, pendingProfile.data);
+            }
+        } else if (request.type == Type.DOCUMENT_UPLOAD) {
+            const apartmentDocument = await this.pendingDocumentRepo.findOne({ id: request.pendingDocument.id });
+            this.apartmentService.uploadDocuments(apartmentDocument.entityId, apartmentDocument.document);
+
         }
 
 
@@ -179,43 +218,85 @@ export class PendingRequestService {
     }
 
 
-    async submitProfileUpdate(userId: string, entityType: EntityType, profileData: any) {
+    async submitProfileUpdate(userId: string, entityType: EntityType, profileData: any, requestType: Type) {
 
+        // console.log(profileData)
         const formattedData = {
-            gender: profileData.gender || null,
-            phone: profileData.phone || null,
-            instagram: profileData.instagram || null,
-            facebook: profileData.facebook || null,
-            linkedin: profileData.linkedin || null,
-            image: profileData.image || null, 
-            idCard: profileData.idCard || null,  
+            gender: profileData?.gender ?? null,
+            phone: profileData?.phone ?? null,
+            instagram: profileData?.instagram ?? null,
+            facebook: profileData?.facebook ?? null,
+            linkedin: profileData?.linkedin ?? null,
+            image: profileData?.image ?? null,
+            idCard: profileData?.idCard ?? null,
+            hobbies: profileData?.hobbies ?? null,
+            socialPerson: profileData?.socialPerson ?? null,
+            level: profileData?.level ?? null,
+            university: profileData?.university ?? null,
+            smoking: profileData?.smoking ?? null,
+            major: profileData?.major ?? null,
+            lastName: profileData?.lastName ?? null,
+            firstName: profileData?.firstName ?? null,
         };
-        console.log(formattedData);
 
+        // console.log('After');
+        // console.log(formattedData);
 
+        // console.log(userId)
         let request = await this.pendingRequestRepo
-            .createQueryBuilder("pendingRequest") // ✅ Define alias correctly
-            .leftJoinAndSelect("pendingRequest.pendingProfile", "pendingProfile") // ✅ Correct alias for the relation
-            .where("pendingRequest.providerId = :userId", { userId }) // ✅ Ensure you use the correct user column
-            .andWhere("pendingRequest.type = :type", { type: Type.PROFILE_COMPLETE })
+            .createQueryBuilder("pendingRequest")
+            .leftJoinAndSelect("pendingRequest.pendingProfile", "pendingProfile")
+            .where("pendingProfile.userId = :userId", { userId })
+            .andWhere("pendingRequest.type = :type", { type: requestType })
             .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
             .getOne();
 
 
-
-        console.log(request);
+        // console.log("here", request);
         if (request) {
-            await this.pendingProfileRepo.update({ pendingRequest: request }, { data: formattedData });
+            // console.log("exist!")
+            // console.log(request);
+            const pendingProfile = await this.pendingProfileRepo.findOne({ id: request.pendingProfile.id })
+            pendingProfile.data = formattedData;
+            await this.pendingProfileRepo.save(pendingProfile);
         } else {
 
-            request = this.pendingRequestRepo.create({ type: Type.PROFILE_UPDATE });
+            const pendingProfile = this.pendingProfileRepo.create({ data: formattedData, userId: userId, entityType });
+            await this.pendingProfileRepo.save(pendingProfile);
+
+            request = this.pendingRequestRepo.create({ type: requestType, pendingProfile: pendingProfile });
             await this.pendingRequestRepo.save(request);
 
-            const pendingProfile = this.pendingProfileRepo.create({ pendingRequest: request, data: formattedData });
-            await this.pendingProfileRepo.save(pendingProfile);
         }
 
         return { message: "Profile update submitted for approval" };
+    }
+
+
+
+    async uploadDocumentRequest(apartmentId: string, document: string) {
+        let request = await this.pendingRequestRepo
+            .createQueryBuilder("pendingRequest")
+            .leftJoinAndSelect("pendingRequest.pendingDocument", "pendingDocument")
+            .where("pendingDocument.entityId = :apartmentId", { apartmentId })
+            .andWhere("pendingRequest.type = :type", { type: Type.UPLOAD_APARTMENT })
+            .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
+            .getOne();
+
+
+        if (request) {
+            const apartmentDocument = await this.pendingDocumentRepo.findOne({ id: request.pendingDocument.id })
+            apartmentDocument.document = document;
+            await this.pendingDocumentRepo.save(apartmentDocument);
+        } else {
+
+            const apartmentDocument = this.pendingDocumentRepo.create({ document, entityId: apartmentId });
+            await this.pendingDocumentRepo.save(apartmentDocument);
+
+            request = this.pendingRequestRepo.create({ type: Type.DOCUMENT_UPLOAD, pendingDocument: apartmentDocument });
+            await this.pendingRequestRepo.save(request);
+
+        }
     }
 
 
