@@ -17,8 +17,6 @@ export class ImageController {
     ) {
     }
 
-
-
     @Post(':id/upload-images')
     @UseInterceptors(ImageUploadFilesInterceptor())
     async uploadImages(@Param('id') id: string

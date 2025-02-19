@@ -16,6 +16,7 @@ import { BaseModel } from '@src/libs/database/base.model';
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
 
 import { ApartmentDocument } from '../document.entity';
+import { Status } from '@src/modules/request/entities/enum/status.enum';
 @Entity()
 export class Apartment extends BaseModel {
   constructor(input?: DeepPartial<Apartment>) {
@@ -53,18 +54,15 @@ export class Apartment extends BaseModel {
   rooms: Room[];
 
 
-  @Column({ type: Boolean, default: false })
-  isReviewed: boolean;
-
-  @Column({ type: Boolean, default: false })
-  isTrusted: boolean;
+  @Column({default:"PENDING"})
+  status: string; // PENDING , APPROVED , PUBLISHED
 
   @Column({ nullable: true })
   gender: string;
 
 
   @Column({ default: "UNBOOKED" })
-  status: string;
+  bookingStatus: string;
 
 
   @OneToOne(() => ApartmentDocument, (apartmentDocument) => apartmentDocument.id, { onDelete: 'CASCADE' })

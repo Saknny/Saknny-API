@@ -126,7 +126,7 @@ export class PendingRequestService {
         }
         Object.assign(request, body);
         await this.pendingRequestRepo.save(request);
-        // console.log(request.type);
+       
         if (request.type.startsWith('UPLOAD')) {
             const images = await this.getApprovedImages(request.id);
             if (images.length > 0) {
@@ -199,7 +199,7 @@ export class PendingRequestService {
 
     async submitProfileUpdate(userId: string, entityType: EntityType, profileData: any, requestType: Type) {
 
-        // console.log(profileData)
+       
         const formattedData = {
             gender: profileData?.gender ?? null,
             phone: profileData?.phone ?? null,
@@ -218,10 +218,7 @@ export class PendingRequestService {
             firstName: profileData?.firstName ?? null,
         };
 
-        // console.log('After');
-        // console.log(formattedData);
 
-        // console.log(userId)
         let request = await this.pendingRequestRepo
             .createQueryBuilder("pendingRequest")
             .leftJoinAndSelect("pendingRequest.pendingProfile", "pendingProfile")
@@ -230,11 +227,8 @@ export class PendingRequestService {
             .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
             .getOne();
 
-
-        // console.log("here", request);
         if (request) {
-            // console.log("exist!")
-            // console.log(request);
+
             const pendingProfile = await this.pendingProfileRepo.findOne({ id: request.pendingProfile.id })
             pendingProfile.data = formattedData;
             await this.pendingProfileRepo.save(pendingProfile);
@@ -257,11 +251,11 @@ export class PendingRequestService {
         let request = await this.pendingRequestRepo
             .createQueryBuilder("pendingRequest")
             .leftJoinAndSelect("pendingRequest.pendingDocument", "pendingDocument")
-            .where("pendingDocument.entityId = :apartmentId", { apartmentId })
-            .andWhere("pendingRequest.type = :type", { type: Type.UPLOAD_APARTMENT })
+            .where("pendingDocument.entityId = :entityId", {entityId: apartmentId })
+            .andWhere("pendingRequest.type = :type", { type: Type.DOCUMENT_UPLOAD })
             .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
             .getOne();
-
+        console.log(request);
 
         if (request) {
             const apartmentDocument = await this.pendingDocumentRepo.findOne({ id: request.pendingDocument.id })

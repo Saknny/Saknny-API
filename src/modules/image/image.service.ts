@@ -11,8 +11,6 @@ export class ImageService {
     constructor(
         @InjectRepository(Image)
         private readonly imageRepo: BaseRepository<Image>,
-
-
     ) { }
 
     async uploadImages(enityId: string, entityType: EntityType, imageFilenames: string[]): Promise<Image[]> {

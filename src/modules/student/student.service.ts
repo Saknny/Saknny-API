@@ -4,6 +4,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Student } from './entities/student.entity';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 import { UpdateStudentInput } from './dtos/inputs/update-student.input';
+import { Status } from '../request/entities/enum/status.enum';
 
 
 @Injectable()
@@ -17,7 +18,7 @@ export class StudentService {
     if (!student) {
       throw new NotFoundException('student not found');
     }
-    student.isReviewed = true;
+
     await this.studentRepo.save(student);
     return student;
   }
@@ -26,16 +27,12 @@ export class StudentService {
     userId: string,
     completeProfileDto: CompleteProfileDto,
   ): Promise<Student> {
-    console.log('.......................')
-    console.log(userId);
-    console.log(completeProfileDto);
-
     const student = await this.studentRepo.findOne({ userId });
 
     if (!student) {
       throw new Error('Student not found');
     }
-
+    student.status = Status.APPROVED;
     if (completeProfileDto.idCard) {
       student.idCard = completeProfileDto.idCard;
     }
@@ -119,21 +116,7 @@ export class StudentService {
     return student;
   }
 
-  async getUnReviewedStudents(): Promise<Student[]> {
-    return this.studentRepo.find({
-      where: {
-        isReviewed: false
-      },
-    });
-  }
 
-  async updateStudentApproval(id: string, isTrusted: boolean): Promise<Student> {
-    const student = await this.studentRepo.findOneBy({ id });
-    if (!student) {
-      throw new NotFoundException(`student not found`);
-    }
-    student.isTrusted = isTrusted;
-    return this.studentRepo.save(student);
-  }
+
 
 }

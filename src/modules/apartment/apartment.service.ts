@@ -12,6 +12,7 @@ import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.dto';
 import { ApartmentDocument } from './entities/document.entity';
+import { Status } from '../request/entities/enum/status.enum';
 
 @Injectable()
 export class ApartmentService {
@@ -91,7 +92,7 @@ export class ApartmentService {
         }
 
 
-        if (apartment.status == "UNBOOKED" && updateApartment.gender) {
+        if (apartment.bookingStatus == "UNBOOKED" && updateApartment.gender) {
             apartment.gender = updateApartment.gender;
         }
 
@@ -106,14 +107,14 @@ export class ApartmentService {
         return await this.apartmentRepository.save(apartment);
     }
 
-    
+
     async uploadDocuments(id: string, document: string) {
         const apartment = await this.apartmentRepository.findOne({ id })
         if (!apartment) {
             throw new NotFoundException('Apartment not found');
         }
-
-
+        console.log(apartment.status);
+        apartment.status = "APPROVED";
         const apartmentDocument = await this.apartmentDocumentRepo.create({ document, apartment })
         await this.apartmentDocumentRepo.save(apartmentDocument);
         apartment.document = apartmentDocument;
@@ -121,34 +122,22 @@ export class ApartmentService {
     }
 
 
-   
 
-    async getById(id: string) {
+
+    async publishApartment(id: string) {
         const apartment = await this.apartmentRepository.findOneBy({ id });
         if (!apartment) {
             throw new NotFoundException('apartment not found');
         }
-        apartment.isReviewed = true;
+        if (apartment.status == "APPROVED") {
+            apartment.status = "PUBLISHED";
+        }
         await this.apartmentRepository.save(apartment);
         return apartment
     }
 
-    async updateApartmentApproval(id: string, isTrusted: boolean): Promise<Apartment> {
-        const apartment = await this.apartmentRepository.findOneBy({ id });
-        if (!apartment) {
-            throw new NotFoundException(`apartment not found`);
-        }
-        apartment.isTrusted = isTrusted;
-        return this.apartmentRepository.save(apartment);
-    }
 
-    async getUnReviewedApartments(): Promise<Apartment[]> {
-        return this.apartmentRepository.find({
-            where: {
-                isReviewed: false
-            },
-        });
-    }
+
 
     async getRecentApartments(limit = 10): Promise<Apartment[]> {
         return this.apartmentRepository.find({

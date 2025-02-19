@@ -10,6 +10,7 @@ import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
 import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity';
 import { PendingRequest } from '@src/modules/request/entities/pendingRequest.entity';
+import { Status } from '@src/modules/request/entities/enum/status.enum';
 
 @Entity()
 export class Provider extends BaseModel {
@@ -26,12 +27,8 @@ export class Provider extends BaseModel {
   @Column({ nullable: true })
   phone: string;
 
-  @Column({ type: Boolean, default: false })
-  isTrusted: boolean;
-
-
-  @Column({ type: Boolean, default: false })
-  isReviewed: boolean;
+  @Column({ type: "enum", enum: Status, default: Status.PENDING })
+  status: Status;
 
   @Column()
   userId: string;
@@ -49,7 +46,7 @@ export class Provider extends BaseModel {
   gender: string;
 
 
-  @Column({ type: 'varchar', nullable: true })  // Store idCard as binary
+  @Column({ type: 'varchar', nullable: true }) 
   idCard: string;
 
   @Column({ nullable: true })

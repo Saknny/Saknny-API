@@ -54,7 +54,7 @@ export class CompleteProfileDto {
   linkedin?: string;
 
 
-  @IsOptional()
+
   @IsString()
   @IsPhoneNumber()
   phone?: string;

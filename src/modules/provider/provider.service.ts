@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Provider } from './entities/provider.entity';
 import { CompleteProviderProfileInput } from './dtos/inputs/complete-profile.input';
 import { Apartment } from '../apartment/entities/apartment.entity/apartment.entity';
+import { Status } from '../request/entities/enum/status.enum';
 
 @Injectable()
 export class ProviderService {
@@ -19,7 +20,6 @@ export class ProviderService {
     if (!provider) {
       throw new NotFoundException('provider not found');
     }
-    provider.isReviewed = true;
     await this.providerRepository.save(provider);
     return provider
   }
@@ -29,6 +29,7 @@ export class ProviderService {
     if (!provider) {
       throw new NotFoundException('provider not found');
     }
+    provider.status = Status.APPROVED;
     if (attrs.facebook) {
       provider.facebook = attrs.facebook;
     }
@@ -40,8 +41,6 @@ export class ProviderService {
     }
     if (attrs.idCard) {
       provider.idCard = attrs.idCard;
-      provider.isReviewed = false;
-      provider.isTrusted = false;
     }
     if (attrs.image) {
       provider.image = attrs.image;
@@ -63,37 +62,22 @@ export class ProviderService {
   }
 
 
-  async updateProviderApproval(id: string, isTrusted: boolean): Promise<Provider> {
-    const provider = await this.providerRepository.findOneBy({ id });
-    if (!provider) {
-      throw new NotFoundException(`Provider not found`);
-    }
-    provider.isTrusted = isTrusted;
-    return this.providerRepository.save(provider);
-  }
-
-  async getUnReviewedProviders(): Promise<Provider[]> {
-    return this.providerRepository.find({
-      where: {
-        isReviewed: false
-      },
-    });
-  }
 
   //provider list all his apartments 
-  async getProviderApartments(providerId: string): Promise<Apartment[]> {
+  async getProviderApartments(userId: string): Promise<Apartment[]> {
+
+
     const provider = await this.providerRepository
       .createQueryBuilder('provider')
       .leftJoinAndSelect('provider.apartments', 'apartments')
       .leftJoinAndSelect('apartments.rooms', 'rooms')
-      .leftJoinAndSelect('apartments.images', 'images')
-      .where('provider.id = :providerId', { providerId })
+      .where('provider.userId = :userId', { userId })
       .getOne();
-  
+
     if (!provider) {
       throw new NotFoundException('Provider not found');
     }
-  
+
     return provider.apartments || [];
   }
 }

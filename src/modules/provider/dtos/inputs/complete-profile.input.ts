@@ -1,18 +1,19 @@
-import { IsEnum, IsOptional, IsPhoneNumber, isString, IsString, IsUrl } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, isString, IsString, IsUrl } from 'class-validator';
 import 'reflect-metadata';
 
 
 
 export class CompleteProviderProfileInput {
 
-    idCard: any;
+
 
     @IsOptional()
     @IsString()
-    gender:string
+    gender: string
 
     @IsOptional()
     image: any;
+
 
     @IsPhoneNumber(null)
     phone: string;
@@ -28,4 +29,6 @@ export class CompleteProviderProfileInput {
     @IsOptional()
     @IsUrl()
     linkedin: string;
+
+    idCard: any;
 }

@@ -33,7 +33,7 @@ export class ApartmentController {
   ) {
     const document = files.document[0].buffer.toString('base64');
     return await this.pendingRequestService.uploadDocumentRequest(id, document)
-    // return this.apartmentService.uploadDocuments(id, document)
+ 
   }
 
   @Patch(":id/update")
@@ -77,6 +77,9 @@ export class ApartmentController {
     );
   }
 
-
+  @Patch(':id/publish')
+  async publishApartment(@Param('id') id: string) {
+    return this.apartmentService.publishApartment(id);
+  }
 
 }
