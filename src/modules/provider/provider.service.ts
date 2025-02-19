@@ -4,24 +4,39 @@ import { Repository } from 'typeorm';
 import { Provider } from './entities/provider.entity';
 import { CompleteProviderProfileInput } from './dtos/inputs/complete-profile.input';
 import { Apartment } from '../apartment/entities/apartment.entity/apartment.entity';
+import { InjectBaseRepository } from '@src/libs/decorators/inject-base-repository.decorator';
+import { BaseRepository } from '@src/libs/types/base-repository';
+import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum';
 
 @Injectable()
 export class ProviderService {
   constructor(
-    @InjectRepository(Provider)
-    private readonly providerRepository: Repository<Provider>,
+    @InjectBaseRepository(Provider)
+    private readonly providerRepository: BaseRepository<Provider>,
     @InjectRepository(Apartment)
-    private readonly apartmentRepository: Repository<Apartment>
-  ) { }
+    private readonly apartmentRepository: Repository<Apartment>,
+  ) {}
 
   async getById(id: string) {
     const provider = await this.providerRepository.findOneBy({ id });
+
     if (!provider) {
       throw new NotFoundException('provider not found');
     }
+
     provider.isReviewed = true;
+
     await this.providerRepository.save(provider);
-    return provider
+
+    return provider;
+  }
+
+  async provider(id: string) {
+    return this.providerRepository.findOneOrError(
+      { id, isTrusted: true },
+      ErrorCodeEnum.PROVIDER_NOT_FOUND_OR_NOT_PENDING_NOR_REJECTED,
+      ['user'],
+    );
   }
 
   async updateProfile(userId: string, attrs: Partial<Provider>) {
@@ -62,8 +77,10 @@ export class ProviderService {
     return this.providerRepository.save(provider);
   }
 
-
-  async updateProviderApproval(id: string, isTrusted: boolean): Promise<Provider> {
+  async updateProviderApproval(
+    id: string,
+    isTrusted: boolean,
+  ): Promise<Provider> {
     const provider = await this.providerRepository.findOneBy({ id });
     if (!provider) {
       throw new NotFoundException(`Provider not found`);
@@ -75,12 +92,12 @@ export class ProviderService {
   async getUnReviewedProviders(): Promise<Provider[]> {
     return this.providerRepository.find({
       where: {
-        isReviewed: false
+        isReviewed: false,
       },
     });
   }
 
-  //provider list all his apartments 
+  //provider list all his apartments
   async getProviderApartments(providerId: string): Promise<Apartment[]> {
     const provider = await this.providerRepository
       .createQueryBuilder('provider')
@@ -89,12 +106,11 @@ export class ProviderService {
       .leftJoinAndSelect('apartments.images', 'images')
       .where('provider.id = :providerId', { providerId })
       .getOne();
-  
+
     if (!provider) {
       throw new NotFoundException('Provider not found');
     }
-  
+
     return provider.apartments || [];
   }
 }
-

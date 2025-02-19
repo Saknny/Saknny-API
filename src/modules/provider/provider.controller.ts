@@ -1,4 +1,16 @@
-import { Controller, UseInterceptors, Param, UploadedFiles, Body, Post, Req, Patch, Get, Inject, forwardRef } from '@nestjs/common';
+import {
+  Controller,
+  UseInterceptors,
+  Param,
+  UploadedFiles,
+  Body,
+  Post,
+  Req,
+  Patch,
+  Get,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { ProviderService } from './provider.service';
 import { CompleteProviderProfileInput } from './dtos/inputs/complete-profile.input';
 
@@ -13,18 +25,13 @@ import { PendingRequestService } from '../request/pendingRequest.service';
 import { EntityType } from '../request/entities/enum/entityType.enum';
 import { Type } from '../request/entities/enum/type.enum';
 
-
-
 @Controller('provider')
 export class ProviderController {
-  constructor(private readonly providerService: ProviderService,
+  constructor(
+    private readonly providerService: ProviderService,
     @Inject(forwardRef(() => PendingRequestService))
-    private readonly pendingRequestService: PendingRequestService
-  ) {
-
-  }
-
-
+    private readonly pendingRequestService: PendingRequestService,
+  ) {}
 
   @Post('complete-profile')
   @UseInterceptors(fileUploadInterceptor())
@@ -37,14 +44,17 @@ export class ProviderController {
     },
     @Body() completeProfileDto: CompleteProviderProfileInput,
   ) {
-
     completeProfileDto.idCard = files.idCard[0].buffer.toString('base64'); // Store as binary
     completeProfileDto.image = `/uploads/${files.image[0].filename}`;
-    console.log('my id ' , id);
-    return await this.pendingRequestService.submitProfileUpdate(id , EntityType.PROVIDER , completeProfileDto  ,Type.PROFILE_COMPLETE)
+    console.log('my id ', id);
+    return await this.pendingRequestService.submitProfileUpdate(
+      id,
+      EntityType.PROVIDER,
+      completeProfileDto,
+      Type.PROFILE_COMPLETE,
+    );
     // return { message: 'Profile completed successfully!', provider: updatedProvider };
   }
-
 
   @Patch('update-profile')
   @UseInterceptors(fileUploadInterceptor())
@@ -57,9 +67,7 @@ export class ProviderController {
     },
     @Body() updateProfileDto: UpdateProviderProfileInput,
   ) {
-
     if (files.idCard && files.idCard.length > 0) {
-
       if (Buffer.isBuffer(files.idCard[0].buffer)) {
         updateProfileDto.idCard = files.idCard[0].buffer.toString('base64');
       }
@@ -70,20 +78,23 @@ export class ProviderController {
     }
 
     console.log('controller');
-    return await this.pendingRequestService.submitProfileUpdate(id , EntityType.PROVIDER , updateProfileDto , Type.PROFILE_UPDATE) 
+    return await this.pendingRequestService.submitProfileUpdate(
+      id,
+      EntityType.PROVIDER,
+      updateProfileDto,
+      Type.PROFILE_UPDATE,
+    );
   }
 
-
-
-
-
   @Get(':providerId/apartments')
-  async getProviderApartments(@Param('providerId') providerId: string): Promise<Apartment[]> {
+  async getProviderApartments(
+    @Param('providerId') providerId: string,
+  ): Promise<Apartment[]> {
     return this.providerService.getProviderApartments(providerId);
   }
 
-
-
-
+  @Get(':providerId')
+  getProvider(@Param('providerId') providerId: string) {
+    return this.providerService.getById(providerId);
+  }
 }
-
