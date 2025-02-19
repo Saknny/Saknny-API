@@ -30,6 +30,7 @@ import { BedModule } from './modules/bed/bed.module';
 import { RoomModule } from './modules/room/room.module';
 import { ApartmentModule } from './modules/apartment/apartment.module';
 import { PendingRequestModule } from './modules/request/pendingRequest.module';
+import { ImageModule } from './modules/image/image.module';
 
 @Module({
   imports: [
@@ -72,7 +73,8 @@ import { PendingRequestModule } from './modules/request/pendingRequest.module';
     BedModule,
     RoomModule,
     ApartmentModule,
-    PendingRequestModule
+    PendingRequestModule,
+    ImageModule
   ],
   controllers: [],
   providers: [

@@ -8,11 +8,11 @@ import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
 import { Not, Repository, IsNull } from 'typeorm';
-import { ApartmentImage } from './entities/apartmentImage.entity';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.dto';
 import { ApartmentDocument } from './entities/document.entity';
+import { Status } from '../request/entities/enum/status.enum';
 
 @Injectable()
 export class ApartmentService {
@@ -28,8 +28,7 @@ export class ApartmentService {
 
         @InjectRepository(Bed)
         private readonly bedRepository: BaseRepository<Bed>,
-        @InjectRepository(ApartmentImage)
-        private readonly imageRepo: BaseRepository<ApartmentImage>,
+
 
         @InjectRepository(ApartmentDocument)
         private readonly apartmentDocumentRepo: BaseRepository<ApartmentDocument>,
@@ -93,7 +92,7 @@ export class ApartmentService {
         }
 
 
-        if (apartment.status == "UNBOOKED" && updateApartment.gender) {
+        if (apartment.bookingStatus == "UNBOOKED" && updateApartment.gender) {
             apartment.gender = updateApartment.gender;
         }
 
@@ -108,34 +107,14 @@ export class ApartmentService {
         return await this.apartmentRepository.save(apartment);
     }
 
-    async saveApartmentImages(id: string, imageFilenames: string[]): Promise<Apartment> {
-        const apartment = await this.apartmentRepository.findOne({ id })
-        if (!apartment) {
-            throw new NotFoundException('Apartment not found');
-        }
-
-        const images = imageFilenames.map(filename =>
-            this.imageRepo.create({ imageUrl: filename, apartment })
-        );
-
-        await this.imageRepo.save(images);
-
-        apartment.images = await this.imageRepo.find({
-            where: { apartment: { id: apartment.id } },
-        });
-
-        apartment.isReviewed = false;
-        return await this.apartmentRepository.save(apartment);
-    }
-
 
     async uploadDocuments(id: string, document: string) {
         const apartment = await this.apartmentRepository.findOne({ id })
         if (!apartment) {
             throw new NotFoundException('Apartment not found');
         }
-
-
+        console.log(apartment.status);
+        apartment.status = "APPROVED";
         const apartmentDocument = await this.apartmentDocumentRepo.create({ document, apartment })
         await this.apartmentDocumentRepo.save(apartmentDocument);
         apartment.document = apartmentDocument;
@@ -143,75 +122,22 @@ export class ApartmentService {
     }
 
 
-    async updateApartmentImage(id: string, newFilename: string): Promise<ApartmentImage> {
-        const image = await this.imageRepo.findOne({ id }, ['apartment']);
-
-        if (!image) {
-            throw new NotFoundException('Image not found');
-        }
-
-        // 🔹 Delete old image from storage
-        const oldImagePath = join(__dirname, '../../uploads/apartments', image.imageUrl);
-        try {
-            await unlink(oldImagePath);
-        } catch (err) {
-            console.warn('Old image file not found or already deleted:', oldImagePath);
-        }
 
 
-        image.imageUrl = newFilename;
-        return await this.imageRepo.save(image);
-    }
-
-
-    async deleteApartmentImage(id: string): Promise<{ message: string }> {
-        const image = await this.imageRepo.findOne({ id }, ['apartment']);
-
-        if (!image) {
-            throw new NotFoundException('Image not found');
-        }
-
-
-        const imagePath = join(__dirname, '../../uploads/apartments', image.imageUrl);
-        try {
-            await unlink(imagePath);
-        } catch (err) {
-            console.warn('Image file not found or already deleted:', imagePath);
-        }
-
-
-        await this.imageRepo.delete(id);
-
-        return { message: 'Image deleted successfully' };
-    }
-
-
-    async getById(id: string) {
+    async publishApartment(id: string) {
         const apartment = await this.apartmentRepository.findOneBy({ id });
         if (!apartment) {
             throw new NotFoundException('apartment not found');
         }
-        apartment.isReviewed = true;
+        if (apartment.status == "APPROVED") {
+            apartment.status = "PUBLISHED";
+        }
         await this.apartmentRepository.save(apartment);
         return apartment
     }
 
-    async updateApartmentApproval(id: string, isTrusted: boolean): Promise<Apartment> {
-        const apartment = await this.apartmentRepository.findOneBy({ id });
-        if (!apartment) {
-            throw new NotFoundException(`apartment not found`);
-        }
-        apartment.isTrusted = isTrusted;
-        return this.apartmentRepository.save(apartment);
-    }
 
-    async getUnReviewedApartments(): Promise<Apartment[]> {
-        return this.apartmentRepository.find({
-            where: {
-                isReviewed: false
-            },
-        });
-    }
+
 
     async getRecentApartments(limit = 10): Promise<Apartment[]> {
         return this.apartmentRepository.find({
