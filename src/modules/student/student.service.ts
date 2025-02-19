@@ -4,14 +4,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Student } from './entities/student.entity';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 import { UpdateStudentInput } from './dtos/inputs/update-student.input';
-
+import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum';
 
 @Injectable()
 export class StudentService {
   constructor(
     @InjectBaseRepository(Student)
     private readonly studentRepo: BaseRepository<Student>,
-  ) { }
+  ) {}
   async getById(id: string) {
     const student = await this.studentRepo.findOneBy({ id });
     if (!student) {
@@ -26,7 +26,7 @@ export class StudentService {
     userId: string,
     completeProfileDto: CompleteProfileDto,
   ): Promise<Student> {
-    console.log('.......................')
+    console.log('.......................');
     console.log(userId);
     console.log(completeProfileDto);
 
@@ -58,11 +58,7 @@ export class StudentService {
     return this.studentRepo.save(student);
   }
 
-  async updateStudent(
-    userId: string,
-    attrs: Partial<Student>
-  ) {
-
+  async updateStudent(userId: string, attrs: Partial<Student>) {
     const student = await this.studentRepo.findOne({ userId });
 
     if (!student) {
@@ -122,12 +118,15 @@ export class StudentService {
   async getUnReviewedStudents(): Promise<Student[]> {
     return this.studentRepo.find({
       where: {
-        isReviewed: false
+        isReviewed: false,
       },
     });
   }
 
-  async updateStudentApproval(id: string, isTrusted: boolean): Promise<Student> {
+  async updateStudentApproval(
+    id: string,
+    isTrusted: boolean,
+  ): Promise<Student> {
     const student = await this.studentRepo.findOneBy({ id });
     if (!student) {
       throw new NotFoundException(`student not found`);
@@ -136,4 +135,11 @@ export class StudentService {
     return this.studentRepo.save(student);
   }
 
+  async getStudent(id: string) {
+    return this.studentRepo.findOneOrError(
+      { id },
+      ErrorCodeEnum.PROFILE_NOT_FOUND,
+      ['user'],
+    );
+  }
 }

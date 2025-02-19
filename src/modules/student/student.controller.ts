@@ -6,6 +6,8 @@ import {
   UploadedFiles,
   Inject,
   forwardRef,
+  Get,
+  Param,
 } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
@@ -17,20 +19,21 @@ import { PendingRequestService } from '../request/pendingRequest.service';
 import { EntityType } from '../request/entities/enum/entityType.enum';
 import { Type } from '../request/entities/enum/type.enum';
 
-
 @Controller('students')
 export class StudentController {
-  constructor(private readonly studentService: StudentService,
+  constructor(
+    private readonly studentService: StudentService,
     @Inject(forwardRef(() => PendingRequestService))
-    private readonly pendingRequestService: PendingRequestService
-  ) { }
+    private readonly pendingRequestService: PendingRequestService,
+  ) {}
 
   @Patch('me')
   @UseInterceptors(fileUploadInterceptor())
   async updateStudent(
     @currentUser() { id }: currentUserType,
-    @UploadedFiles() files: { idCard?: Express.Multer.File[]; image?: Express.Multer.File[] },
-    @Body() body: UpdateStudentInput
+    @UploadedFiles()
+    files: { idCard?: Express.Multer.File[]; image?: Express.Multer.File[] },
+    @Body() body: UpdateStudentInput,
   ) {
     if (files.idCard && files.idCard.length > 0) {
       body.idCard = files.idCard[0].buffer.toString('base64');
@@ -39,11 +42,14 @@ export class StudentController {
       body.image = `/uploads/${files.image[0].filename}`;
     }
 
-    return await this.pendingRequestService.submitProfileUpdate(id, EntityType.STUDENT, body, Type.PROFILE_UPDATE)
+    return await this.pendingRequestService.submitProfileUpdate(
+      id,
+      EntityType.STUDENT,
+      body,
+      Type.PROFILE_UPDATE,
+    );
     // return await this.studentService.updateStudent(id, body);
   }
-
-
 
   @Patch('complete-profile')
   @UseInterceptors(fileUploadInterceptor())
@@ -56,13 +62,21 @@ export class StudentController {
     },
     @Body() completeProfileDto: CompleteProfileDto,
   ) {
-
-
     completeProfileDto.idCard = files.idCard[0].buffer.toString('base64');
-    completeProfileDto.image = files.image ? `/uploads/${files.image[0].filename}` : undefined;
+    completeProfileDto.image = files.image
+      ? `/uploads/${files.image[0].filename}`
+      : undefined;
 
-    return await this.pendingRequestService.submitProfileUpdate(id, EntityType.STUDENT, completeProfileDto, Type.PROFILE_COMPLETE)
-
+    return await this.pendingRequestService.submitProfileUpdate(
+      id,
+      EntityType.STUDENT,
+      completeProfileDto,
+      Type.PROFILE_COMPLETE,
+    );
   }
 
+  @Get(':studentId')
+  async getStudent(@Param('studentId') studentId: string) {
+    return await this.studentService.getStudent(studentId);
+  }
 }
