@@ -147,4 +147,5 @@ export const arErrorMessage: IErrorMessage = {
   IMAGE_UPLOAD_IS_INVALID: '',
   FILE_UPLOAD_IS_INVALID: '',
   MISSING_DOWNLOAD_DIRECTORY: '',
+  APARTMENT_NOT_FOUND: 'الشقة غير موجودة',
 };
