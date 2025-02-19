@@ -3,16 +3,9 @@ import { ApartmentService } from './apartment.service';
 import { CreateApartmentDto } from './dto/create-apartment.dto/create-apartment.dto';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
 import { currentUserType } from '@src/libs/types/current-user.type';
-import { extname } from 'path';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { apartmentImageUploadInterceptor } from './interceptors/file-upload.interceptor';
 import { Apartment } from './entities/apartment.entity/apartment.entity';
 import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.dto';
 import { PendingRequestService } from '../request/pendingRequest.service';
-import { EntityType } from '../request/entities/enum/entityType.enum';
-import { ReferenceType } from '../request/entities/enum/referenceType.enum';
-import { Type } from '../request/entities/enum/type.enum';
 import { fileUploadInterceptor } from './interceptors/document.interceptor';
 
 @Controller('apartment')
@@ -50,42 +43,6 @@ export class ApartmentController {
     return this.apartmentService.updateApartment(id, updateApartmentDto);
   }
 
-  @Post(':id/upload-images')
-  @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 10 }], {
-    storage: diskStorage({
-      destination: './uploads/apartments',
-      filename: (req, file, callback) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        callback(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
-      },
-    }),
-  }))
-  async uploadApartmentImages(@Param('id') id: string, @UploadedFiles() files: { images?: Express.Multer.File[] }, @currentUser() user: currentUserType) {
-    const imageFilenames = files.images?.map(file => file.filename) || [];
-
-    return this.pendingRequestService.uploadImageRequest(user.id, id, Type.UPLOAD_APARTMENT, ReferenceType.APARTMENT_IMAGE, EntityType.APARTMENT, imageFilenames);
-
-  }
-
-
-  @Patch(':id/update-image')
-  @UseInterceptors(apartmentImageUploadInterceptor())
-  async updateApartmentImage(
-    @Param('id') imageId: string,
-    @UploadedFile() file: Express.Multer.File,
-    @currentUser() user: currentUserType
-  ) {
-    if (!file) {
-      throw new NotFoundException('No file uploaded');
-    }
-    return this.pendingRequestService.uploadImageRequest(user.id, imageId, Type.UPDATE_APARTMENT, ReferenceType.APARTMENT_IMAGE, EntityType.APARTMENT, file.filename);
-  }
-
-
-  @Delete(':id/delete-image')
-  async deleteApartmentImage(@Param('id') imageId: string) {
-    return this.apartmentService.deleteApartmentImage(imageId);
-  }
 
   @Get('recent')
   async getRecentApartments(@Query('limit') limit?: number) {

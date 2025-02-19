@@ -6,7 +6,6 @@ import { Apartment } from './entities/apartment.entity/apartment.entity';
 import { Room } from '../room/entities/room.entity/room.entity';
 import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { ProviderModule } from '../provider/provider.module';
-import { ApartmentImage } from './entities/apartmentImage.entity';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { PendingRequestModule } from '../request/pendingRequest.module';
@@ -14,7 +13,7 @@ import { Provider } from '../provider/entities/provider.entity';
 import { ApartmentDocument } from './entities/document.entity';
 
 @Module({
-  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, ApartmentImage , Provider , ApartmentDocument
+  imports: [DatabaseModule.forFeature([Apartment, Room, Bed , Provider , ApartmentDocument
   ])
    
     , ServeStaticModule.forRoot({

@@ -8,13 +8,14 @@ import {
     OneToMany,
     ManyToOne
 } from 'typeorm';
-import { Bed } from './bed.entity/bed.entity';
+import { Room } from '@src/modules/room/entities/room.entity/room.entity';
 import { BaseModel } from '@src/libs/database/base.model';
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
+import { EntityType } from '../request/entities/enum/entityType.enum';
 
 @Entity()
-export class BedImage extends BaseModel {
-    constructor(input?: DeepPartial<BedImage>) {
+export class Image extends BaseModel {
+    constructor(input?: DeepPartial<Image>) {
         super(input);
     }
 
@@ -30,13 +31,14 @@ export class BedImage extends BaseModel {
     @Column("text", { nullable: true })
     imageUrl: string;
 
-    @ManyToOne(() => Bed, (bed) => bed.images, {
-        onDelete: "SET NULL",
-        onUpdate: "CASCADE",
-        nullable: true
-    })
-    bed: Bed;
+    @Column()
+    entityType: EntityType;
 
+    @Column()
+    entityId: string;
+
+    @Column({ nullable: true })
+    description: string;
 
 
 }
