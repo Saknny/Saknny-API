@@ -62,10 +62,12 @@ export class PendingRequestService {
 
         var request = await this.pendingRequestRepo
             .createQueryBuilder("pendingRequest")
-            .leftJoinAndSelect("pendingRequest.provider", "provider") // Ensure provider relation is loaded
-            .where("provider.id = :providerId", { providerId: provider.id }) // Filter by provider ID
-            .andWhere("pendingRequest.type = :requestType", { requestType }) // Filter by type
-            .andWhere("pendingRequest.status = :status", { status: Status.PENDING }) // Filter by status
+            .leftJoinAndSelect("pendingRequest.provider", "provider")
+            .leftJoinAndSelect("pendingRequest.imageApprovals", "imageApprovals")
+            .where("provider.id = :providerId", { providerId: provider.id })
+            .where("imageApprovals.referenceId = :referenceId", { referenceId: id })
+            .andWhere("pendingRequest.type = :requestType", { requestType })
+            .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
             .getOne();
 
 
@@ -116,7 +118,7 @@ export class PendingRequestService {
             .getOne();
 
         if (!request) {
-            
+
             throw new NotFoundException('record not found');
         }
         if (body.status == Status.REJECTED) {
@@ -126,7 +128,7 @@ export class PendingRequestService {
         }
         Object.assign(request, body);
         await this.pendingRequestRepo.save(request);
-       
+
         if (request.type.startsWith('UPLOAD')) {
             const images = await this.getApprovedImages(request.id);
             if (images.length > 0) {
@@ -143,7 +145,7 @@ export class PendingRequestService {
             if (pendingProfile.entityType == EntityType.PROVIDER) {
                 this.providerService.updateProfile(pendingProfile.userId, pendingProfile.data);
             } else {
-                
+
                 this.studentService.completeProfile(pendingProfile.userId, pendingProfile.data);
             }
         } else if (request.type == Type.PROFILE_UPDATE) {
@@ -199,7 +201,7 @@ export class PendingRequestService {
 
     async submitProfileUpdate(userId: string, entityType: EntityType, profileData: any, requestType: Type) {
 
-       
+
         const formattedData = {
             gender: profileData?.gender ?? null,
             phone: profileData?.phone ?? null,
@@ -251,7 +253,7 @@ export class PendingRequestService {
         let request = await this.pendingRequestRepo
             .createQueryBuilder("pendingRequest")
             .leftJoinAndSelect("pendingRequest.pendingDocument", "pendingDocument")
-            .where("pendingDocument.entityId = :entityId", {entityId: apartmentId })
+            .where("pendingDocument.entityId = :entityId", { entityId: apartmentId })
             .andWhere("pendingRequest.type = :type", { type: Type.DOCUMENT_UPLOAD })
             .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
             .getOne();
