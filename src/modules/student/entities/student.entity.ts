@@ -14,11 +14,15 @@ import { IsEndDateAfterStartDate } from '../../../libs/utils/validators/is-endDa
 import { User } from '../../user/entities/user.entity';
 import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
 import { FavoriteList } from '@src/modules/favoriteList/entities/favorite-list.entity';
+import { Status } from '@src/modules/request/entities/enum/status.enum';
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
     super(input);
   }
+
+  @Column({ type: 'enum', enum: Status, default: Status.PENDING })
+  status: Status;
 
   @Column()
   firstName: string;
@@ -43,12 +47,6 @@ export class Student extends BaseModel {
 
   @Column({ nullable: true })
   university: string;
-
-  @Column({ type: Boolean, default: false })
-  isTrusted: boolean;
-
-  @Column({ type: Boolean, default: false })
-  isReviewed: boolean;
 
   @Column({ type: 'varchar', nullable: true }) // Store idCard as binary
   idCard: string;

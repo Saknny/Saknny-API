@@ -31,6 +31,7 @@ import { RoomModule } from './modules/room/room.module';
 import { ApartmentModule } from './modules/apartment/apartment.module';
 import { PendingRequestModule } from './modules/request/pendingRequest.module';
 import { FavoriteModule } from './modules/favoriteList/favorite.module';
+import { ImageModule } from './modules/image/image.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { FavoriteModule } from './modules/favoriteList/favorite.module';
     ApartmentModule,
     PendingRequestModule,
     FavoriteModule,
+    ImageModule,
   ],
   controllers: [],
   providers: [

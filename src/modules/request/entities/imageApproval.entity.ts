@@ -16,41 +16,41 @@ export class ImageApproval extends BaseModel {
         type: "enum",
         enum: Status,
         default: Status.PENDING,
-        nullable: true, // ✅ Allows NULL values
+        nullable: true,
     })
     status?: Status;
 
-    @Column({ nullable: true }) // ✅ Allows NULL values
+    @Column({ nullable: true })
     referenceId?: string;
 
-    @Column({ nullable: true }) // ✅ Allows NULL values
-    referenceType?: string;
+    // @Column({ nullable: true }) 
+    // referenceType?: string;
 
     @Column({
         type: "enum",
         enum: Type,
-        nullable: true, // ✅ Allows NULL values
+        nullable: true, 
     })
     type?: Type;
 
     @Column({
         type: "enum",
         enum: EntityType,
-        nullable: true, // ✅ Allows NULL values
+        nullable: true,
     })
     entityType?: EntityType;
 
-    @Column({ nullable: true }) // ✅ Allows NULL values
+    @Column({ nullable: true }) 
     url?: string;
 
-    @Column({ nullable: true }) // ✅ Allows NULL values
+    @Column({ nullable: true }) 
     reason?: string;
 
-    @Column({ nullable: true }) // ✅ Allows NULL values
+    @Column({ nullable: true }) 
     description?: string;
 
     @ManyToOne(() => PendingRequest, (pendingRequest) => pendingRequest.imageApprovals, {
-        onDelete: "SET NULL", // ✅ Allows ImageApproval to exist if PendingRequest is deleted
+        onDelete: "SET NULL",
         onUpdate: "CASCADE",
         nullable: true,
     })

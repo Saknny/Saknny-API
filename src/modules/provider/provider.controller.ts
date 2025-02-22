@@ -10,6 +10,9 @@ import {
   Get,
   Inject,
   forwardRef,
+  ValidationPipe,
+  UsePipes,
+  BadRequestException,
 } from '@nestjs/common';
 import { ProviderService } from './provider.service';
 import { CompleteProviderProfileInput } from './dtos/inputs/complete-profile.input';
@@ -35,8 +38,10 @@ export class ProviderController {
 
   @Post('complete-profile')
   @UseInterceptors(fileUploadInterceptor())
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async completeProfile(
     @currentUser() { id }: currentUserType,
+
     @UploadedFiles()
     files: {
       idCard?: Express.Multer.File[];
@@ -44,16 +49,27 @@ export class ProviderController {
     },
     @Body() completeProfileDto: CompleteProviderProfileInput,
   ) {
-    completeProfileDto.idCard = files.idCard[0].buffer.toString('base64'); // Store as binary
-    completeProfileDto.image = `/uploads/${files.image[0].filename}`;
-    console.log('my id ', id);
+    files = files || {};
+
+    if (!files.idCard || files.idCard.length === 0) {
+      throw new BadRequestException('ID Card is required');
+    }
+    if (files.idCard && files.idCard?.length > 0) {
+      if (Buffer.isBuffer(files.idCard[0].buffer)) {
+        completeProfileDto.idCard = files.idCard[0].buffer.toString('base64');
+      }
+    }
+
+    if (files.image && files.image.length > 0) {
+      completeProfileDto.image = `/uploads/${files.image[0].filename}`;
+    }
+
     return await this.pendingRequestService.submitProfileUpdate(
       id,
       EntityType.PROVIDER,
       completeProfileDto,
       Type.PROFILE_COMPLETE,
     );
-    // return { message: 'Profile completed successfully!', provider: updatedProvider };
   }
 
   @Patch('update-profile')
@@ -68,29 +84,31 @@ export class ProviderController {
     @Body() updateProfileDto: UpdateProviderProfileInput,
   ) {
     if (files.idCard && files.idCard.length > 0) {
-      if (Buffer.isBuffer(files.idCard[0].buffer)) {
-        updateProfileDto.idCard = files.idCard[0].buffer.toString('base64');
+      files = files || {};
+      if (files.idCard && files.idCard?.length > 0) {
+        if (Buffer.isBuffer(files.idCard[0].buffer)) {
+          updateProfileDto.idCard = files.idCard[0].buffer.toString('base64');
+        }
       }
-    }
 
-    if (files.image && files.image.length > 0) {
-      updateProfileDto.image = `/uploads/${files.image[0].filename}`;
-    }
+      if (files.image && files.image?.length > 0) {
+        updateProfileDto.image = `/uploads/${files.image[0].filename}`;
+      }
 
-    console.log('controller');
-    return await this.pendingRequestService.submitProfileUpdate(
-      id,
-      EntityType.PROVIDER,
-      updateProfileDto,
-      Type.PROFILE_UPDATE,
-    );
+      return await this.pendingRequestService.submitProfileUpdate(
+        id,
+        EntityType.PROVIDER,
+        updateProfileDto,
+        Type.PROFILE_UPDATE,
+      );
+    }
   }
 
-  @Get(':providerId/apartments')
+  @Get('myApartments')
   async getProviderApartments(
-    @Param('providerId') providerId: string,
+    @currentUser() user: currentUserType,
   ): Promise<Apartment[]> {
-    return this.providerService.getProviderApartments(providerId);
+    return this.providerService.getProviderApartments(user.id);
   }
 
   @Get(':providerId')

@@ -8,6 +8,7 @@ import {
   forwardRef,
   Get,
   Param,
+  BadRequestException,
 } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
@@ -35,10 +36,14 @@ export class StudentController {
     files: { idCard?: Express.Multer.File[]; image?: Express.Multer.File[] },
     @Body() body: UpdateStudentInput,
   ) {
-    if (files.idCard && files.idCard.length > 0) {
-      body.idCard = files.idCard[0].buffer.toString('base64');
+    files = files || {};
+    if (files.idCard && files.idCard?.length > 0) {
+      if (Buffer.isBuffer(files.idCard[0].buffer)) {
+        body.idCard = files.idCard[0].buffer.toString('base64');
+      }
     }
-    if (files.image && files.image.length > 0) {
+
+    if (files.image && files.image?.length > 0) {
       body.image = `/uploads/${files.image[0].filename}`;
     }
 
@@ -62,10 +67,26 @@ export class StudentController {
     },
     @Body() completeProfileDto: CompleteProfileDto,
   ) {
-    completeProfileDto.idCard = files.idCard[0].buffer.toString('base64');
-    completeProfileDto.image = files.image
-      ? `/uploads/${files.image[0].filename}`
-      : undefined;
+    files = files || {};
+
+    if (!files.idCard || files.idCard.length === 0) {
+      throw new BadRequestException('ID Card is required');
+    }
+    if (files.idCard && files.idCard?.length > 0) {
+      if (Buffer.isBuffer(files.idCard[0].buffer)) {
+        completeProfileDto.idCard = files.idCard[0].buffer.toString('base64');
+      }
+    }
+
+    if (files.image && files.image.length > 0) {
+      completeProfileDto.image = `/uploads/${files.image[0].filename}`;
+    }
+    return await this.pendingRequestService.submitProfileUpdate(
+      id,
+      EntityType.STUDENT,
+      completeProfileDto,
+      Type.PROFILE_COMPLETE,
+    );
 
     return await this.pendingRequestService.submitProfileUpdate(
       id,

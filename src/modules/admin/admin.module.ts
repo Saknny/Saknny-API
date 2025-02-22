@@ -12,10 +12,7 @@ import { PendingRequestModule } from "../request/pendingRequest.module";
 
 
 @Module({
-  imports: [DatabaseModule.forFeature([Admin, Provider, Student]),
-    ProviderModule
-    , StudentModule
-    , ApartmentModule
+  imports: [DatabaseModule.forFeature([Admin])
   , PendingRequestModule],
   controllers: [AdminController],
   providers: [AdminService],

@@ -1,6 +1,5 @@
 export enum ReferenceType {
-    APARTMENT_IMAGE = "apartment image",
-    ROOM_IMAGE = "room image",
-    BED_IMAGE = "bed image",
-
+    APARTMENT_IMAGE = "APARTMENT_IMAGE",
+    ROOM_IMAGE = "ROOM_IMAGE",
+    BED_IMAGE = "BED_IMAGE",
 }
