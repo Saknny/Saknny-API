@@ -150,4 +150,5 @@ export const arErrorMessage: IErrorMessage = {
   APARTMENT_NOT_FOUND: 'الشقة غير موجودة',
   BED_NOT_FOUND: 'السرير غير موجود',
   ROOM_NOT_FOUND: 'الغرفة غير موجودة',
+  FAVORITE_LIST_NOT_FOUND: 'قائمة المفضلة غير موجودة',
 };

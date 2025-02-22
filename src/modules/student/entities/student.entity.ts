@@ -1,11 +1,19 @@
 import { Expose, Type } from 'class-transformer';
 import { IsDate, IsString, Validate } from 'class-validator';
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { IsEndDateAfterStartDate } from '../../../libs/utils/validators/is-endDate-after-startDate';
 import { User } from '../../user/entities/user.entity';
 import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
+import { FavoriteList } from '@src/modules/favoriteList/entities/favorite-list.entity';
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
@@ -39,11 +47,10 @@ export class Student extends BaseModel {
   @Column({ type: Boolean, default: false })
   isTrusted: boolean;
 
-
-  @Column({ type: Boolean, default: false  })
+  @Column({ type: Boolean, default: false })
   isReviewed: boolean;
 
-  @Column({ type: 'varchar', nullable: true })  // Store idCard as binary
+  @Column({ type: 'varchar', nullable: true }) // Store idCard as binary
   idCard: string;
 
   @Column({ nullable: true })
@@ -52,13 +59,13 @@ export class Student extends BaseModel {
   @Column({ nullable: true })
   major: string;
 
-  @Column({ type: 'boolean', default: false , nullable: true  })
+  @Column({ type: 'boolean', default: false, nullable: true })
   smoking: boolean;
 
   @Column({ nullable: true })
   level: string;
 
-  @Column({ type: 'boolean', default: false  , nullable: true })
+  @Column({ type: 'boolean', default: false, nullable: true })
   socialPerson: boolean;
 
   @Column('simple-array', { nullable: true })
@@ -74,4 +81,10 @@ export class Student extends BaseModel {
   @OneToOne(() => Bed, (bed) => bed.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'bedId' })
   bed: Bed;
+
+  @OneToMany(() => FavoriteList, (favoriteList) => favoriteList.student, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  favoriteLists: FavoriteList[];
 }
