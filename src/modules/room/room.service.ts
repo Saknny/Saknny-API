@@ -66,4 +66,12 @@ export class RoomService {
       return { message: 'Room can not be deleted ' };
     }
   }
+
+  async getRoom(roomId: string): Promise<Room> {
+    return await this.roomRepository.findOneOrError(
+      { id: roomId },
+      ErrorCodeEnum.ROOM_NOT_FOUND,
+      ['apartment', 'apartment.images', 'images'],
+    );
+  }
 }

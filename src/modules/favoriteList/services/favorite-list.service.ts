@@ -85,6 +85,7 @@ export class FavoriteListService {
     return this.apartmentRepo.save(apartment);
   }
 
+  // TODO: fix this
   async getUserFavoriteLists(userId: number) {
     return this.favoriteListRepo
       .createQueryBuilder('favoriteList')
@@ -99,7 +100,7 @@ export class FavoriteListService {
     return this.apartmentRepo.find({
       where: { favoriteList: { id: listId, student: { id: studentId } } },
       order: { createdAt: 'DESC' },
-      select: ['id', 'descriptionEn', 'descriptionAr', 'images'],
+      select: ['id', 'descriptionEn', 'descriptionAr'],
     });
   }
 }
