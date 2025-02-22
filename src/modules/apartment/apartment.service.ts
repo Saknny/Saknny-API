@@ -14,6 +14,7 @@ import { join } from 'path';
 import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.dto';
 import { ApartmentDocument } from './entities/document.entity';
 import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum';
+import { GetApartmentsDto } from './dto/get-apartments.dto';
 
 @Injectable()
 export class ApartmentService {
@@ -302,5 +303,41 @@ export class ApartmentService {
       ErrorCodeEnum.APARTMENT_NOT_FOUND,
       ['provider', 'images', 'rooms', 'rooms.beds'],
     );
+  }
+
+  async getApartments(filters: GetApartmentsDto) {
+    const { gender, minPrice, maxPrice, page, limit } = filters;
+
+    const query = this.apartmentRepository.createQueryBuilder('apartment');
+
+    if (gender) {
+      query.andWhere('apartment.gender = :gender', { gender });
+    }
+
+    if (minPrice !== undefined) {
+      query.andWhere('apartment.price >= :minPrice', { minPrice });
+    }
+
+    if (maxPrice !== undefined) {
+      query.andWhere('apartment.price <= :maxPrice', { maxPrice });
+    }
+
+    // TODO: Location filter (to be implemented)
+
+    query.orderBy('apartment.createdAt', 'DESC');
+
+    const take = limit || 10;
+    const skip = (page - 1) * take;
+
+    query.skip(skip).take(take);
+
+    const [data, total] = await query.getManyAndCount();
+
+    return {
+      total,
+      page,
+      limit,
+      data,
+    };
   }
 }

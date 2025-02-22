@@ -29,6 +29,7 @@ import { EntityType } from '../request/entities/enum/entityType.enum';
 import { ReferenceType } from '../request/entities/enum/referenceType.enum';
 import { Type } from '../request/entities/enum/type.enum';
 import { fileUploadInterceptor } from './interceptors/document.interceptor';
+import { GetApartmentsDto } from './dto/get-apartments.dto';
 
 @Controller('apartment')
 export class ApartmentController {
@@ -170,5 +171,10 @@ export class ApartmentController {
   @Get(':apartmentId')
   async getApartment(@Param('apartmentId') apartmentId: string) {
     return this.apartmentService.getApartment(apartmentId);
+  }
+
+  @Get()
+  async getApartments(@Query() filters: GetApartmentsDto) {
+    return this.apartmentService.getApartments(filters);
   }
 }
