@@ -1,8 +1,13 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, UpdateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToOne,
+  UpdateDateColumn,
   CreateDateColumn,
   DeleteDateColumn,
-  OneToMany
+  OneToMany,
 } from 'typeorm';
 import { Room } from '@src/modules/room/entities/room.entity/room.entity';
 import { Student } from '@src/modules/student/entities/student.entity';
@@ -18,10 +23,10 @@ export class Bed extends BaseModel {
   @Column({ default: 'AVAILABLE' })
   status: string;
 
-  @Column("text")
+  @Column('text')
   descriptionEn: string;
 
-  @Column("text")
+  @Column('text')
   descriptionAr: string;
 
   @CreateDateColumn()
@@ -35,10 +40,11 @@ export class Bed extends BaseModel {
 
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
+
   @OneToMany(() => BedImage, (images) => images.bed, {
-      onDelete: "SET NULL",
-      onUpdate: "CASCADE",
-      nullable: true
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    nullable: true,
   })
   images: BedImage[];
 

@@ -1,4 +1,18 @@
-import { Controller, Post, Param, UploadedFiles, UseInterceptors, Patch, UploadedFile, NotFoundException, Delete, Body, forwardRef, Inject } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  UploadedFiles,
+  UseInterceptors,
+  Patch,
+  UploadedFile,
+  NotFoundException,
+  Delete,
+  Body,
+  forwardRef,
+  Inject,
+  Get,
+} from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -15,64 +29,92 @@ import { PendingRequestService } from '../request/pendingRequest.service';
 
 @Controller('beds')
 export class BedController {
-    constructor(private readonly bedService: BedService,
-        @Inject(forwardRef(() => PendingRequestService))
-        private readonly pendingRequestService: PendingRequestService
-    ) { }
+  constructor(
+    private readonly bedService: BedService,
+    @Inject(forwardRef(() => PendingRequestService))
+    private readonly pendingRequestService: PendingRequestService,
+  ) {}
 
+  @Post(':id/create')
+  async createBed(
+    @Param('id') roomId: string,
+    @Body() createBedDto: CreateBedDto,
+  ) {
+    return this.bedService.createBed(roomId, createBedDto);
+  }
 
+  @Patch(':id/update')
+  async updateBed(
+    @Param('id') bedId: string,
+    @Body() updateBedDto: UpdateBedDto,
+  ) {
+    return this.bedService.updateBed(bedId, updateBedDto);
+  }
 
-    @Post(':id/create')
-    async createBed(@Param('id') roomId: string,
-        @Body() createBedDto: CreateBedDto) {
-        return this.bedService.createBed(roomId, createBedDto);
+  @Delete(':id/delete')
+  async deleteBed(@Param('id') BedId: string) {
+    return this.bedService.deleteBed(BedId);
+  }
+
+  @Post(':id/upload-images')
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'images', maxCount: 10 }], {
+      storage: diskStorage({
+        destination: './uploads/beds',
+        filename: (req, file, callback) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          callback(
+            null,
+            file.fieldname + '-' + uniqueSuffix + extname(file.originalname),
+          );
+        },
+      }),
+    }),
+  )
+  async uploadBedImages(
+    @Param('id') id: string,
+    @UploadedFiles() files: { images?: Express.Multer.File[] },
+    @currentUser() user: currentUserType,
+  ) {
+    const imageFilenames = files.images?.map((file) => file.filename) || [];
+    return this.pendingRequestService.uploadImageRequest(
+      user.id,
+      id,
+      Type.UPLOAD_BED,
+      ReferenceType.BED_IMAGE,
+      EntityType.BED,
+      imageFilenames,
+    );
+  }
+
+  @Patch(':id/update-image')
+  @UseInterceptors(bedImageUploadInterceptor())
+  async updateBedImage(
+    @Param('id') imageId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @currentUser() user: currentUserType,
+  ) {
+    if (!file) {
+      throw new NotFoundException('No file uploaded');
     }
+    return this.pendingRequestService.uploadImageRequest(
+      user.id,
+      imageId,
+      Type.UPDATE_BED,
+      ReferenceType.BED_IMAGE,
+      EntityType.BED,
+      file.filename,
+    );
+  }
 
-    @Patch(':id/update')
-    async updateBed(@Param('id') bedId: string,
-        @Body() updateBedDto: UpdateBedDto) {
-        return this.bedService.updateBed(bedId, updateBedDto);
-    }
+  @Delete(':id/delete-image')
+  async deleteBedImage(@Param('id') imageId: string) {
+    return this.bedService.deleteBedImage(imageId);
+  }
 
-    @Delete(':id/delete')
-    async deleteBed(@Param('id') BedId: string) {
-        return this.bedService.deleteBed(BedId);
-    }
-
-
-    @Post(':id/upload-images')
-    @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 10 }], {
-        storage: diskStorage({
-            destination: './uploads/beds',
-            filename: (req, file, callback) => {
-                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-                callback(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
-            },
-        }),
-    }))
-    async uploadBedImages(@Param('id') id: string, @UploadedFiles() files: { images?: Express.Multer.File[] },
-        @currentUser() user: currentUserType) {
-        const imageFilenames = files.images?.map(file => file.filename) || [];
-        return this.pendingRequestService.uploadImageRequest(user.id, id, Type.UPLOAD_BED, ReferenceType.BED_IMAGE, EntityType.BED, imageFilenames);
-    }
-
-
-    @Patch(':id/update-image')
-    @UseInterceptors(bedImageUploadInterceptor())
-    async updateBedImage(
-        @Param('id') imageId: string,
-        @UploadedFile() file: Express.Multer.File,
-        @currentUser() user: currentUserType
-    ) {
-        if (!file) {
-            throw new NotFoundException('No file uploaded');
-        }
-        return this.pendingRequestService.uploadImageRequest(user.id, imageId, Type.UPDATE_BED, ReferenceType.BED_IMAGE, EntityType.BED, file.filename);
-    }
-
-
-    @Delete(':id/delete-image')
-    async deleteBedImage(@Param('id') imageId: string) {
-        return this.bedService.deleteBedImage(imageId);
-    }
+  @Get(':id')
+  async getBed(@Param('id') id: string) {
+    return this.bedService.getBed(id);
+  }
 }
