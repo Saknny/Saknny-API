@@ -15,11 +15,11 @@ export class PendingDocument extends BaseModel {
     @Column({ nullable: true })
     entityId?: string; // apartment Id
 
-    @OneToOne(() => PendingRequest, (pendingRequest) => pendingRequest.pendingDocument, {
-        onDelete: 'SET NULL',
-        onUpdate: 'CASCADE',
-        nullable: true
-    })
+    // @OneToOne(() => PendingRequest, (pendingRequest) => pendingRequest.pendingDocument, {
+    //     onDelete: 'SET NULL',
+    //     onUpdate: 'CASCADE',
+    //     nullable: true
+    // })
     @JoinColumn({ name: "pendingRequestId" })
     pendingRequest?: PendingRequest;
 }

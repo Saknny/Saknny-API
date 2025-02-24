@@ -9,11 +9,11 @@ export class PendingProfile extends BaseModel {
         super(input);
     }
 
-    @OneToOne(() => PendingRequest, (pendingRequest) => pendingRequest.pendingProfile, {
-        onDelete: 'SET NULL', // ✅ Allow null when related PendingRequest is deleted
-        onUpdate: 'CASCADE',
-        nullable: true
-    })
+    // @OneToOne(() => PendingRequest, (pendingRequest) => pendingRequest.pendingProfile, {
+    //     onDelete: 'SET NULL', // ✅ Allow null when related PendingRequest is deleted
+    //     onUpdate: 'CASCADE',
+    //     nullable: true
+    // })
     @JoinColumn({ name: "pendingRequestId" })
     pendingRequest?: PendingRequest;
 
@@ -21,7 +21,7 @@ export class PendingProfile extends BaseModel {
     userId?: string;
 
     @Column({ type: "jsonb", nullable: true })
-    data?: any; // Can be null if no data is provided
+    data?: any; 
 
     @Column({ nullable: true })
     reason?: string;

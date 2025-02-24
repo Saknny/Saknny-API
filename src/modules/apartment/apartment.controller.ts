@@ -38,7 +38,7 @@ export class ApartmentController {
     @Body() createApartmentDto: CreateApartmentDto,
   ) {
     console.log(createApartmentDto);
-    return this.apartmentService.createApartment(id, createApartmentDto);
+    return this.pendingRequestService.createApartmentRequest(id, createApartmentDto);
   }
 
   @Post(':id/Apartment-document')
@@ -51,7 +51,7 @@ export class ApartmentController {
     },
   ) {
     const document = files.document[0].buffer.toString('base64');
-    return await this.pendingRequestService.uploadDocumentRequest(id, document);
+    // return await this.pendingRequestService.uploadDocumentRequest(id, document);
   }
 
   @Patch(':id/update')

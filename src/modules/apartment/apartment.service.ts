@@ -35,67 +35,69 @@ export class ApartmentService {
     private readonly apartmentDocumentRepo: BaseRepository<ApartmentDocument>,
   ) {}
 
-  async createApartment(
-    providerId: string,
-    createApartmentDto: CreateApartmentDto,
-  ): Promise<Apartment> {
-    const { descriptionEn, descriptionAr, rooms, gender } = createApartmentDto;
 
-    // Find the provider
-    const provider = await this.providerRepository.findOne({
-      userId: providerId,
-    });
-    if (!provider) {
-      throw new NotFoundException('Provider not found');
-    }
+  
+  // async createApartment(
+  //   providerId: string,
+  //   createApartmentDto: CreateApartmentDto,
+  // ): Promise<Apartment> {
+  //   const { descriptionEn, descriptionAr, rooms, gender } = createApartmentDto;
 
-    // Create the apartment
-    const apartment = this.apartmentRepository.create({
-      descriptionEn,
-      descriptionAr,
-      provider,
-      gender,
-    });
+  
+  //   const provider = await this.providerRepository.findOne({
+  //     userId: providerId,
+  //   });
+  //   if (!provider) {
+  //     throw new NotFoundException('Provider not found');
+  //   }
 
-    await this.apartmentRepository.save(apartment);
+  //   // Create the apartment
+  //   const apartment = this.apartmentRepository.create({
+  //     descriptionEn,
+  //     descriptionAr,
+  //     provider,
+  //     gender,
+  //   });
 
-    // Create rooms and beds
-    for (const roomDto of rooms) {
-      const {
-        descriptionEn,
-        descriptionAr,
-        bedCount,
-        availableFor,
-        hasAirConditioner,
-        beds,
-      } = roomDto;
+  //   await this.apartmentRepository.save(apartment);
 
-      const room = this.roomRepository.create({
-        descriptionEn,
-        descriptionAr,
-        bedCount,
-        availableFor,
-        hasAirConditioner,
-        apartment,
-      });
+  //   // Create rooms and beds
+  //   for (const roomDto of rooms) {
+  //     const {
+  //       descriptionEn,
+  //       descriptionAr,
+  //       bedCount,
+  //       availableFor,
+  //       hasAirConditioner,
+  //       beds,
+  //     } = roomDto;
 
-      await this.roomRepository.save(room);
+  //     const room = this.roomRepository.create({
+  //       descriptionEn,
+  //       descriptionAr,
+  //       bedCount,
+  //       availableFor,
+  //       hasAirConditioner,
+  //       apartment,
+  //     });
 
-      // Create beds for the room
-      for (const bedDto of beds) {
-        const { descriptionEn, descriptionAr, price } = bedDto;
-        const bed = this.bedRepository.create({
-          descriptionEn,
-          descriptionAr,
-          price,
-          room,
-        });
-        await this.bedRepository.save(bed);
-      }
-    }
+  //     await this.roomRepository.save(room);
 
-    return apartment;
-  }
+  //     // Create beds for the room
+  //     for (const bedDto of beds) {
+  //       const { descriptionEn, descriptionAr, price } = bedDto;
+  //       const bed = this.bedRepository.create({
+  //         descriptionEn,
+  //         descriptionAr,
+  //         price,
+  //         room,
+  //       });
+  //       await this.bedRepository.save(bed);
+  //     }
+  //   }
+
+  //   return apartment;
+  // }
 
   async updateApartment(id: string, updateApartment: UpdateApartmentDto) {
     const apartment = await this.apartmentRepository.findOne({ id });

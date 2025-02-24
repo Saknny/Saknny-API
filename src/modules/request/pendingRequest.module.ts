@@ -15,6 +15,7 @@ import { StudentModule } from "../student/student.module";
 import { ApartmentDocument } from "../apartment/entities/document.entity";
 import { PendingDocument } from "./entities/pendingDocument.entity";
 import { ImageModule } from "../image/image.module";
+import { RequestItem } from "./entities/RequestItem.entity";
 
 console.log("PendingRequestModule Imports:", [
     ApartmentModule,
@@ -23,7 +24,7 @@ console.log("PendingRequestModule Imports:", [
 ]);
 
 @Module({
-    imports: [DatabaseModule.forFeature([PendingRequest, Provider, ImageApproval, PendingProfile, PendingDocument])
+    imports: [DatabaseModule.forFeature([PendingRequest, Provider, ImageApproval, PendingProfile, PendingDocument , RequestItem])
         , forwardRef(() => ApartmentModule),
     forwardRef(() => RoomModule),
     forwardRef(() => BedModule),

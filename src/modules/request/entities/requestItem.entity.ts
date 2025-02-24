@@ -1,17 +1,15 @@
+import { Provider } from "@nestjs/common";
 import { BaseModel } from "@src/libs/database/base.model";
-import { Column, DeepPartial, Entity, ManyToOne, OneToMany, OneToOne, JoinColumn } from "typeorm";
-import { ImageApproval } from "./imageApproval.entity";
-import { Provider } from "@src/modules/provider/entities/provider.entity";
+import { Column, DeepPartial, Entity, ManyToOne } from "typeorm";
+import { PendingRequest } from "./pendingRequest.entity";
 import { Status } from "./enum/status.enum";
 import { Type } from "./enum/type.enum";
-import { PendingProfile } from "./PendingProfile.Entity";
-import { PendingDocument } from "./pendingDocument.entity";
-import { RequestItem } from "./RequestItem.entity";
 import { EntityType } from "./enum/entityType.enum";
+import { ItemType } from "./enum/itemType.enum";
 
 @Entity()
-export class PendingRequest extends BaseModel {
-    constructor(input?: DeepPartial<PendingRequest>) {
+export class RequestItem extends BaseModel {
+    constructor(input?: DeepPartial<RequestItem>) {
         super(input);
     }
 
@@ -23,19 +21,29 @@ export class PendingRequest extends BaseModel {
     })
     status?: Status;
 
+
     @Column({
         type: "enum",
-        enum: Type,
+        enum: ItemType,
         nullable: true,
     })
-    type?: Type;
+    type?: ItemType;
+
+
+    @Column({ nullable: true })
+    image?: string;
+
+    @Column({ type: "jsonb", nullable: true })
+    data?: any;
+
+    @Column({ type: 'varchar', nullable: true })
+    document?: string;
 
     @Column({ nullable: true })
     reason?: string;
 
     @Column({ nullable: true })
     description?: string;
-
 
     @Column({ nullable: true })
     referenceId?: string;
@@ -47,12 +55,13 @@ export class PendingRequest extends BaseModel {
     })
     referenceType?: string;
 
-    @OneToMany(() => RequestItem, (item) => item.request, {
+    @Column({ nullable: true })
+    referenceName?: string;
+
+    @ManyToOne(() => PendingRequest, (request) => request.items, {
         onDelete: "SET NULL",
         onUpdate: "CASCADE",
         nullable: true,
     })
-    items?: RequestItem[];
-
-
+    request?: PendingRequest;
 }

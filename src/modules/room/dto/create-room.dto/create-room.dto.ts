@@ -8,6 +8,9 @@ export class CreateRoomDto {
   @IsString()
   descriptionEn: string;
 
+  @IsString()
+  name: string;
+
   @IsNotEmpty()
   @IsString()
   descriptionAr: string;
