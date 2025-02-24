@@ -11,6 +11,7 @@ import { User } from '../../user/entities/user.entity';
 import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity';
 import { PendingRequest } from '@src/modules/request/entities/pendingRequest.entity';
 import { Status } from '@src/modules/request/entities/enum/status.enum';
+import { ProviderSubscription } from '@src/modules/provider-subscription/provider-subscription.entity/provider-subscription.entity';
 
 @Entity()
 export class Provider extends BaseModel {
@@ -62,5 +63,8 @@ export class Provider extends BaseModel {
 
   @OneToMany(() => PendingRequest, (pendingRequests) => pendingRequests.provider, { cascade: true })
   pendingRequests: PendingRequest[];
+
+  @OneToMany(() => ProviderSubscription, (sub) => sub.provider)
+  subscriptions: ProviderSubscription[];
 
 }

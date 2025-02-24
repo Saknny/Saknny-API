@@ -20,7 +20,6 @@ import { UserModule } from './modules/user/user.module';
 import { OtpModule } from './modules/otp/otp.module';
 import { PubSubModule } from './libs/redis-pubsub/pubsub.module';
 import { ChatModule } from './modules/chat/chat.module';
-import { PaymentModule } from './modules/payment/payment.module';
 import { UploaderModule } from './libs/application/uploader/uploader.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { ContextAuthService } from './libs/application/context/context-auth.service';
@@ -32,7 +31,9 @@ import { ApartmentModule } from './modules/apartment/apartment.module';
 import { PendingRequestModule } from './modules/request/pendingRequest.module';
 import { FavoriteModule } from './modules/favoriteList/favorite.module';
 import { ImageModule } from './modules/image/image.module';
-
+import { SubscriptionPlanModule } from './modules/subscription-plan/subscription-plan.module';
+import { ProviderSubscriptionModule } from './modules/provider-subscription/provider-subscription.module';
+import { PaymentModule } from './modules/payment/payment.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -77,6 +78,11 @@ import { ImageModule } from './modules/image/image.module';
     PendingRequestModule,
     FavoriteModule,
     ImageModule,
+    SubscriptionPlanModule,
+    ProviderSubscriptionModule,
+    PaymentModule,
+    SubscriptionPlanModule,
+    ProviderSubscriptionModule
   ],
   controllers: [],
   providers: [
