@@ -113,6 +113,11 @@ export class ProviderController {
 
   @Get(':providerId')
   getProvider(@Param('providerId') providerId: string) {
-    return this.providerService.getById(providerId);
+    return this.providerService.provider(providerId);
+  }
+
+  @Get(':providerId/board')
+  getProviderBoard(@Param('providerId') providerId: string) {
+    return this.providerService.providerBoard(providerId);
   }
 }

@@ -24,17 +24,33 @@ export class ProviderService {
     if (!provider) {
       throw new NotFoundException('provider not found');
     }
+
     await this.providerRepository.save(provider);
 
     return provider;
   }
 
   async provider(id: string) {
-    return this.providerRepository.findOneOrError(
+    const provider = await this.providerRepository.findOne(
       { id, status: Status.APPROVED },
-      ErrorCodeEnum.PROVIDER_NOT_FOUND_OR_NOT_PENDING_NOR_REJECTED,
       ['user'],
     );
+
+    if (!provider) {
+      throw new NotFoundException('Provider not found');
+    }
+
+    return provider;
+  }
+
+  async providerBoard(id: string) {
+    const provider = await this.providerRepository.findOne({ id }, ['user']);
+
+    if (!provider) {
+      throw new NotFoundException('Provider not found');
+    }
+
+    return provider;
   }
 
   async updateProfile(userId: string, attrs: Partial<Provider>) {
