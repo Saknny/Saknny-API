@@ -8,8 +8,9 @@ import { Apartment } from '../apartment/entities/apartment.entity/apartment.enti
 import { Room } from '../room/entities/room.entity/room.entity';
 import { PendingRequestModule } from '../request/pendingRequest.module';
 @Module({
-  imports: [DatabaseModule.forFeature([Bed, Apartment, Room])],
-  providers: [BedService],
+  imports: [DatabaseModule.forFeature([Bed, Apartment, Room]) , 
+  forwardRef(() => PendingRequestModule)],
+    providers: [BedService],
   controllers: [BedController],
   exports: [BedService]
 })

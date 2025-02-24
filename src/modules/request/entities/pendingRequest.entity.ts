@@ -40,6 +40,9 @@ export class PendingRequest extends BaseModel {
     @Column({ nullable: true })
     referenceId?: string;
 
+    @Column({ nullable: true })
+    userId?: string;
+
     @Column({
         type: "enum",
         enum: EntityType,

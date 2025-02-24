@@ -40,6 +40,14 @@ export class AdminController {
     return await this.pendingRequestService.updateRequestApproval(id, body);
   }
 
+
+  @Patch(':id/item-approval')
+  async itemApproval(@Param('id') id: string, @Body() body: RequestApprovalDto) {
+    
+    return await this.pendingRequestService.updateItemApproval(id, body);
+  }
+
+
   @Patch(':id/image-approval')
   async imageApproval(@Param('id') id: string, @Body() body: ImageApprovalDto) {
     return await this.pendingRequestService.updateImageApproval(id, body);

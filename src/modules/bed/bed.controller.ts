@@ -18,17 +18,20 @@ import { BedService } from './bed.service';
 
 import { CreateBedDto } from './dto/create-bed.dto/create-bed.dto';
 import { UpdateBedDto } from './dto/update-bed.dto/update-bed.dto';
+import { PendingRequestService } from '../request/pendingRequest.service';
 
 @Controller('beds')
 export class BedController {
-  constructor(private readonly bedService: BedService) {}
+  constructor(private readonly bedService: BedService ,   
+      @Inject(forwardRef(() => PendingRequestService))
+  private readonly pendingRequestService: PendingRequestService,) {}
 
   @Post(':id/create')
   async createBed(
-    @Param('id') roomId: string,
+    @Param('id') ApartmentRequestId: string,
     @Body() createBedDto: CreateBedDto,
   ) {
-    return this.bedService.createBed(roomId, createBedDto);
+    return this.pendingRequestService.addBedRequest(ApartmentRequestId, createBedDto);
   }
 
   @Patch(':id/update')

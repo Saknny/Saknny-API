@@ -15,5 +15,8 @@ export class CreateBedDto {
 
 
   @IsString()
-  name:string;
+  name: string;
+
+  @IsString()
+  roomName: string;
 }

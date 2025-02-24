@@ -1,11 +1,12 @@
 import { Provider } from "@nestjs/common";
 import { BaseModel } from "@src/libs/database/base.model";
-import { Column, DeepPartial, Entity, ManyToOne } from "typeorm";
+import { Column, DeepPartial, Entity, ManyToOne, OneToMany } from "typeorm";
 import { PendingRequest } from "./pendingRequest.entity";
 import { Status } from "./enum/status.enum";
 import { Type } from "./enum/type.enum";
 import { EntityType } from "./enum/entityType.enum";
 import { ItemType } from "./enum/itemType.enum";
+import { ImageApproval } from "./imageApproval.entity";
 
 @Entity()
 export class RequestItem extends BaseModel {
@@ -24,14 +25,18 @@ export class RequestItem extends BaseModel {
 
     @Column({
         type: "enum",
-        enum: ItemType,
+        enum: EntityType,
         nullable: true,
     })
-    type?: ItemType;
+    type?: EntityType;
 
 
-    @Column({ nullable: true })
-    image?: string;
+    @OneToMany(() => ImageApproval, (images) => images.Item, {
+        onDelete: "SET NULL",
+        onUpdate: "CASCADE",
+        nullable: true,
+    })
+    images?: ImageApproval;
 
     @Column({ type: "jsonb", nullable: true })
     data?: any;
@@ -55,8 +60,12 @@ export class RequestItem extends BaseModel {
     })
     referenceType?: string;
 
-    @Column({ nullable: true })
-    referenceName?: string;
+
+    @Column({nullable:true})
+    entityId?:string;
+
+    @Column({nullable:true})
+    entityName?:string;
 
     @ManyToOne(() => PendingRequest, (request) => request.items, {
         onDelete: "SET NULL",
