@@ -213,11 +213,30 @@ export class ApartmentService {
   }
 
   async getApartment(id: string) {
-    return this.apartmentRepository.findOneOrError(
+    const apartment = await this.apartmentRepository.findOne(
       { id, status: 'PUBLISHED' },
-      ErrorCodeEnum.APARTMENT_NOT_FOUND,
-      ['provider', 'images', 'rooms', 'rooms.beds'],
+      ['provider', 'rooms', 'rooms.beds'],
     );
+
+    if (!apartment) {
+      throw new NotFoundException('Apartment not found');
+    }
+
+    return apartment;
+  }
+
+  async getApartmentBoard(id: string) {
+    const apartment = await this.apartmentRepository.findOne({ id }, [
+      'provider',
+      'rooms',
+      'rooms.beds',
+    ]);
+
+    if (!apartment) {
+      throw new NotFoundException('Apartment not found');
+    }
+
+    return apartment;
   }
 
   async getApartments(filters: GetApartmentsDto) {

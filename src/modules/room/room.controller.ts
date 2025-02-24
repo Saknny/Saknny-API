@@ -46,4 +46,9 @@ export class RoomController {
   async getRoom(@Param('id') roomId: string) {
     return this.roomService.getRoom(roomId);
   }
+
+  @Get(':id/board')
+  async getRoomBoard(@Param('id') roomId: string) {
+    return this.roomService.getRoomBoard(roomId);
+  }
 }

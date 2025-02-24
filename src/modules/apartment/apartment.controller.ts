@@ -107,6 +107,11 @@ export class ApartmentController {
     return this.apartmentService.getApartment(apartmentId);
   }
 
+  @Get(':apartmentId/board')
+  async getApartmentBoard(@Param('apartmentId') apartmentId: string) {
+    return this.apartmentService.getApartmentBoard(apartmentId);
+  }
+
   @Get()
   async getApartments(@Query() filters: GetApartmentsDto) {
     return this.apartmentService.getApartments(filters);
