@@ -129,61 +129,23 @@ export class PendingRequestService {
             .getOne();
         const items = request.items;
 
-        const apartments = items.filter(item => item.type === EntityType.APARTMENT);
+        const apartmentItem = items.filter(item => item.type === EntityType.APARTMENT)[0];
+        const apartment = await this.approveApartment(apartmentItem);
+
         const rooms = items.filter(item => item.type === EntityType.ROOM);
-        const beds = items.filter(item => item.type === EntityType.BED);
-
-        await Promise.all(apartments.map(item => this.ApproveRequestItem(request.userId, item)));
-        await Promise.all(rooms.map(item => this.ApproveRequestItem(request.userId, item)));
-        await Promise.all(beds.map(item => this.ApproveRequestItem(request.userId, item)));
 
 
-        //     if (!request) {
+        await Promise.all(rooms.map(async (item) => {
+            const room = await this.approveRoom(item, apartment.id);
+            const beds = items.filter(item => (item.type === EntityType.BED && item.data.roomName === room.name));
+            await Promise.all(beds.map(item => this.approveBed(item, room.id)));
+        }
+        ));
 
-        //         throw new NotFoundException('record not found');
-        //     }
-        //     if (body.status == Status.REJECTED) {
-        //         Object.assign(request, body);
-        //         await this.pendingRequestRepo.save(request);
-        //         return;
-        //     }
-        //     Object.assign(request, body);
-        //     await this.pendingRequestRepo.save(request);
-
-        //     if (request.type.startsWith('UPLOAD')) {
-        //         const images = await this.getApprovedImages(request.id);
-        //         if (images.length > 0) {
-        //             await this.imageService.uploadImages(images[0].referenceId, images[0].entityType, images.map(image => image.url))
-        //         }
-        //     } else if (request.type.startsWith('UPDATE')) {
-        //         const images = await this.getApprovedImages(request.id);
-        //         if (images.length) {
-        //             await this.imageService.updateImage(images[0].referenceId, images[0].entityType, images[0].url)
-        //         }
-        //     } else if (request.type == Type.PROFILE_COMPLETE) {
-        //         const pendingProfile = await this.pendingProfileRepo.findOne({ id: request.pendingProfile.id });
-
-        //         if (pendingProfile.entityType == EntityType.PROVIDER) {
-        //             this.providerService.updateProfile(pendingProfile.userId, pendingProfile.data);
-        //         } else {
-
-        //             this.studentService.completeProfile(pendingProfile.userId, pendingProfile.data);
-        //         }
-        //     } else if (request.type == Type.PROFILE_UPDATE) {
-        //         const pendingProfile = await this.pendingProfileRepo.findOne({ id: request.pendingProfile.id });
-        //         if (pendingProfile.entityType == EntityType.PROVIDER) {
-        //             this.providerService.updateProfile(pendingProfile.userId, pendingProfile.data);
-        //         } else {
-        //             this.studentService.updateStudent(pendingProfile.userId, pendingProfile.data);
-        //         }
-        //     } else if (request.type == Type.DOCUMENT_UPLOAD) {
-        //         const apartmentDocument = await this.pendingDocumentRepo.findOne({ id: request.pendingDocument.id });
-        //         this.apartmentService.uploadDocuments(apartmentDocument.entityId, apartmentDocument.document);
-
-        //     }
 
 
     }
+
     async getApprovedImages(id: string) {
         //     const request = await this.pendingRequestRepo.findOne({ id });
         //     if (!request) {
@@ -216,7 +178,7 @@ export class PendingRequestService {
 
 
     async getPendingRequests() {
-        //     return await this.pendingRequestRepo.find({ where: { status: Status.PENDING } });// relation
+        return await this.pendingRequestRepo.find({ where: { status: Status.PENDING } });
     }
 
 
@@ -444,85 +406,56 @@ export class PendingRequestService {
         await this.requestItemRepo.save(item);
     }
 
-    async ApproveRequestItem(userId: string, item: RequestItem) {
-        const request = await this.pendingRequestRepo.findOne({ id: item.request.id })
-        if (item.type == EntityType.APARTMENT_IMAGE) {
-            //  create record for each image in image's table
-            // and link image with appratment id and additionla info
-            // change status requestItem
-
-            const apartment = await this.apartmentService.createApartment(userId, item.data);
-            request.referenceId = apartment.id;
-            item.referenceId = item.entityId = apartment.id;
-
-            const images = await this.imagesRepo.find({ where: { Item: item } });
-            await this.imageService.uploadImages(apartment.id, EntityType.APARTMENT, images.map(image => image.url));
-
-            await this.apartmentService.uploadDocuments(apartment.id, item.document);
-
-        }
-        else if (item.type == EntityType.APARTMENT_DOC) {
-            //  for this item  create record in docs table and map the data from this item to doc record
-            // link this docRecord with appartement id (refId, refType)
-            // change status for this requestItem
-        }
-        else if (item.type == EntityType.ROOM) {
 
 
+    async approveApartment(item: RequestItem) {
+        const request = await this.pendingRequestRepo.findOne({ id: item.request.id });
 
+        const apartment = await this.apartmentService.createApartment(request.userId, item.data);
 
+        // ✅ Fetch images using QueryBuilder
+        const images = await this.imagesRepo
+            .createQueryBuilder('image')
+            .leftJoinAndSelect('image.Item', 'item')
+            .where('item.id = :itemId', { itemId: item.id }) // ✅ Ensure we get images linked to the correct request item
+            .getMany();
 
+        console.log("RequestItem:", item);
+        console.log("Images:", images);
 
-        } else if (item.type == EntityType.BED) {
+        await this.imageService.uploadImages(apartment.id, EntityType.APARTMENT, images.map(image => image.url));
 
-            console.log(item.data.roomName)
+        await this.apartmentService.uploadDocuments(apartment.id, item.document);
 
-
-
-        }
-
-        await this.requestItemRepo.save(item);
-        await this.pendingRequestRepo.save(request);
+        return apartment;
     }
 
 
-
-    async approveBed(item: RequestItem, requestId: string) {
-        const room = await this.requestItemRepo
-            .createQueryBuilder('room')
-            .leftJoinAndSelect('room.request', 'request')
-            .where('room.type = :type', { type: EntityType.ROOM })
-            .andWhere('room.entityName = :name', { name: item.data.roomName })
-            .andWhere('room.requestId = :requestId', { requestId })
-            .getOne();
-
-
-        const bed = await this.bedService.createBed(room.entityId, item.data);
-        item.entityId = bed.id;
-
-        const images = await this.imagesRepo.find({ where: { Item: item } });
+    async approveBed(item: RequestItem, roomId: string) {
+        const request = await this.pendingRequestRepo.findOne({ id: item.request.id })
+        const bed = await this.bedService.createBed(roomId, item.data);
+        const images = await this.imagesRepo
+            .createQueryBuilder('image')
+            .leftJoinAndSelect('image.Item', 'item')
+            .where('item.id = :itemId', { itemId: item.id }) // ✅ Ensure we get images linked to the correct request item
+            .getMany();
         await this.imageService.uploadImages(bed.id, EntityType.BED, images.map(image => image.url));
-
-
-
 
     }
 
 
     async approveRoom(item: RequestItem, apartmentId: string) {
         const room = await this.roomService.createRoom(apartmentId, item.data);
-        item.entityId = room.id;
-
-        const images = await this.imagesRepo.find({ where: { Item: item } });
+        const images = await this.imagesRepo
+        .createQueryBuilder('image')
+        .leftJoinAndSelect('image.Item', 'item')
+        .where('item.id = :itemId', { itemId: item.id }) // ✅ Ensure we get images linked to the correct request item
+        .getMany();
         await this.imageService.uploadImages(room.id, EntityType.ROOM, images.map(image => image.url));
-
+        return room;
     }
-    // switch (type)
-    // approveBed
-    // approveRoom
-    // approveAppartment
-    // approveAppartmentImages
-    // approveRoomImages
-    // approveBedImages
+
+
+
 }
 
