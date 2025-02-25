@@ -1,4 +1,4 @@
-import { Entity, Column, OneToOne } from 'typeorm';
+import { Entity, Column, OneToOne, CreateDateColumn } from 'typeorm';
 import { BaseModel } from '@src/libs/database/base.model';
 import { ProviderSubscription } from '@src/modules/provider-subscription/provider-subscription.entity/provider-subscription.entity';
 
@@ -8,7 +8,7 @@ export class Payment extends BaseModel {
   @Column('decimal')
   amount: number;
 
-  @Column()
+  @CreateDateColumn()
   paymentDate: Date;
 
   @Column({ type: 'enum', enum: ['Paid', 'Failed', 'Pending'], default: 'Pending' })
