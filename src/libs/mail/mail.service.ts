@@ -23,6 +23,8 @@ export class MailService implements IMailService {
       'body.hbs',
     );
 
+    console.log('templatePath --------------->', templatePath);
+
     await this.mailService.send({
       ...input,
       html: await this.handleTemplate(input.mjml, templatePath),

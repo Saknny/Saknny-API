@@ -43,7 +43,7 @@ import { ImageModule } from './modules/image/image.module';
         return addTransactionalDataSource(dataSource as any);
       },
     }),
-    QueueModule.register(),
+    QueueModule,
     AuthModule,
     ProviderModule,
     LoggerModule,
