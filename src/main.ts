@@ -10,6 +10,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import { join } from 'path';
 import * as express from 'express';
+import * as bodyParser from 'body-parser';
 
 function initializeLogging() {
   const logDir = 'logs';
@@ -48,11 +49,13 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: { origin: '*' },
   });
-
+  
+  
   app.use(json()); // Ensure JSON support
   app.use(urlencoded({ extended: true })); // Ensure form data parsing
-
+  
   app.setGlobalPrefix('api');
+  app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
 
   setupMiddlewares(app);
 
