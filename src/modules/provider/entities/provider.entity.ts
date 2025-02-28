@@ -47,7 +47,7 @@ export class Provider extends BaseModel {
   gender: string;
 
 
-  @Column({ type: 'varchar', nullable: true }) 
+  @Column({ type: 'varchar', nullable: true })
   idCard: string;
 
   @Column({ nullable: true })

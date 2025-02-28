@@ -113,7 +113,9 @@ export class ApartmentController {
   }
 
   @Patch(':id/publish')
-  async publishApartment(@Param('id') id: string) {
-    return this.apartmentService.publishApartment(id);
+  async publishApartment(@Param('id') id: string  ,
+  @currentUser()user: currentUserType) {
+    return this.apartmentService.publishApartment(user.id , id);
+
   }
 }

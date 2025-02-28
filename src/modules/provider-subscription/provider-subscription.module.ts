@@ -8,6 +8,7 @@ import { SubscriptionPlan } from '../subscription-plan/subscription-plan.entity/
 import { Payment } from '../payment/payment.entity/payment.entity';
 import { StripeService } from '../payment/stripe.service';
 import { PaymentModule } from '../payment/payment.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ProviderSubscription,
@@ -15,7 +16,8 @@ import { PaymentModule } from '../payment/payment.module';
     SubscriptionPlan,
     Payment
   ]),
-  PaymentModule
+  PaymentModule , 
+  ScheduleModule.forRoot(),
 ],
   controllers: [ProviderSubscriptionController],
   providers: [ProviderSubscriptionService],

@@ -34,6 +34,7 @@ import { ImageModule } from './modules/image/image.module';
 import { SubscriptionPlanModule } from './modules/subscription-plan/subscription-plan.module';
 import { ProviderSubscriptionModule } from './modules/provider-subscription/provider-subscription.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -82,7 +83,8 @@ import { PaymentModule } from './modules/payment/payment.module';
     ProviderSubscriptionModule,
     PaymentModule,
     SubscriptionPlanModule,
-    ProviderSubscriptionModule
+    ProviderSubscriptionModule,
+    ScheduleModule.forRoot()
   ],
   controllers: [],
   providers: [

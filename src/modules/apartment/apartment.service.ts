@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Apartment } from './entities/apartment.entity/apartment.entity';
 import { Provider } from '../provider/entities/provider.entity';
@@ -15,6 +15,7 @@ import { ApartmentDocument } from './entities/document.entity';
 import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum';
 import { GetApartmentsDto } from './dto/get-apartments.dto';
 import { Status } from '../request/entities/enum/status.enum';
+import { ProviderSubscriptionService } from '../provider-subscription/provider-subscription.service';
 
 @Injectable()
 export class ApartmentService {
@@ -33,7 +34,9 @@ export class ApartmentService {
 
     @InjectRepository(ApartmentDocument)
     private readonly apartmentDocumentRepo: BaseRepository<ApartmentDocument>,
-  ) {}
+    @Inject(ProviderSubscriptionService)
+    private readonly providerSubscriptionService: ProviderSubscriptionService,
+  ) { }
 
   async createApartment(
     providerId: string,
@@ -134,13 +137,21 @@ export class ApartmentService {
     return await this.apartmentRepository.save(apartment);
   }
 
-  async publishApartment(id: string) {
-    const apartment = await this.apartmentRepository.findOneBy({ id });
+  async publishApartment(userId: string, apartmentId) {
+    const apartment = await this.apartmentRepository.findOneBy({ id: apartmentId });
+    const provider = await this.providerRepository.findOneBy({ userId });
+    if (!provider) {
+      throw new NotFoundException('provider not found');
+
+    }
+
     if (!apartment) {
       throw new NotFoundException('apartment not found');
     }
-    if (apartment.status == 'APPROVED') {
+
+    if (apartment.status == 'APPROVED' && this.providerSubscriptionService.checkSubscriptionLimit(provider.id)) {
       apartment.status = 'PUBLISHED';
+      this.providerSubscriptionService.reduceMaxApartments(provider.id);
     }
     await this.apartmentRepository.save(apartment);
     return apartment;
