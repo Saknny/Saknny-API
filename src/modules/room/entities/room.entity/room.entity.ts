@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
-  ManyToOne
+  ManyToOne,
 } from 'typeorm';
 import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
 import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity';
@@ -30,15 +30,14 @@ export class Room extends BaseModel {
 
   @ManyToOne(() => Apartment, (apartment) => apartment.rooms, {
     onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
+    onUpdate: 'CASCADE',
   })
   apartment: Apartment;
 
-
-  @Column("text")
+  @Column('text')
   descriptionEn: string;
 
-  @Column("text")
+  @Column('text')
   descriptionAr: string;
 
   @Column()
@@ -52,7 +51,6 @@ export class Room extends BaseModel {
 
   @OneToMany(() => Bed, (bed) => bed.room)
   beds: Bed[];
-
 
   @Column({ default: 'UNBOOKED' })
   status: string;

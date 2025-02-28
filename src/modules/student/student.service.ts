@@ -113,10 +113,25 @@ export class StudentService {
   }
 
   async getStudent(id: string) {
-    return this.studentRepo.findOneOrError(
-      { id },
-      ErrorCodeEnum.PROFILE_NOT_FOUND,
+    const student = await this.studentRepo.findOne(
+      { id, status: Status.APPROVED },
       ['user'],
     );
+
+    if (!student) {
+      throw new NotFoundException('student not found');
+    }
+
+    return student;
+  }
+
+  async getStudentBoard(id: string) {
+    const student = await this.studentRepo.findOne({ id }, ['user']);
+
+    if (!student) {
+      throw new NotFoundException('student not found');
+    }
+
+    return student;
   }
 }

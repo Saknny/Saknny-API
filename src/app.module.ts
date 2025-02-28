@@ -45,7 +45,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         return addTransactionalDataSource(dataSource as any);
       },
     }),
-    QueueModule.register(),
+    QueueModule,
     AuthModule,
     ProviderModule,
     LoggerModule,

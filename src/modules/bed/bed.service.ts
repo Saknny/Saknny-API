@@ -63,10 +63,25 @@ export class BedService {
   }
 
   async getBed(id: string): Promise<Bed> {
-    return await this.bedRepository.findOneOrError(
-      { id },
-      ErrorCodeEnum.BED_NOT_FOUND,
-      ['room', 'room.apartment', 'images', 'student'],
+    const bed = await this.bedRepository.findOne(
+      { id, room: { apartment: { status: 'PUBLISHED' } } },
+      ['room', 'student'],
     );
+
+    if (!bed) {
+      throw new NotFoundException("Bed doesn't exist");
+    }
+
+    return bed;
+  }
+
+  async getBedBoard(id: string): Promise<Bed> {
+    const bed = await this.bedRepository.findOne({ id }, ['room', 'student']);
+
+    if (!bed) {
+      throw new NotFoundException("Bed doesn't exist");
+    }
+
+    return bed;
   }
 }
