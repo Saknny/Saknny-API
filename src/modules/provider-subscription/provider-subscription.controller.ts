@@ -6,7 +6,7 @@ import { SelectPlanDto } from './dtos/select-plan.dto';
 
 @Controller('provider-subscription')
 export class ProviderSubscriptionController {
-    constructor(private readonly providerSubscriptionService: ProviderSubscriptionService) {}
+    constructor(private readonly providerSubscriptionService: ProviderSubscriptionService) { }
 
     @Post('select-plan/:planId')
     async selectPlan(
@@ -16,4 +16,5 @@ export class ProviderSubscriptionController {
         const dto: SelectPlanDto = { planId };
         return await this.providerSubscriptionService.selectPlan(id, dto);
     }
+
 }

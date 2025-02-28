@@ -19,23 +19,35 @@ export class StripeWebhookService {
         });
     }
 
-    async handleWebhook(payload: any, sig: string) {
-        console.log('🔔 Webhook received:', payload);
+    async handleWebhook(payload: Buffer, sig: string) {
         const endpointSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
         let event: Stripe.Event;
-        
+
         try {
             event = this.stripe.webhooks.constructEvent(payload, sig, endpointSecret);
-            console.log(event.id);
         } catch (err) {
-            throw new Error(`Webhook error: ${err.message}`);
+            console.error("🚨 Webhook Error:", err);
+            return { statusCode: 400, message: `Webhook signature verification failed: ${err.message}` };
         }
 
+        console.log('🔔 Event Type:', event.type);
+
+        // Handle successful checkout session
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object as Stripe.Checkout.Session;
-            const subscriptionId = session.metadata.subscriptionId;
-            console.log(subscriptionId);
-            await this.paymentRepo.update({ subscription: { id: subscriptionId } }, { status: 'Paid' });
+
+            console.log('checkout Session.................');
+            if (!session.metadata || !session.metadata.paymentId) {
+                return { statusCode: 400, message: "PaymentId is missing from metadata!" };
+            }
+
+            const paymentId = session.metadata.paymentId;
+            try {
+                await this.paymentRepo.update({ id: paymentId }, { status: 'Paid' });
+            } catch (dbError) {
+                return { statusCode: 500, message: "Database error: Failed to update payment status." };
+            }
         }
+
     }
-}
+}        

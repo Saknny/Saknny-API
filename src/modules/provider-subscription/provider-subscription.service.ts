@@ -19,36 +19,40 @@ export class ProviderSubscriptionService {
         private readonly subscriptionPlanRepo: BaseRepository<SubscriptionPlan>,
         @InjectBaseRepository(Payment)
         private readonly paymentRepo: BaseRepository<Payment>,
-        @Inject( StripeService)
+        @Inject(StripeService)
         private readonly stripeService: StripeService,
-    ) {}
+    ) { }
 
     async selectPlan(userId: string, dto: SelectPlanDto) {
         const provider = await this.providerRepo.createQueryBuilder('provider')
-        .where('provider.userId = :userId', { userId })
-        .getOne();
+            .where('provider.userId = :userId', { userId })
+            .getOne();
         if (!provider) throw new NotFoundException('Provider not found');
 
-        const plan = await this.subscriptionPlanRepo.findOneBy({ id: dto.planId } );
+        const plan = await this.subscriptionPlanRepo.findOneBy({ id: dto.planId });
         if (!plan) throw new NotFoundException('Subscription plan not found');
 
         const subscription = this.providerSubscriptionRepo.create({
             provider,
+            endDate: new Date(Date.now() + plan.durationInDays * 24 * 60 * 60 * 1000), // duration in days
             plan
         });
-        // Create a Stripe Checkout session
-        const session = await this.stripeService.createCheckoutSession(100, subscription.id);
 
         const payment = this.paymentRepo.create({
-            amount: 100, // Example amount, change as needed
-            // paymentDate: new Date(),
+            amount: plan.price,
             status: 'Pending',
             subscription,
         });
-        await this.providerSubscriptionRepo.save(subscription);
-        payment.subscription = subscription; 
-        await this.paymentRepo.save(payment);
 
-        return { message: 'Redirect to Stripe for payment', sessionUrl: session.url };
+
+        await this.providerSubscriptionRepo.save(subscription);
+        payment.subscription = subscription;
+        await this.paymentRepo.save(payment);
+        // Create a Stripe Checkout session
+        const session = await this.stripeService.createCheckoutSession(100, subscription.id, payment.id);
+        console.log("✅ Checkout Session Created:", session.id);
+        console.log("🛠️ Metadata in Created Session:", session.metadata); // ✅ Debug metadata
+
+        return session;
     }
 }
