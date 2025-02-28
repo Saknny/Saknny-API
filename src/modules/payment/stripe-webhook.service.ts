@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Payment } from './payment.entity/payment.entity';
 import { ConfigService } from '@nestjs/config';
+import { ProviderSubscription } from '../provider-subscription/provider-subscription.entity/provider-subscription.entity';
 
 @Injectable()
 export class StripeWebhookService {
@@ -12,7 +13,10 @@ export class StripeWebhookService {
     constructor(
         @InjectRepository(Payment)
         private readonly paymentRepo: Repository<Payment>,
+        @InjectRepository(ProviderSubscription)
+        private readonly providerSubscription: Repository<ProviderSubscription>,
         private readonly configService: ConfigService
+
     ) {
         this.stripe = new Stripe(this.configService.get<string>('STRIPE_SECRET_KEY'), {
             apiVersion: null,
@@ -42,33 +46,35 @@ export class StripeWebhookService {
             }
 
             const paymentId = session.metadata.paymentId;
+            const subscriptionId = session.metadata.subscriptionId;
             try {
                 await this.paymentRepo.update({ id: paymentId }, { status: 'Paid' });
+                await this.providerSubscription.update({ id: subscriptionId }, { isActive: true });
             } catch (dbError) {
                 return { statusCode: 500, message: "Database error: Failed to update payment status." };
             }
-        } 
+        }
         else if (event.type === 'payment_intent.payment_failed') {
             const paymentIntent = event.data.object as Stripe.PaymentIntent;
             console.log('💥 Payment Failed Intent.................');
-    
+
             if (!paymentIntent.metadata?.paymentId) {
                 return { statusCode: 400, message: "PaymentId is missing from metadata!" };
             }
-    
+
             try {
                 await this.paymentRepo.update(
                     { id: paymentIntent.metadata.paymentId },
                     { status: 'Failed' }
                 );
             } catch (dbError) {
-                return { 
-                    statusCode: 500, 
-                    message: "Database error: Failed to update payment status to Failed." 
+                return {
+                    statusCode: 500,
+                    message: "Database error: Failed to update payment status to Failed."
                 };
             }
         }
-    
+
 
     }
 }        
