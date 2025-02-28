@@ -50,8 +50,7 @@ export class ProviderSubscriptionService {
         await this.paymentRepo.save(payment);
         // Create a Stripe Checkout session
         const session = await this.stripeService.createCheckoutSession(100, subscription.id, payment.id);
-        console.log("✅ Checkout Session Created:", session.id);
-        console.log("🛠️ Metadata in Created Session:", session.metadata); // ✅ Debug metadata
+       
 
         return session;
     }

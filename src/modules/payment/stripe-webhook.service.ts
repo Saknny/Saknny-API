@@ -47,7 +47,28 @@ export class StripeWebhookService {
             } catch (dbError) {
                 return { statusCode: 500, message: "Database error: Failed to update payment status." };
             }
+        } 
+        else if (event.type === 'payment_intent.payment_failed') {
+            const paymentIntent = event.data.object as Stripe.PaymentIntent;
+            console.log('💥 Payment Failed Intent.................');
+    
+            if (!paymentIntent.metadata?.paymentId) {
+                return { statusCode: 400, message: "PaymentId is missing from metadata!" };
+            }
+    
+            try {
+                await this.paymentRepo.update(
+                    { id: paymentIntent.metadata.paymentId },
+                    { status: 'Failed' }
+                );
+            } catch (dbError) {
+                return { 
+                    statusCode: 500, 
+                    message: "Database error: Failed to update payment status to Failed." 
+                };
+            }
         }
+    
 
     }
 }        

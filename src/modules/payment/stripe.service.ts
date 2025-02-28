@@ -12,40 +12,37 @@ export class StripeService {
         });
     }
 
-    async createCheckoutSession(amount: number, subscriptionId: string, paymentId: string) {
-        console.log("createCheckoutSession")
-        console.log(subscriptionId, paymentId);
-        const session = await this.stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            mode: 'payment',
-            line_items: [
-                {
-                    price_data: {
-                        currency: 'usd',
-                        product_data: {
-                            name: 'Subscription Plan',
-                        },
-                        unit_amount: amount * 100, // Stripe expects amount in cents
+  // stripe.service.ts
+
+async createCheckoutSession(amount: number, subscriptionId: string, paymentId: string) {
+    const session = await this.stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'payment',
+        line_items: [
+            {
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: 'Subscription Plan',
                     },
-                    quantity: 1,
+                    unit_amount: amount * 100,
                 },
-            ],
+                quantity: 1,
+            },
+        ],
+        metadata: {
+            subscriptionId,
+            paymentId
+        },
+        payment_intent_data: {
             metadata: {
                 subscriptionId,
                 paymentId
-            
-            },
-            success_url: this.configService.get<string>('STRIPE_SUCCESS_URL'),
-            cancel_url: this.configService.get<string>('STRIPE_CANCEL_URL'),
-        });
-
-
-
-        
-        return session;
-
-
-    }
-
-
+            }
+        },
+        success_url: this.configService.get<string>('STRIPE_SUCCESS_URL'),
+        cancel_url: this.configService.get<string>('STRIPE_CANCEL_URL'),
+    });
+    return session;
+}
 }
