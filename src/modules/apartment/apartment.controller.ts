@@ -51,6 +51,7 @@ export class ApartmentController {
     },
   ) {
     const document = files.document[0].buffer.toString('base64');
+    await this.pendingRequestService.UploadDocRequest(id , document)
     // return await this.pendingRequestService.uploadDocumentRequest(id, document);
   }
 

@@ -7,7 +7,7 @@ import { ImageApproval } from "./entities/imageApproval.entity";
 import { Type } from "./entities/enum/type.enum";
 import { Provider } from "../provider/entities/provider.entity";
 import { ImageApprovalDto } from "./dto/image-approval.dto";
-import { RequestApprovalDto } from "./dto/RequestApproval.dto";
+import { RequestDto } from "./dto/Request.dto";
 import { Status } from "./entities/enum/status.enum";
 import { ItemType } from "./entities/enum/itemType.enum";
 import { ApartmentService } from "../apartment/apartment.service";
@@ -59,85 +59,65 @@ export class PendingRequestService {
         private readonly studentService: StudentService,
     ) { }
 
-    async uploadImageRequest(userId: string, id: string, requestType: Type,
-        entityType: EntityType, imageFilenames: string[] | string) {
 
 
-        //     const filenamesArray = Array.isArray(imageFilenames) ? imageFilenames : [imageFilenames];
+    async updateRequestApproval(body: RequestDto) {
 
-        //     const provider = await this.providerRepo.findOneBy({ userId: userId });
-        //     if (!provider) {
-        //         throw new NotFoundException('provider not found');
-        //     }
-
-
-        //     var request = await this.pendingRequestRepo
-        //         .createQueryBuilder("pendingRequest")
-        //         .leftJoinAndSelect("pendingRequest.provider", "provider")
-        //         .leftJoinAndSelect("pendingRequest.imageApprovals", "imageApprovals")
-        //         .where("provider.id = :providerId", { providerId: provider.id })
-        //         .where("imageApprovals.referenceId = :referenceId", { referenceId: id })
-        //         .andWhere("pendingRequest.type = :requestType", { requestType })
-        //         .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
-        //         .getOne();
-
-
-
-        //     if (request) {
-
-        //         await this.deleteApprovalImages(request.id);
-
-        //     } else {
-        //         request = await this.pendingRequestRepo.create({
-        //             provider,
-        //             type: requestType
-        //         })
-        //     }
-
-        //     await this.pendingRequestRepo.save(request);
-
-        //     const images = filenamesArray.map(filename =>
-        //         this.imageApprovalRepo.create({
-        //             referenceId: id,
-        //             url: filename,
-        //             type: requestType,
-        //             entityType: entityType,
-        //             pendingRequest: request
-        //         })
-        //     );
-
-        //     await this.imageApprovalRepo.save(images);
-    }
-
-
-
-    async updateImageApproval(id: string, body: ImageApprovalDto) {
-        //     const imageApproval = await this.imageApprovalRepo.findOne({ id });
-        //     if (!imageApproval) {
-        //         throw new NotFoundException('record not found')
-        //     }
-        //     Object.assign(imageApproval, body);
-        //     return await this.imageApprovalRepo.save(imageApproval);
-    }
-
-    async updateRequestApproval(id: string, body: RequestApprovalDto) {
         const request = await this.pendingRequestRepo
             .createQueryBuilder('request')
             .leftJoinAndSelect('request.items', 'items')
             .leftJoinAndSelect('items.request', 'requestItemRequest')
-            .where('request.id = :id', { id })
+            .where('request.id = :id', { id: body.id })
             .getOne();
+        request.status == body.status;
+        request.reason == body.reason;
+        await this.pendingRequestRepo.save(request);
+        if (request.status == Status.REJECTED) {
+            return;
+        }
+
+        switch (body.type) {
+            case Type.CREATE_APARTMENT:
+                this.ApproveCreateApartmentRequest(body);
+                break;
+            case Type.UPDATE_APARTMENT:
+                // this.ApproveUpdateApartmentRequest(body);
+                break;
+            case Type.PROFILE_COMPLETE:
+                // this.ApproveCompleteProfileRequest(body);
+                break;
+            case Type.PROFILE_UPDATE:
+                // this.ApproveUpdateProfileRequest(body);
+                break;
+
+        }
+    }
+
+
+    async ApproveCreateApartmentRequest(body: RequestDto) {
+        const request = await this.pendingRequestRepo
+            .createQueryBuilder('request')
+            .leftJoinAndSelect('request.items', 'items')
+            .leftJoinAndSelect('items.request', 'requestItemRequest')
+            .where('request.id = :id', { id: body.id })
+            .getOne();
+
+
         const items = request.items;
 
-        const apartmentItem = items.filter(item => item.type === EntityType.APARTMENT)[0];
+        const apartmentItem = items.filter(item => item.entityType === EntityType.APARTMENT && item.status == Status.APPROVED)[0];
         const apartment = await this.approveApartment(apartmentItem);
 
-        const rooms = items.filter(item => item.type === EntityType.ROOM);
+        const rooms = items.filter(item => item.entityType === EntityType.ROOM && item.status == Status.APPROVED);
 
 
         await Promise.all(rooms.map(async (item) => {
             const room = await this.approveRoom(item, apartment.id);
-            const beds = items.filter(item => (item.type === EntityType.BED && item.data.roomName === room.name));
+            const beds = items.filter(item =>
+                item.entityType === EntityType.BED &&
+                item.data.name.startsWith(room.name) &&
+                item.status === Status.APPROVED
+            );
             await Promise.all(beds.map(item => this.approveBed(item, room.id)));
         }
         ));
@@ -175,10 +155,28 @@ export class PendingRequestService {
         //     console.log("Images deleted successfully for request ID:", id);
     }
 
-
+    async updateImageApproval(id: string, body: ImageApprovalDto) {
+        const imageApproval = await this.imagesRepo.findOne({ id });
+        if (!imageApproval) {
+            throw new NotFoundException('record not found')
+        }
+        Object.assign(imageApproval, body);
+        return await this.imagesRepo.save(imageApproval);
+    }
 
     async getPendingRequests() {
         return await this.pendingRequestRepo.find({ where: { status: Status.PENDING } });
+    }
+
+    async getRequestItems(id: string) {
+        const items = await this.requestItemRepo
+            .createQueryBuilder('item')
+            .leftJoinAndSelect('item.request', 'request')
+            .where('request.id = :id', { id })
+            .where('item.status = :status', { status: Status.PENDING })
+            .getMany();
+
+        return items;
     }
 
 
@@ -263,7 +261,7 @@ export class PendingRequestService {
     async createApartmentRequest(
         userId: string,
         createApartmentDto: CreateApartmentDto
-    ): Promise<{ requestId: string; requestItemId: string }> {
+    ): Promise<{ requestId: string; }> {
         const { descriptionEn, descriptionAr, gender, name, roomCount } = createApartmentDto;
 
 
@@ -279,7 +277,7 @@ export class PendingRequestService {
 
         const requestItem = this.requestItemRepo.create({
             status: Status.PENDING,
-            type: EntityType.APARTMENT,
+            entityType: EntityType.APARTMENT,
             referenceId: null,
             referenceType: EntityType.APARTMENT,
             entityName: name,
@@ -296,7 +294,7 @@ export class PendingRequestService {
 
         await this.requestItemRepo.save(requestItem);
 
-        return { requestId: pendingRequest.id, requestItemId: requestItem.id };
+        return { requestId: pendingRequest.id }
     }
 
 
@@ -310,7 +308,7 @@ export class PendingRequestService {
 
         const requestItem = this.requestItemRepo.create({
             status: Status.PENDING,
-            type: EntityType.ROOM,
+            entityType: EntityType.ROOM,
             referenceId: null,
             referenceType: EntityType.APARTMENT,
             entityName: name,
@@ -336,11 +334,11 @@ export class PendingRequestService {
     ): Promise<{ requestId: string; requestItemId: string }> {
 
         const request = await this.pendingRequestRepo.findOne({ id: requestId });
-        const { descriptionEn, descriptionAr, name, price, roomName } = createBedDto;
+        const { descriptionEn, descriptionAr, name, price } = createBedDto;
 
         const requestItem = this.requestItemRepo.create({
             status: Status.PENDING,
-            type: EntityType.BED,
+            entityType: EntityType.BED,
             referenceId: null,
             entityName: name,
             referenceType: EntityType.APARTMENT,
@@ -350,7 +348,6 @@ export class PendingRequestService {
                 descriptionAr,
                 price,
                 name,
-                roomName
 
             },
             request: request,
@@ -392,15 +389,19 @@ export class PendingRequestService {
 
 
     async UploadDocRequest(requestId: string, document: string) {
-        const request = await this.pendingRequestRepo.findOne({ id: requestId });
-        const item = await this.requestItemRepo.findOne({ request, type: EntityType.APARTMENT });
+        const item = await this.requestItemRepo
+            .createQueryBuilder('item')
+            .leftJoinAndSelect('item.request', 'request')
+            .where('item.requestId = :requestId', { requestId })
+            .getOne();
+
         item.document = document;
         await this.requestItemRepo.save(item);
     }
 
 
-    async updateItemApproval(id: string, body: RequestApprovalDto) {
-        const item = await this.requestItemRepo.findOne({ id });
+    async updateItemApproval(body: RequestDto) {
+        const item = await this.requestItemRepo.findOne({ id: body.id });
         item.status = body.status;
         item.reason = body.reason;
         await this.requestItemRepo.save(item);
@@ -413,15 +414,17 @@ export class PendingRequestService {
 
         const apartment = await this.apartmentService.createApartment(request.userId, item.data);
 
-        // ✅ Fetch images using QueryBuilder
+        console.log(item.id);
         const images = await this.imagesRepo
             .createQueryBuilder('image')
             .leftJoinAndSelect('image.Item', 'item')
-            .where('item.id = :itemId', { itemId: item.id }) // ✅ Ensure we get images linked to the correct request item
+            .where('item.id = :itemId', { itemId: item.id })
+            .andWhere('image.status = :status', { status: Status.APPROVED })
             .getMany();
 
-        console.log("RequestItem:", item);
-        console.log("Images:", images);
+
+        // console.log("RequestItem:", item);
+        console.log("Images:", images.length);
 
         await this.imageService.uploadImages(apartment.id, EntityType.APARTMENT, images.map(image => image.url));
 
@@ -437,7 +440,8 @@ export class PendingRequestService {
         const images = await this.imagesRepo
             .createQueryBuilder('image')
             .leftJoinAndSelect('image.Item', 'item')
-            .where('item.id = :itemId', { itemId: item.id }) // ✅ Ensure we get images linked to the correct request item
+            .where('item.id = :itemId', { itemId: item.id })
+            .andWhere('image.status = :status', { status: Status.APPROVED })
             .getMany();
         await this.imageService.uploadImages(bed.id, EntityType.BED, images.map(image => image.url));
 
@@ -446,11 +450,13 @@ export class PendingRequestService {
 
     async approveRoom(item: RequestItem, apartmentId: string) {
         const room = await this.roomService.createRoom(apartmentId, item.data);
+
         const images = await this.imagesRepo
-        .createQueryBuilder('image')
-        .leftJoinAndSelect('image.Item', 'item')
-        .where('item.id = :itemId', { itemId: item.id }) // ✅ Ensure we get images linked to the correct request item
-        .getMany();
+            .createQueryBuilder('image')
+            .leftJoinAndSelect('image.Item', 'item')
+            .where('item.id = :itemId', { itemId: item.id })
+            .andWhere('image.status = :status', { status: Status.APPROVED })
+            .getMany();
         await this.imageService.uploadImages(room.id, EntityType.ROOM, images.map(image => image.url));
         return room;
     }

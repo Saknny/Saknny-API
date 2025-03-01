@@ -41,7 +41,7 @@ export class ImageController {
         }
         const requestTypeKey = (`UPLOAD_${entityType}`);
         const requestType = Type[requestTypeKey];
-        return this.pendingRequestService.uploadImageRequest(user.id, imageId, requestType, EntityType.ROOM, file.filename);
+        // return this.pendingRequestService.uploadImageRequest(user.id, imageId, requestType, EntityType.ROOM, file.filename);
     }
 
 

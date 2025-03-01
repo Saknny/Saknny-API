@@ -28,7 +28,14 @@ export class RequestItem extends BaseModel {
         enum: EntityType,
         nullable: true,
     })
-    type?: EntityType;
+    entityType?: EntityType;
+
+    @Column({
+        type: "enum",
+        enum: Type,
+        nullable: true,
+    })
+    type?: Type;
 
 
     @OneToMany(() => ImageApproval, (images) => images.Item, {
