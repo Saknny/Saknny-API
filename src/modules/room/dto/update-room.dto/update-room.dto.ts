@@ -20,5 +20,23 @@ export class UpdateRoomDto {
     hasAirConditioner?: boolean;
 
 
+    @IsBoolean()
+    wardrobe: boolean;
 
+    @IsBoolean()
+    Desk: boolean;
+
+    @IsBoolean()
+    nightStand: boolean;
+
+
+    @IsBoolean()
+    ceilingFan: boolean;
+
+    @IsBoolean()
+    cutains: boolean;
+
+
+    @IsBoolean()
+    balacony: boolean;
 }
