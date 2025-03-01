@@ -16,6 +16,7 @@ import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum'
 import { GetApartmentsDto } from './dto/get-apartments.dto';
 import { Status } from '../request/entities/enum/status.enum';
 import { ProviderSubscriptionService } from '../provider-subscription/provider-subscription.service';
+import { Student } from '../student/entities/student.entity';
 
 @Injectable()
 export class ApartmentService {
@@ -31,6 +32,8 @@ export class ApartmentService {
 
     @InjectRepository(Bed)
     private readonly bedRepository: BaseRepository<Bed>,
+    @InjectRepository(Student) 
+    private readonly studentRepository: BaseRepository<Student>,
 
     @InjectRepository(ApartmentDocument)
     private readonly apartmentDocumentRepo: BaseRepository<ApartmentDocument>,
@@ -285,4 +288,35 @@ export class ApartmentService {
       data,
     };
   }
+
+  async getHomeData() {
+    // Fetch aggregated counts
+  const numberOfApartments = await this.apartmentRepository.count();
+  
+  // FIXED: Count beds through proper relationships
+  const numberOfBeds = await this.apartmentRepository
+    .createQueryBuilder('apartment')
+    .leftJoin('apartment.rooms', 'room') // Join with rooms
+    .leftJoin('room.beds', 'bed') // Join with beds
+    .select('COUNT(bed.id)::int', 'totalBeds') // Cast to integer with "::int"
+    .getRawOne();
+
+  const numberOfProviders = await this.providerRepository.count();
+  const numberOfStudents = await this.studentRepository.count();
+    // Fetch recently added apartments
+    const recentlyAdded = await this.getRecentApartments(6);
+  
+    // Fetch recently viewed apartments
+    const recentlyViewed = await this.getRecentlyViewed();
+  
+    return {
+      numberOfApartments,
+      umberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0, // Parse to integer
+      numberOfProviders,
+      numberOfStudents,
+      recentlyAdded,
+      recentlyViewed: recentlyViewed.slice(0, 6),
+    };
+  }
+  
 }
