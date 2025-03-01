@@ -1,15 +1,15 @@
-import helmet from 'helmet';
-import { get } from 'env-var';
-import { AppModule } from './app.module';
-import * as compression from 'compression';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import * as bodyParser from 'body-parser';
+import * as compression from 'compression';
+import { get } from 'env-var';
+import * as express from 'express';
 import rateLimit from 'express-rate-limit';
 import { existsSync, mkdirSync, writeFile } from 'fs';
-import { NestExpressApplication } from '@nestjs/platform-express';
+import helmet from 'helmet';
 import { join } from 'path';
-import * as express from 'express';
-import * as bodyParser from 'body-parser';
 import { initializeTransactionalContext } from 'typeorm-transactional';
+import { AppModule } from './app.module';
 
 function initializeLogging() {
   const logDir = 'logs';
