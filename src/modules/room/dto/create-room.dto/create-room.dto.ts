@@ -28,4 +28,24 @@ export class CreateRoomDto {
   @ValidateNested({ each: true })
   @Type(() => CreateBedDto)
   beds: CreateBedDto[];
+
+  @IsBoolean()
+  wardrobe: boolean;
+
+  @IsBoolean()
+  Desk: boolean;
+
+  @IsBoolean()
+  nightStand: boolean;
+
+
+  @IsBoolean()
+  ceilingFan: boolean;
+
+  @IsBoolean()
+  cutains: boolean;
+
+
+  @IsBoolean()
+  balacony: boolean;
 }
