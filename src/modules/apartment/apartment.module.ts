@@ -12,9 +12,10 @@ import { PendingRequestModule } from '../request/pendingRequest.module';
 import { Provider } from '../provider/entities/provider.entity';
 import { ApartmentDocument } from './entities/document.entity';
 import { ProviderSubscriptionModule } from '../provider-subscription/provider-subscription.module';
+import { Student } from '../student/entities/student.entity';
 
 @Module({
-  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, Provider, ApartmentDocument
+  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, Provider, ApartmentDocument,Student
   ])
 
     , ServeStaticModule.forRoot({

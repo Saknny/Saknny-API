@@ -101,7 +101,10 @@ export class ApartmentController {
       Number(limit),
     );
   }
-
+  @Get('/home')
+  async getHomeData() {
+    return this.apartmentService.getHomeData();
+  }
   @Get(':apartmentId')
   async getApartment(@Param('apartmentId') apartmentId: string) {
     return this.apartmentService.getApartment(apartmentId);
@@ -123,4 +126,5 @@ export class ApartmentController {
     return this.apartmentService.publishApartment(user.id , id);
 
   }
+
 }
