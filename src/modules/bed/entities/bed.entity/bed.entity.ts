@@ -13,6 +13,7 @@ import { Room } from '@src/modules/room/entities/room.entity/room.entity';
 import { Student } from '@src/modules/student/entities/student.entity';
 import { BaseModel } from '@src/libs/database/base.model';
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
+import { RentalRequest } from '@src/modules/booking-request/entity/rental-request.entity';
 
 @Entity()
 export class Bed extends BaseModel {
@@ -46,4 +47,7 @@ export class Bed extends BaseModel {
 
   @OneToOne(() => Student, (student) => student.bed, { nullable: true })
   student: Student;
+
+  @OneToMany(() => RentalRequest, (request) => request.bed)
+  rentalRequests: RentalRequest[];
 }

@@ -15,6 +15,7 @@ import { User } from '../../user/entities/user.entity';
 import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
 import { FavoriteList } from '@src/modules/favoriteList/entities/favorite-list.entity';
 import { Status } from '@src/modules/request/entities/enum/status.enum';
+import { RentalRequest } from '@src/modules/booking-request/entity/rental-request.entity';
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
@@ -85,4 +86,7 @@ export class Student extends BaseModel {
     onDelete: 'SET NULL',
   })
   favoriteLists: FavoriteList[];
+
+  @OneToMany(() => RentalRequest, (request) => request.student)
+  rentalRequests: RentalRequest[];
 }

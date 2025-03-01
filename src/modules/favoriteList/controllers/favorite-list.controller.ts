@@ -8,48 +8,52 @@ import {
   Body,
 } from '@nestjs/common';
 import { FavoriteListService } from '../services/favorite-list.service';
+import { currentUser } from '@src/libs/decorators/currentUser.decorator';
+import { User } from '@src/modules/user/entities/user.entity';
 
 @Controller('favorite-lists')
 export class FavoriteListController {
   constructor(private readonly favoriteListService: FavoriteListService) {}
 
   @Post()
-  createFavoriteList(
-    @Body('studentId') studentId: string,
-    @Body('name') name: string,
-  ) {
-    return this.favoriteListService.createFavoriteList(studentId, name);
+  createFavoriteList(@currentUser() user: User, @Body('name') name: string) {
+    if (!user?.student) throw new Error('Student not found');
+
+    return this.favoriteListService.createFavoriteList(user.student.id, name);
   }
 
   @Patch(':id')
   renameFavoriteList(
     @Param('id') listId: string,
-    @Body('studentId') studentId: string,
+    @currentUser() user: User,
     @Body('name') newName: string,
   ) {
+    if (!user?.student) throw new Error('Student not found');
+
     return this.favoriteListService.renameFavoriteList(
-      studentId,
+      user.student.id,
       listId,
       newName,
     );
   }
 
   @Delete(':id')
-  deleteFavoriteList(
-    @Param('id') listId: string,
-    @Body('studentId') studentId: string,
-  ) {
-    return this.favoriteListService.deleteFavoriteList(studentId, listId);
+  deleteFavoriteList(@Param('id') listId: string, @currentUser() user: User) {
+    if (!user?.student) throw new Error('Student not found');
+
+    return this.favoriteListService.deleteFavoriteList(user.student.id, listId);
   }
 
   @Post(':id/apartments')
   addApartmentToFavoriteList(
     @Param('id') listId: string,
-    @Body('studentId') studentId: string,
+    @currentUser() user: User,
     @Body('apartmentId') apartmentId: string,
   ) {
+    if (!user?.student) throw new Error('Student not found');
+
     return this.favoriteListService.addApartmentToFavoriteList(
-      studentId,
+      user.student.id,
       listId,
       apartmentId,
     );
@@ -57,27 +61,32 @@ export class FavoriteListController {
 
   @Delete('apartments/:apartmentId')
   removeApartmentFromFavoriteList(
-    @Body('studentId') studentId: string,
+    @currentUser() user: User,
     @Param('apartmentId') apartmentId: string,
   ) {
+    if (!user?.student) throw new Error('Student not found');
+
     return this.favoriteListService.removeApartmentFromFavoriteList(
-      studentId,
+      user.student.id,
       apartmentId,
     );
   }
 
-  @Get(':userId')
-  getUserFavoriteLists(@Param('userId') userId: number) {
-    return this.favoriteListService.getUserFavoriteLists(userId);
+  @Get('my-favorite-lists')
+  getStudentFavoriteLists(@currentUser() user: User) {
+    if (!user?.student) throw new Error('Student not found');
+    return this.favoriteListService.getStudentFavoriteLists(user.student.id);
   }
 
   @Get(':id/apartments')
   getFavoriteListApartments(
     @Param('id') listId: string,
-    @Body('studentId') studentId: string,
+    @currentUser() user: User,
   ) {
+    if (!user?.student) throw new Error('Student not found');
+
     return this.favoriteListService.getFavoriteListApartments(
-      studentId,
+      user.student.id,
       listId,
     );
   }
