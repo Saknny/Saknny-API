@@ -5,6 +5,7 @@ import { join } from 'path';
 import { unlink } from 'fs/promises';
 import { Image } from './image.entity';
 import { EntityType } from '../request/entities/enum/entityType.enum';
+import { ImageDto } from './dto/image.dto';
 
 @Injectable()
 export class ImageService {
@@ -60,6 +61,13 @@ export class ImageService {
         await this.imageRepo.delete(id);
 
         return { message: 'Image deleted successfully' };
+    }
+
+
+    async getImage(imageDto:ImageDto){
+        const images = await this.imageRepo.findBy({entityId:imageDto.entityId , entityType: imageDto.entityType});
+        console.log(images);
+        return images;
     }
 }
 

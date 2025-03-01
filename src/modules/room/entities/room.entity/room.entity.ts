@@ -54,4 +54,29 @@ export class Room extends BaseModel {
 
   @Column({ default: 'UNBOOKED' })
   status: string;
+
+
+  @Column()
+  wardrobe: boolean;
+
+  @Column()
+  Desk: boolean;
+
+  @Column()
+  nightStand: boolean;
+
+
+  @Column()
+  ceilingFan: boolean;
+
+
+
+
+  @Column()
+  cutains: boolean;
+
+
+  @Column()
+  balacony: boolean;
+
 }
