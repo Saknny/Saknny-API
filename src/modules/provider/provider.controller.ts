@@ -64,7 +64,7 @@ export class ProviderController {
       completeProfileDto.image = `/uploads/${files.image[0].filename}`;
     }
 
-    return await this.pendingRequestService.submitProfileUpdate(
+    return await this.pendingRequestService.CreateProfileRequest(
       id,
       EntityType.PROVIDER,
       completeProfileDto,
@@ -95,7 +95,7 @@ export class ProviderController {
         updateProfileDto.image = `/uploads/${files.image[0].filename}`;
       }
 
-      return await this.pendingRequestService.submitProfileUpdate(
+      return await this.pendingRequestService.CreateProfileRequest(
         id,
         EntityType.PROVIDER,
         updateProfileDto,

@@ -23,6 +23,7 @@ import { CreateApartmentDto } from "../apartment/dto/create-apartment.dto/create
 import { RequestItem } from "./entities/RequestItem.entity";
 import { CreateRoomDto } from "../room/dto/create-room.dto/create-room.dto";
 import { CreateBedDto } from "../bed/dto/create-bed.dto/create-bed.dto";
+import { UpdateApartmentDto } from "../apartment/dto/update-apartment.dto/update-apartment.dto";
 
 @Injectable()
 export class PendingRequestService {
@@ -78,21 +79,24 @@ export class PendingRequestService {
 
         switch (body.type) {
             case Type.CREATE_APARTMENT:
-                this.ApproveCreateApartmentRequest(body);
+                await this.ApproveCreateApartmentRequest(body);
                 break;
             case Type.UPDATE_APARTMENT:
-                // this.ApproveUpdateApartmentRequest(body);
+                this.ApproveUpdateApartmentRequest(body);
                 break;
             case Type.PROFILE_COMPLETE:
-                // this.ApproveCompleteProfileRequest(body);
+                await this.ApproveProfileRequest(body);
                 break;
             case Type.PROFILE_UPDATE:
-                // this.ApproveUpdateProfileRequest(body);
+                await this.ApproveProfileRequest(body);
                 break;
 
         }
     }
 
+    async ApproveUpdateApartmentRequest(body: RequestDto) {
+
+    }
 
     async ApproveCreateApartmentRequest(body: RequestDto) {
         const request = await this.pendingRequestRepo
@@ -126,34 +130,9 @@ export class PendingRequestService {
 
     }
 
-    async getApprovedImages(id: string) {
-        //     const request = await this.pendingRequestRepo.findOne({ id });
-        //     if (!request) {
-        //         throw new NotFoundException('record not found');
-        //     }
-
-        //     const images = await this.imageApprovalRepo
-        //         .createQueryBuilder("imageApproval")
-        //         .where("imageApproval.pendingRequestId = :requestId", { requestId: id }) // Filter by request ID
-        //         .andWhere("imageApproval.status = :status", { status: Status.APPROVED }) // Filter by approved status
-        //         .getMany();
-        //     return images;
-
-    }
 
 
 
-
-    deleteApprovalImages(id: string) {
-        //     const pendingRequest = await this.pendingRequestRepo.findOneBy({ id });
-        //     if (!pendingRequest) {
-        //         throw new NotFoundException('Pending request not found');
-        //     }
-
-        //     await this.imageApprovalRepo.delete({ pendingRequest: { id } });
-
-        //     console.log("Images deleted successfully for request ID:", id);
-    }
 
     async updateImageApproval(id: string, body: ImageApprovalDto) {
         const imageApproval = await this.imagesRepo.findOne({ id });
@@ -180,82 +159,113 @@ export class PendingRequestService {
     }
 
 
-    async submitProfileUpdate(userId: string, entityType: EntityType, profileData: any, requestType: Type) {
+    async CreateProfileRequest(userId: string, entityType: EntityType, profileData: any, requestType: Type) {
 
 
-        //     const formattedData = {
-        //         gender: profileData?.gender ?? null,
-        //         phone: profileData?.phone ?? null,
-        //         instagram: profileData?.instagram ?? null,
-        //         facebook: profileData?.facebook ?? null,
-        //         linkedin: profileData?.linkedin ?? null,
-        //         image: profileData?.image ?? null,
-        //         idCard: profileData?.idCard ?? null,
-        //         hobbies: profileData?.hobbies ?? null,
-        //         socialPerson: profileData?.socialPerson ?? null,
-        //         level: profileData?.level ?? null,
-        //         university: profileData?.university ?? null,
-        //         smoking: profileData?.smoking ?? null,
-        //         major: profileData?.major ?? null,
-        //         lastName: profileData?.lastName ?? null,
-        //         firstName: profileData?.firstName ?? null,
-        //     };
+        const formattedData = {
+            gender: profileData?.gender ?? null,
+            phone: profileData?.phone ?? null,
+            instagram: profileData?.instagram ?? null,
+            facebook: profileData?.facebook ?? null,
+            linkedin: profileData?.linkedin ?? null,
+            image: profileData?.image ?? null,
+            idCard: profileData?.idCard ?? null,
+            hobbies: profileData?.hobbies ?? null,
+            socialPerson: profileData?.socialPerson ?? null,
+            level: profileData?.level ?? null,
+            university: profileData?.university ?? null,
+            smoking: profileData?.smoking ?? null,
+            major: profileData?.major ?? null,
+            lastName: profileData?.lastName ?? null,
+            firstName: profileData?.firstName ?? null,
+        };
 
 
-        //     let request = await this.pendingRequestRepo
-        //         .createQueryBuilder("pendingRequest")
-        //         .leftJoinAndSelect("pendingRequest.pendingProfile", "pendingProfile")
-        //         .where("pendingProfile.userId = :userId", { userId })
-        //         .andWhere("pendingRequest.type = :type", { type: requestType })
-        //         .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
-        //         .getOne();
+        let request = await this.pendingRequestRepo
+            .createQueryBuilder("pendingRequest")
+            .leftJoinAndSelect("pendingRequest.pendingProfile", "pendingProfile")
+            .where("pendingProfile.userId = :userId", { userId })
+            .andWhere("pendingRequest.type = :type", { type: requestType })
+            .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
+            .getOne();
 
-        //     if (request) {
+        if (request) {
+            await this.requestItemRepo
+                .createQueryBuilder()
+                .delete()
+                .where("requestId = :requestId", { requestId: request.id })
+                .execute();
 
-        //         const pendingProfile = await this.pendingProfileRepo.findOne({ id: request.pendingProfile.id })
-        //         pendingProfile.data = formattedData;
-        //         await this.pendingProfileRepo.save(pendingProfile);
-        //     } else {
+            await this.pendingRequestRepo
+                .createQueryBuilder()
+                .delete()
+                .where("id = :requestId", { requestId: request.id })
+                .execute();
+        } else {
 
-        //         const pendingProfile = this.pendingProfileRepo.create({ data: formattedData, userId: userId, entityType });
-        //         await this.pendingProfileRepo.save(pendingProfile);
+            request = this.pendingRequestRepo.create(
+                {
+                    userId: userId,
+                    type: requestType,
+                    referenceType: entityType
+                });
 
-        //         request = this.pendingRequestRepo.create({ type: requestType, pendingProfile: pendingProfile });
-        //         await this.pendingRequestRepo.save(request);
+            await this.pendingRequestRepo.save(request);
 
-        //     }
+            const requestItem = this.requestItemRepo.create(
+                {
+                    data: formattedData,
+                    request,
+                    entityType,
 
-        //     return { message: "Profile update submitted for approval" };
+                });
+            await this.requestItemRepo.save(requestItem);
+
+        }
+
+        return { message: "Profile update submitted for approval" };
     }
 
 
 
-    async uploadDocumentRequest(apartmentId: string, document: string) {
-        //     let request = await this.pendingRequestRepo
-        //         .createQueryBuilder("pendingRequest")
-        //         .leftJoinAndSelect("pendingRequest.pendingDocument", "pendingDocument")
-        //         .where("pendingDocument.entityId = :entityId", { entityId: apartmentId })
-        //         .andWhere("pendingRequest.type = :type", { type: Type.DOCUMENT_UPLOAD })
-        //         .andWhere("pendingRequest.status = :status", { status: Status.PENDING })
-        //         .getOne();
-        //     console.log(request);
+    async ApproveProfileRequest(body: RequestDto) {
 
-        //     if (request) {
-        //         const apartmentDocument = await this.pendingDocumentRepo.findOne({ id: request.pendingDocument.id })
-        //         apartmentDocument.document = document;
-        //         await this.pendingDocumentRepo.save(apartmentDocument);
-        //     } else {
+        const request = await this.pendingRequestRepo
+            .createQueryBuilder('request')
+            .leftJoinAndSelect('request.items', 'items')
+            .leftJoinAndSelect('items.request', 'requestItemRequest')
+            .where('request.id = :id', { id: body.id })
+            .getOne();
 
-        //         const apartmentDocument = this.pendingDocumentRepo.create({ document, entityId: apartmentId });
-        //         await this.pendingDocumentRepo.save(apartmentDocument);
 
-        //         request = this.pendingRequestRepo.create({ type: Type.DOCUMENT_UPLOAD, pendingDocument: apartmentDocument });
-        //         await this.pendingRequestRepo.save(request);
+        const item = request.items[0];
+        switch (request.type) {
+            case Type.PROFILE_COMPLETE:
+                switch (item.entityType) {
+                    case EntityType.PROVIDER:
+                        await this.providerService.updateProfile(request.userId, item.data);
+                        break;
+                    case EntityType.STUDENT:
+                        await this.studentService.completeProfile(request.userId, item.data);
+                        break;
 
-        //     }
+                }
+                break;
+            case Type.PROFILE_UPDATE:
+                switch (item.entityType) {
+                    case EntityType.PROVIDER:
+                        await this.providerService.updateProfile(request.userId, item.data);
+                        break;
+                    case EntityType.STUDENT:
+                        await this.studentService.updateStudent(request.userId, item.data);
+                        break;
+
+                }
+                break;
+        }
+
+
     }
-
-
 
 
     async createApartmentRequest(
@@ -288,6 +298,78 @@ export class PendingRequestService {
                 name,
                 roomCount,
 
+            },
+            request: pendingRequest,
+        });
+
+        await this.requestItemRepo.save(requestItem);
+
+        return { requestId: pendingRequest.id }
+    }
+
+
+    async updateApartmentRequest(apartmentId: string,
+        updateApartmentDto: UpdateApartmentDto
+    ): Promise<{ requestId: string }> {
+
+        const existingRequest = await this.pendingRequestRepo
+            .createQueryBuilder("request")
+            .where("request.referenceId = :apartmentId", { apartmentId })
+            .andWhere("request.type = :type", { type: Type.UPDATE_APARTMENT })
+            .andWhere("request.status = :status", { status: Status.PENDING })
+            .getOne();
+
+        if (existingRequest) {
+            const requestItems = await this.requestItemRepo
+                .createQueryBuilder("item")
+                .where("item.requestId = :requestId", { requestId: existingRequest.id })
+                .select("item.id")
+                .getMany();
+
+            const requestItemIds = requestItems.map(item => item.id);
+
+            if (requestItemIds.length > 0) {
+                await this.imagesRepo
+                    .createQueryBuilder()
+                    .delete()
+                    .where("itemId IN (:...requestItemIds)", { requestItemIds })
+                    .execute();
+
+                await this.requestItemRepo
+                    .createQueryBuilder()
+                    .delete()
+                    .where("id IN (:...requestItemIds)", { requestItemIds })
+                    .execute();
+            }
+
+            await this.pendingRequestRepo
+                .createQueryBuilder()
+                .delete()
+                .where("id = :requestId", { requestId: existingRequest.id })
+                .execute();
+        }
+        const { descriptionEn, descriptionAr, gender } = updateApartmentDto;
+
+        const pendingRequest = this.pendingRequestRepo.create({
+            referenceId: apartmentId,
+            referenceType: EntityType.APARTMENT,
+            status: Status.PENDING,
+            type: Type.UPDATE_APARTMENT,
+            description: 'Provider is requesting to update an apartment.',
+        });
+
+        await this.pendingRequestRepo.save(pendingRequest);
+
+        const requestItem = this.requestItemRepo.create({
+            status: Status.PENDING,
+            entityType: EntityType.APARTMENT,
+            referenceId: null,
+            referenceType: EntityType.APARTMENT,
+
+            data: {
+                descriptionEn,
+                descriptionAr,
+                gender,
             },
             request: pendingRequest,
         });

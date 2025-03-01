@@ -47,7 +47,7 @@ export class StudentController {
       body.image = `/uploads/${files.image[0].filename}`;
     }
 
-    return await this.pendingRequestService.submitProfileUpdate(
+    return await this.pendingRequestService.CreateProfileRequest(
       id,
       EntityType.STUDENT,
       body,
@@ -81,19 +81,13 @@ export class StudentController {
     if (files.image && files.image.length > 0) {
       completeProfileDto.image = `/uploads/${files.image[0].filename}`;
     }
-    return await this.pendingRequestService.submitProfileUpdate(
+    return await this.pendingRequestService.CreateProfileRequest(
       id,
       EntityType.STUDENT,
       completeProfileDto,
       Type.PROFILE_COMPLETE,
     );
 
-    return await this.pendingRequestService.submitProfileUpdate(
-      id,
-      EntityType.STUDENT,
-      completeProfileDto,
-      Type.PROFILE_COMPLETE,
-    );
   }
 
   @Get(':studentId')

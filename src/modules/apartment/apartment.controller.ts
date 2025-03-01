@@ -60,8 +60,9 @@ export class ApartmentController {
     @Param('id') id: string,
     @Body() updateApartmentDto: UpdateApartmentDto,
   ) {
-    console.log(updateApartmentDto);
-    return this.apartmentService.updateApartment(id, updateApartmentDto);
+    // console.log(updateApartmentDto);
+    return this.pendingRequestService.updateApartmentRequest(id, updateApartmentDto);
+    // return this.apartmentService.updateApartment(id, updateApartmentDto);
   }
 
   @Get('recent')
