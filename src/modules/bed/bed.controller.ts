@@ -22,9 +22,9 @@ import { PendingRequestService } from '../request/pendingRequest.service';
 
 @Controller('beds')
 export class BedController {
-  constructor(private readonly bedService: BedService ,   
-      @Inject(forwardRef(() => PendingRequestService))
-  private readonly pendingRequestService: PendingRequestService,) {}
+  constructor(private readonly bedService: BedService,
+    @Inject(forwardRef(() => PendingRequestService))
+    private readonly pendingRequestService: PendingRequestService,) { }
 
   @Post(':id/:roomRecordId/create')
   async createBed(
@@ -32,20 +32,26 @@ export class BedController {
     @Param('roomRecordId') roomRecordId: string,
     @Body() createBedDto: CreateBedDto,
   ) {
-    console.log('ApartmentRequestId:', apartmentRequestId);
-    console.log('roomRecordId:', roomRecordId);
-    console.log('createBedDto:', createBedDto);
-  
-    return this.pendingRequestService.addBedRequest(apartmentRequestId , roomRecordId, createBedDto);
-  }
-  
 
-  @Patch(':id/update')
-  async updateBed(
+    return this.pendingRequestService.addBedRequest(apartmentRequestId, roomRecordId, createBedDto);
+  }
+
+
+  @Patch(':id/updateInfo')
+  async updateBedInfo(
     @Param('id') bedId: string,
     @Body() updateBedDto: UpdateBedDto,
   ) {
     return this.bedService.updateBed(bedId, updateBedDto);
+  }
+
+
+  @Post(':id/:requestId/updateRequest')
+  async updateBedRequest(
+    @Param('id') bedId: string,
+    @Param('requestId') requestId: string,
+  ) {
+    return this.pendingRequestService.updateBedRequest(bedId, requestId);
   }
 
   @Delete(':id/delete')

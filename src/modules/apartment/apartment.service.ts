@@ -71,7 +71,7 @@ export class ApartmentService {
       throw new NotFoundException('Apartment not found');
     }
 
-    if (apartment.status == 'UNBOOKED' && updateApartment.gender) {
+    if (apartment.bookingStatus == 'UNBOOKED' && updateApartment.gender) {
       apartment.gender = updateApartment.gender;
     }
 

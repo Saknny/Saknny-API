@@ -32,13 +32,28 @@ export class RoomController {
     return this.pendingRequestService.addRoomRequest(apartmentRequestId, createRoomDto);
   }
 
-  @Patch(':id/update')
-  async updateRoom(
+  @Patch(':id/updateInfo')
+  async updateRoomInfo(
     @Param('id') roomId: string,
     @Body() updateRoomDto: UpdateRoomDto,
   ) {
     return this.roomService.updateRoom(roomId, updateRoomDto);
   }
+
+
+
+  
+  @Post(':id/:requestId/updateRequest')
+  async updateRoomRequest(
+    @Param('id') roomId: string,
+    @Param('requestId') requestId:string 
+
+  ) {
+    return this.pendingRequestService.updateRoomRequest(roomId, requestId);
+  }
+
+
+
 
   @Delete(':id/delete')
   async deleteRoom(@Param('id') roomId: string) {
