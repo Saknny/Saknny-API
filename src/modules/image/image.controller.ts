@@ -1,4 +1,4 @@
-import { Controller, Delete, forwardRef, Inject, NotFoundException, Param, Patch, Post, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, forwardRef, Get, Inject, NotFoundException, Param, Patch, Post, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
 import { PendingRequestService } from "../request/pendingRequest.service";
 import { ImageService } from "./image.service";
 import { ImageUploadFileInterceptor } from "./interceptors/interceptor.upload-file";
@@ -7,6 +7,7 @@ import { currentUserType } from "@src/libs/types/current-user.type";
 import { Type } from "../request/entities/enum/type.enum";
 import { EntityType } from "../request/entities/enum/entityType.enum";
 import { ImageUploadFilesInterceptor } from "./interceptors/interceptor.upload-files";
+import { ImageDto } from "./dto/image.dto";
 
 
 @Controller('image')
@@ -49,5 +50,10 @@ export class ImageController {
     async deleteImage(@Param('id') imageId: string
         , @Query('entityType') entityType: EntityType) {
         return this.imageService.deleteImage(imageId, entityType);
+    }
+
+    @Get('')
+    async getImage(@Body() imageDto:ImageDto) {
+        return this.imageService.getImage(imageDto);
     }
 }

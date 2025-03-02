@@ -84,4 +84,59 @@ export class Apartment extends BaseModel {
   })
   @JoinColumn({ name: 'favoriteListId' })
   favoriteList: FavoriteList;
+
+
+  @Column()
+  tv: boolean;
+
+  @Column()
+  refrigerator: boolean;
+
+  @Column()
+  stove: boolean;
+
+
+  @Column()
+  microwave: boolean;
+
+  @Column()
+  kettle: boolean;
+
+  @Column()
+  washingMachine: boolean;
+
+  @Column()
+  waterHeater: boolean;
+
+  @Column()
+  standFan: boolean;
+
+  @Column()
+  Iron: boolean;
+
+  @Column()
+  wifi: boolean;
+
+  @Column()
+  size: number;
+
+  @Column()
+  floor: number;
+
+  @Column()
+  elavator: boolean;
+
+  @Column()
+  furnished: boolean;
+
+  @Column()
+  bathrooms: number;
+
+
+
+
+
+
+
+
 }

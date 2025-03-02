@@ -38,10 +38,12 @@ export class FavoriteListService {
   }
 
   async deleteFavoriteList(studentId: string, listId: string) {
-    const favoriteList = await this.favoriteListRepo.findOneOrError(
-      { id: listId, student: { id: studentId } },
-      ErrorCodeEnum.FAVORITE_LIST_NOT_FOUND,
-    );
+    const favoriteList = await this.favoriteListRepo.findOne({
+      id: listId,
+      student: { id: studentId },
+    });
+
+    if (!favoriteList) throw new NotFoundException('Favorite list not found');
 
     return this.favoriteListRepo.remove(favoriteList);
   }
@@ -51,10 +53,12 @@ export class FavoriteListService {
     listId: string,
     apartmentId: string,
   ) {
-    const favoriteList = await this.favoriteListRepo.findOneOrError(
-      { id: listId, student: { id: studentId } },
-      ErrorCodeEnum.FAVORITE_LIST_NOT_FOUND,
-    );
+    const favoriteList = await this.favoriteListRepo.findOne({
+      id: listId,
+      student: { id: studentId },
+    });
+
+    if (!favoriteList) throw new NotFoundException('Favorite list not found');
 
     const apartment = await this.apartmentRepo.findOneOrError(
       { id: apartmentId },
@@ -70,11 +74,9 @@ export class FavoriteListService {
     studentId: string,
     apartmentId: string,
   ) {
-    const apartment = await this.apartmentRepo.findOneOrError(
-      { id: apartmentId },
-      ErrorCodeEnum.APARTMENT_NOT_FOUND,
-      ['favoriteList'],
-    );
+    const apartment = await this.apartmentRepo.findOne({ id: apartmentId }, [
+      'favoriteList',
+    ]);
 
     if (!apartment || apartment.favoriteList?.student?.id !== studentId) {
       throw new BaseHttpException(ErrorCodeEnum.APARTMENT_NOT_FOUND);
@@ -85,15 +87,11 @@ export class FavoriteListService {
     return this.apartmentRepo.save(apartment);
   }
 
-  // TODO: fix this
-  async getUserFavoriteLists(userId: number) {
-    return this.favoriteListRepo
-      .createQueryBuilder('favoriteList')
-      .leftJoinAndSelect('favoriteList.apartments', 'favoriteListApartment')
-      .leftJoinAndSelect('favoriteListApartment.apartment', 'apartment')
-      .orderBy('favoriteListApartment.addedAt', 'DESC')
-      .select(['favoriteList.id', 'favoriteList.name', 'apartment.image'])
-      .getMany();
+  async getStudentFavoriteLists(studentId: string) {
+    return this.favoriteListRepo.find({
+      where: { student: { id: studentId } },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async getFavoriteListApartments(studentId: string, listId: string) {

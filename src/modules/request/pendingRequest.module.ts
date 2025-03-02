@@ -1,5 +1,3 @@
-
-
 import { forwardRef, Module } from "@nestjs/common";
 import { DatabaseModule } from "@src/configs/database/database.module";
 import { PendingRequest } from "./entities/pendingRequest.entity";
@@ -16,12 +14,6 @@ import { ApartmentDocument } from "../apartment/entities/document.entity";
 import { PendingDocument } from "./entities/pendingDocument.entity";
 import { ImageModule } from "../image/image.module";
 import { RequestItem } from "./entities/RequestItem.entity";
-
-console.log("PendingRequestModule Imports:", [
-    ApartmentModule,
-    BedModule,
-    RoomModule,
-]);
 
 @Module({
     imports: [DatabaseModule.forFeature([PendingRequest, Provider, ImageApproval, PendingProfile, PendingDocument , RequestItem])

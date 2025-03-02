@@ -94,4 +94,9 @@ export class StudentController {
   async getStudent(@Param('studentId') studentId: string) {
     return await this.studentService.getStudent(studentId);
   }
+
+  @Get(':studentId/board')
+  async getStudentBoard(@Param('studentId') studentId: string) {
+    return await this.studentService.getStudentBoard(studentId);
+  }
 }

@@ -41,7 +41,6 @@ export class ProviderController {
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async completeProfile(
     @currentUser() { id }: currentUserType,
-
     @UploadedFiles()
     files: {
       idCard?: Express.Multer.File[];
@@ -54,6 +53,7 @@ export class ProviderController {
     if (!files.idCard || files.idCard.length === 0) {
       throw new BadRequestException('ID Card is required');
     }
+
     if (files.idCard && files.idCard?.length > 0) {
       if (Buffer.isBuffer(files.idCard[0].buffer)) {
         completeProfileDto.idCard = files.idCard[0].buffer.toString('base64');
@@ -113,6 +113,11 @@ export class ProviderController {
 
   @Get(':providerId')
   getProvider(@Param('providerId') providerId: string) {
-    return this.providerService.getById(providerId);
+    return this.providerService.provider(providerId);
+  }
+
+  @Get(':providerId/board')
+  getProviderBoard(@Param('providerId') providerId: string) {
+    return this.providerService.providerBoard(providerId);
   }
 }

@@ -51,4 +51,9 @@ export class BedController {
   async getBed(@Param('id') id: string) {
     return this.bedService.getBed(id);
   }
+
+  @Get(':id/board')
+  async getBedBoard(@Param('id') id: string) {
+    return this.bedService.getBedBoard(id);
+  }
 }

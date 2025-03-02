@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Apartment } from './entities/apartment.entity/apartment.entity';
 import { Provider } from '../provider/entities/provider.entity';
@@ -15,6 +15,8 @@ import { ApartmentDocument } from './entities/document.entity';
 import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum';
 import { GetApartmentsDto } from './dto/get-apartments.dto';
 import { Status } from '../request/entities/enum/status.enum';
+import { ProviderSubscriptionService } from '../provider-subscription/provider-subscription.service';
+import { Student } from '../student/entities/student.entity';
 
 @Injectable()
 export class ApartmentService {
@@ -30,10 +32,15 @@ export class ApartmentService {
 
     @InjectRepository(Bed)
     private readonly bedRepository: BaseRepository<Bed>,
+    @InjectRepository(Student)
+    private readonly studentRepository: BaseRepository<Student>,
 
     @InjectRepository(ApartmentDocument)
     private readonly apartmentDocumentRepo: BaseRepository<ApartmentDocument>,
+    @Inject(ProviderSubscriptionService)
+    private readonly providerSubscriptionService: ProviderSubscriptionService,
   ) { }
+
 
 
 
@@ -98,13 +105,21 @@ export class ApartmentService {
     return await this.apartmentRepository.save(apartment);
   }
 
-  async publishApartment(id: string) {
-    const apartment = await this.apartmentRepository.findOneBy({ id });
+  async publishApartment(userId: string, apartmentId) {
+    const apartment = await this.apartmentRepository.findOneBy({ id: apartmentId });
+    const provider = await this.providerRepository.findOneBy({ userId });
+    if (!provider) {
+      throw new NotFoundException('provider not found');
+
+    }
+
     if (!apartment) {
       throw new NotFoundException('apartment not found');
     }
-    if (apartment.status == 'APPROVED') {
+
+    if (apartment.status == 'APPROVED' && this.providerSubscriptionService.checkSubscriptionLimit(provider.id)) {
       apartment.status = 'PUBLISHED';
+      this.providerSubscriptionService.reduceMaxApartments(provider.id);
     }
     await this.apartmentRepository.save(apartment);
     return apartment;
@@ -177,11 +192,30 @@ export class ApartmentService {
   }
 
   async getApartment(id: string) {
-    return this.apartmentRepository.findOneOrError(
+    const apartment = await this.apartmentRepository.findOne(
       { id, status: 'PUBLISHED' },
-      ErrorCodeEnum.APARTMENT_NOT_FOUND,
-      ['provider', 'images', 'rooms', 'rooms.beds'],
+      ['provider', 'rooms', 'rooms.beds'],
     );
+
+    if (!apartment) {
+      throw new NotFoundException('Apartment not found');
+    }
+
+    return apartment;
+  }
+
+  async getApartmentBoard(id: string) {
+    const apartment = await this.apartmentRepository.findOne({ id }, [
+      'provider',
+      'rooms',
+      'rooms.beds',
+    ]);
+
+    if (!apartment) {
+      throw new NotFoundException('Apartment not found');
+    }
+
+    return apartment;
   }
 
   async getApartments(filters: GetApartmentsDto) {
@@ -219,4 +253,35 @@ export class ApartmentService {
       data,
     };
   }
+
+  async getHomeData() {
+    // Fetch aggregated counts
+    const numberOfApartments = await this.apartmentRepository.count();
+
+    // FIXED: Count beds through proper relationships
+    const numberOfBeds = await this.apartmentRepository
+      .createQueryBuilder('apartment')
+      .leftJoin('apartment.rooms', 'room') // Join with rooms
+      .leftJoin('room.beds', 'bed') // Join with beds
+      .select('COUNT(bed.id)::int', 'totalBeds') // Cast to integer with "::int"
+      .getRawOne();
+
+    const numberOfProviders = await this.providerRepository.count();
+    const numberOfStudents = await this.studentRepository.count();
+    // Fetch recently added apartments
+    const recentlyAdded = await this.getRecentApartments(6);
+
+    // Fetch recently viewed apartments
+    const recentlyViewed = await this.getRecentlyViewed();
+
+    return {
+      numberOfApartments,
+      umberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0, // Parse to integer
+      numberOfProviders,
+      numberOfStudents,
+      recentlyAdded,
+      recentlyViewed: recentlyViewed.slice(0, 6),
+    };
+  }
+
 }
