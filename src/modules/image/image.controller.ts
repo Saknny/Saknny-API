@@ -20,15 +20,12 @@ export class ImageController {
 
     @Post(':id/upload-images')
     @UseInterceptors(ImageUploadFilesInterceptor())
-    async uploadImages(@Param('id') id: string
+    async uploadImages(@Param('id') requestItemId: string
         , @UploadedFiles() files: { images?: Express.Multer.File[] }
-        , @currentUser() user: currentUserType
-        , @Query('entityType') entityType: EntityType) {
+        ) {
         const imageFilenames = files.images?.map(file => file.filename) || [];
 
-        const requestTypeKey = (`UPLOAD_${entityType}`);
-        const requestType = Type[requestTypeKey];
-        return this.pendingRequestService.uploadImageRequest(user.id, id, requestType, entityType, imageFilenames);
+        return this.pendingRequestService.UploadImagesRequest( requestItemId, imageFilenames);
     }
 
     @Patch(':id/update-image')
@@ -44,7 +41,7 @@ export class ImageController {
         }
         const requestTypeKey = (`UPLOAD_${entityType}`);
         const requestType = Type[requestTypeKey];
-        return this.pendingRequestService.uploadImageRequest(user.id, imageId, requestType, EntityType.ROOM, file.filename);
+        // return this.pendingRequestService.uploadImageRequest(user.id, imageId, requestType, EntityType.ROOM, file.filename);
     }
 
 

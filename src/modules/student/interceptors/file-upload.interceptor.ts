@@ -20,7 +20,6 @@ export const fileUploadInterceptor = () =>
                         fs.mkdirSync(uploadPath, { recursive: true });
                     }
 
-                    // Assign the destination and filename manually
                     file.destination = uploadPath;
                     file.filename = `${file.fieldname}-${Date.now()}-${Math.round(
                         Math.random() * 1e9

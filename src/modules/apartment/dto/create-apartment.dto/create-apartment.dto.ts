@@ -11,10 +11,8 @@ export class CreateApartmentDto {
   descriptionAr: string;
 
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateRoomDto)
-  rooms: CreateRoomDto[];
+  @IsNumber()
+  roomCount: number;
 
   @IsOptional()
   @IsString()

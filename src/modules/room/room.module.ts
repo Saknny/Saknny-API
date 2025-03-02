@@ -8,7 +8,8 @@ import { ApartmentModule } from '../apartment/apartment.module';
 import { PendingRequestModule } from '../request/pendingRequest.module';
 
 @Module({
-  imports: [DatabaseModule.forFeature([Room, Apartment])],
+  imports: [DatabaseModule.forFeature([Room, Apartment]),
+  forwardRef(() => PendingRequestModule)],
   providers: [RoomService],
   controllers: [RoomController],
   exports: [RoomService]

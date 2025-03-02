@@ -30,6 +30,8 @@ export class Bed extends BaseModel {
   @Column('text')
   descriptionAr: string;
 
+
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -47,6 +49,7 @@ export class Bed extends BaseModel {
 
   @OneToOne(() => Student, (student) => student.bed, { nullable: true })
   student: Student;
+
 
   @OneToMany(() => RentalRequest, (request) => request.bed)
   rentalRequests: RentalRequest[];

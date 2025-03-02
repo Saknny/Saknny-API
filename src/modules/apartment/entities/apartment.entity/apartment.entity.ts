@@ -49,8 +49,13 @@ export class Apartment extends BaseModel {
   })
   provider: Provider;
 
+
+  @Column({ nullable: true })
+  roomCount: number;
+
   @OneToMany(() => Room, (room) => room.apartment)
   rooms: Room[];
+
 
   @Column({ default: 'PENDING' })
   status: string; // PENDING , APPROVED , PUBLISHED

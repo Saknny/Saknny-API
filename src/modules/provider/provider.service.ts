@@ -105,4 +105,14 @@ export class ProviderService {
 
     return provider.apartments || [];
   }
+
+  async updateCard(userId:string , idCard:string){
+    const provider = await this.providerRepository.findOneBy({ userId });
+    if (!provider) {
+      throw new NotFoundException('provider not found');
+    }
+    provider.idCard =idCard;
+    await this.providerRepository.save(provider);
+
+  }
 }

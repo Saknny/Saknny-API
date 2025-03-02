@@ -4,8 +4,9 @@ import { ImageApproval } from "./imageApproval.entity";
 import { Provider } from "@src/modules/provider/entities/provider.entity";
 import { Status } from "./enum/status.enum";
 import { Type } from "./enum/type.enum";
-import { PendingProfile } from "./PendingProfile.Entity";
 import { PendingDocument } from "./pendingDocument.entity";
+import { RequestItem } from "./RequestItem.entity";
+import { EntityType } from "./enum/entityType.enum";
 
 @Entity()
 export class PendingRequest extends BaseModel {
@@ -17,51 +18,43 @@ export class PendingRequest extends BaseModel {
         type: "enum",
         enum: Status,
         default: Status.PENDING,
-        nullable: true, // ✅ Make nullable
+        nullable: true,
     })
     status?: Status;
 
     @Column({
         type: "enum",
         enum: Type,
-        nullable: true, // ✅ Make nullable
+        nullable: true,
     })
     type?: Type;
 
-    @Column({ nullable: true }) // ✅ Make nullable
+    @Column({ nullable: true })
     reason?: string;
 
-    @Column({ nullable: true }) // ✅ Make nullable
+    @Column({ nullable: true })
     description?: string;
 
-    @OneToMany(() => ImageApproval, (imageApproval) => imageApproval.pendingRequest, {
+
+    @Column({ nullable: true })
+    referenceId?: string;
+
+    @Column({ nullable: true })
+    userId?: string;
+
+    @Column({
+        type: "enum",
+        enum: EntityType,
+        nullable: true,
+    })
+    referenceType?: string;
+
+    @OneToMany(() => RequestItem, (item) => item.request, {
         onDelete: "SET NULL",
         onUpdate: "CASCADE",
         nullable: true,
     })
-    imageApprovals?: ImageApproval[];
-
-    @ManyToOne(() => Provider, (provider) => provider.pendingRequests, {
-        onDelete: "SET NULL", // ✅ Set NULL instead of CASCADE
-        onUpdate: "CASCADE",
-        nullable: true,
-    })
-    provider?: Provider;
-
-    @OneToOne(() => PendingProfile, (pendingProfile) => pendingProfile.pendingRequest, {
-        onDelete: "SET NULL", // ✅ Set NULL instead of CASCADE
-        onUpdate: "CASCADE",
-        nullable: true,
-    })
-    @JoinColumn({ name: "pendingProfileId" }) // ✅ Ensure foreign key is managed correctly
-    pendingProfile?: PendingProfile;
+    items?: RequestItem[];
 
 
-    @OneToOne(() => PendingDocument, (pendingDocument) => pendingDocument, {
-        onDelete: "SET NULL", // ✅ Set NULL instead of CASCADE
-        onUpdate: "CASCADE",
-        nullable: true,
-    })
-    @JoinColumn({ name: "pendingDocumentId" }) // ✅ Ensure foreign key is managed correctly
-    pendingDocument?: PendingDocument;
 }

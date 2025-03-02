@@ -32,7 +32,7 @@ export class ApartmentService {
 
     @InjectRepository(Bed)
     private readonly bedRepository: BaseRepository<Bed>,
-    @InjectRepository(Student) 
+    @InjectRepository(Student)
     private readonly studentRepository: BaseRepository<Student>,
 
     @InjectRepository(ApartmentDocument)
@@ -41,64 +41,26 @@ export class ApartmentService {
     private readonly providerSubscriptionService: ProviderSubscriptionService,
   ) { }
 
+
+
+
   async createApartment(
-    providerId: string,
+    userId: string,
     createApartmentDto: CreateApartmentDto,
   ): Promise<Apartment> {
-    const { descriptionEn, descriptionAr, rooms, gender } = createApartmentDto;
 
-    // Find the provider
-    const provider = await this.providerRepository.findOne({
-      userId: providerId,
-    });
+
+    const provider = await this.providerRepository.findOne({ userId });
     if (!provider) {
       throw new NotFoundException('Provider not found');
     }
 
-    // Create the apartment
     const apartment = this.apartmentRepository.create({
-      descriptionEn,
-      descriptionAr,
-      provider,
-      gender,
+     ...createApartmentDto,
+     provider
     });
 
     await this.apartmentRepository.save(apartment);
-
-    // Create rooms and beds
-    for (const roomDto of rooms) {
-      const {
-        descriptionEn,
-        descriptionAr,
-        bedCount,
-        availableFor,
-        hasAirConditioner,
-        beds,
-      } = roomDto;
-
-      const room = this.roomRepository.create({
-        descriptionEn,
-        descriptionAr,
-        bedCount,
-        availableFor,
-        hasAirConditioner,
-        apartment,
-      });
-
-      await this.roomRepository.save(room);
-
-      // Create beds for the room
-      for (const bedDto of beds) {
-        const { descriptionEn, descriptionAr, price } = bedDto;
-        const bed = this.bedRepository.create({
-          descriptionEn,
-          descriptionAr,
-          price,
-          room,
-        });
-        await this.bedRepository.save(bed);
-      }
-    }
 
     return apartment;
   }
@@ -291,24 +253,24 @@ export class ApartmentService {
 
   async getHomeData() {
     // Fetch aggregated counts
-  const numberOfApartments = await this.apartmentRepository.count();
-  
-  // FIXED: Count beds through proper relationships
-  const numberOfBeds = await this.apartmentRepository
-    .createQueryBuilder('apartment')
-    .leftJoin('apartment.rooms', 'room') // Join with rooms
-    .leftJoin('room.beds', 'bed') // Join with beds
-    .select('COUNT(bed.id)::int', 'totalBeds') // Cast to integer with "::int"
-    .getRawOne();
+    const numberOfApartments = await this.apartmentRepository.count();
 
-  const numberOfProviders = await this.providerRepository.count();
-  const numberOfStudents = await this.studentRepository.count();
+    // FIXED: Count beds through proper relationships
+    const numberOfBeds = await this.apartmentRepository
+      .createQueryBuilder('apartment')
+      .leftJoin('apartment.rooms', 'room') // Join with rooms
+      .leftJoin('room.beds', 'bed') // Join with beds
+      .select('COUNT(bed.id)::int', 'totalBeds') // Cast to integer with "::int"
+      .getRawOne();
+
+    const numberOfProviders = await this.providerRepository.count();
+    const numberOfStudents = await this.studentRepository.count();
     // Fetch recently added apartments
     const recentlyAdded = await this.getRecentApartments(6);
-  
+
     // Fetch recently viewed apartments
     const recentlyViewed = await this.getRecentlyViewed();
-  
+
     return {
       numberOfApartments,
       umberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0, // Parse to integer
@@ -318,5 +280,5 @@ export class ApartmentService {
       recentlyViewed: recentlyViewed.slice(0, 6),
     };
   }
-  
+
 }

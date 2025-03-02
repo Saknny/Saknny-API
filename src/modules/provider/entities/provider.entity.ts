@@ -61,8 +61,8 @@ export class Provider extends BaseModel {
   @OneToMany(() => Apartment, (apartment) => apartment.provider, { cascade: true })
   apartments: Apartment[];
 
-  @OneToMany(() => PendingRequest, (pendingRequests) => pendingRequests.provider, { cascade: true })
-  pendingRequests: PendingRequest[];
+  // @OneToMany(() => PendingRequest, (pendingRequests) => pendingRequests.provider, { cascade: true })
+  // pendingRequests: PendingRequest[];
 
   @OneToMany(() => ProviderSubscription, (sub) => sub.provider)
   subscriptions: ProviderSubscription[];

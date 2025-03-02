@@ -34,6 +34,7 @@ export class Room extends BaseModel {
   })
   apartment: Apartment;
 
+
   @Column('text')
   descriptionEn: string;
 

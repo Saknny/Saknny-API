@@ -5,6 +5,7 @@ import { PendingRequest } from "./pendingRequest.entity";
 import { Status } from "./enum/status.enum";
 import { Type } from "./enum/type.enum";
 import { EntityType } from "./enum/entityType.enum";
+import { RequestItem } from "./RequestItem.entity";
 
 @Entity()
 export class ImageApproval extends BaseModel {
@@ -20,26 +21,6 @@ export class ImageApproval extends BaseModel {
     })
     status?: Status;
 
-    @Column({ nullable: true })
-    referenceId?: string;
-
-    // @Column({ nullable: true }) 
-    // referenceType?: string;
-
-    @Column({
-        type: "enum",
-        enum: Type,
-        nullable: true, 
-    })
-    type?: Type;
-
-    @Column({
-        type: "enum",
-        enum: EntityType,
-        nullable: true,
-    })
-    entityType?: EntityType;
-
     @Column({ nullable: true }) 
     url?: string;
 
@@ -49,10 +30,10 @@ export class ImageApproval extends BaseModel {
     @Column({ nullable: true }) 
     description?: string;
 
-    @ManyToOne(() => PendingRequest, (pendingRequest) => pendingRequest.imageApprovals, {
+    @ManyToOne(() => RequestItem, (Item) => Item.images, {
         onDelete: "SET NULL",
         onUpdate: "CASCADE",
         nullable: true,
     })
-    pendingRequest?: PendingRequest; // ✅ Made optional
+    Item?: RequestItem; 
 }

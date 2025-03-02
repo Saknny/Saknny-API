@@ -17,16 +17,19 @@ import {
 import { RoomService } from './room.service';
 import { CreateRoomDto } from './dto/create-room.dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto/update-room.dto';
+import { PendingRequestService } from '../request/pendingRequest.service';
 @Controller('room')
 export class RoomController {
-  constructor(private readonly roomService: RoomService) {}
+  constructor(private readonly roomService: RoomService   ,
+     @Inject(forwardRef(() => PendingRequestService))
+      private readonly pendingRequestService: PendingRequestService,) {}
 
   @Post(':id/create')
   async createRoom(
-    @Param('id') apartmentId: string,
+    @Param('id') apartmentRequestId: string,
     @Body() createRoomDto: CreateRoomDto,
   ) {
-    return this.roomService.createRoom(apartmentId, createRoomDto);
+    return this.pendingRequestService.addRoomRequest(apartmentRequestId, createRoomDto);
   }
 
   @Patch(':id/update')

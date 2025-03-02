@@ -12,7 +12,7 @@ export class StudentService {
   constructor(
     @InjectBaseRepository(Student)
     private readonly studentRepo: BaseRepository<Student>,
-  ) {}
+  ) { }
   async getById(id: string) {
     const student = await this.studentRepo.findOneBy({ id });
     if (!student) {
@@ -133,5 +133,15 @@ export class StudentService {
     }
 
     return student;
+  }
+
+  async updateCard(userId: string, idCard: string) {
+    const student = await this.studentRepo.findOneBy({ userId });
+    if (!student) {
+      throw new NotFoundException('student not found');
+    }
+    student.idCard = idCard;
+    await this.studentRepo.save(student);
+
   }
 }

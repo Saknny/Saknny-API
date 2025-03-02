@@ -5,7 +5,7 @@ import { StudentService } from "../student/student.service";
 import { ApartmentService } from "../apartment/apartment.service";
 import { PendingRequestService } from "../request/pendingRequest.service";
 import { ImageApprovalDto } from "../request/dto/image-approval.dto";
-import { RequestApprovalDto } from "../request/dto/RequestApproval.dto";
+import { RequestDto } from "../request/dto/Request.dto";
 
 
 
@@ -20,7 +20,7 @@ export class AdminController {
 
 
 
-  
+
 
 
 
@@ -34,17 +34,25 @@ export class AdminController {
     return await this.pendingRequestService.getPendingRequests();
   }
 
-  @Patch(':id/request-approval')
-  async requestApproval(@Param('id') id: string, @Body() body: RequestApprovalDto) {
-    console.log(body.status);
-    return await this.pendingRequestService.updateRequestApproval(id, body);
+  @Patch('request-approval')
+  async requestApproval(@Body() body: RequestDto) {
+
+    return await this.pendingRequestService.updateRequestApproval(body);
   }
+
+
+  @Patch('item-approval')
+  async itemApproval( @Body() body: RequestDto) {
+
+    return await this.pendingRequestService.updateItemApproval( body);
+  }
+
 
   @Patch(':id/image-approval')
   async imageApproval(@Param('id') id: string, @Body() body: ImageApprovalDto) {
     return await this.pendingRequestService.updateImageApproval(id, body);
   }
 
-           
+
 
 }

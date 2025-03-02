@@ -12,4 +12,8 @@ export class CreateBedDto {
 
   @IsNumber()
   price: number;
+
+
+
+
 }
