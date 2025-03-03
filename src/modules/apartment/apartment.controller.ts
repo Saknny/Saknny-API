@@ -55,14 +55,20 @@ export class ApartmentController {
     // return await this.pendingRequestService.uploadDocumentRequest(id, document);
   }
 
-  @Patch(':id/update')
-  async updateApartment(
+  @Patch(':id/updateInfo')
+  async updateApartmentInfo(
     @Param('id') id: string,
     @Body() updateApartmentDto: UpdateApartmentDto,
   ) {
-    // console.log(updateApartmentDto);
-    return this.pendingRequestService.updateApartmentRequest(id, updateApartmentDto);
-    // return this.apartmentService.updateApartment(id, updateApartmentDto);
+    return this.apartmentService.updateApartment(id, updateApartmentDto);
+  }
+
+  @Post(':id/updateRequest')
+  async updateApartmentRequest(
+    @currentUser() user: currentUserType,
+    @Param('id') id: string
+  ) {
+    return this.pendingRequestService.updateApartmentRequest(id , user.id);
   }
 
   @Get('recent')

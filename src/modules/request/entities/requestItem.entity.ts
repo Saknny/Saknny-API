@@ -57,22 +57,13 @@ export class RequestItem extends BaseModel {
     @Column({ nullable: true })
     description?: string;
 
-    @Column({ nullable: true })
-    referenceId?: string;
 
-    @Column({
-        type: "enum",
-        enum: EntityType,
-        nullable: true,
-    })
-    referenceType?: string;
 
 
     @Column({ nullable: true })
     entityId?: string;
 
-    @Column({ nullable: true })
-    entityName?: string;
+
 
     @ManyToOne(() => PendingRequest, (request) => request.items, {
         onDelete: "SET NULL",

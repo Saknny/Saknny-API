@@ -92,6 +92,48 @@ export class PendingRequestService {
 
 
     async ApproveUpdateApartmentRequest(body: RequestDto) {
+        const request = await this.pendingRequestRepo
+            .createQueryBuilder('request')
+            .leftJoinAndSelect('request.items', 'items')
+            .leftJoinAndSelect('items.request', 'requestItemRequest')
+            .where('request.id = :id', { id: body.id })
+            .getOne();
+
+
+        const items = request.items.filter(item => item.status === Status.APPROVED);
+
+        let rooms = items.filter(item => item.type === Type.CREATE_ROOM && item.status == Status.APPROVED);
+
+        await Promise.all(rooms.map(async (item) => {
+            const room = await this.approveRoom(item, request.referenceId);
+            const itemId = item.id.replace(/-/g, '').toUpperCase().trim();
+            const beds = items.filter(bed =>
+                bed.entityType === EntityType.BED &&
+                bed.roomRecordId == itemId &&
+                bed.status === Status.APPROVED
+            );
+            console.log(beds)
+            await Promise.all(beds.map(bed => this.approveBed(bed, room.id)));
+        }
+        ));
+
+
+        rooms = items.filter(item => item.type === Type.UPDATE_ROOM && item.status == Status.APPROVED);
+
+        await Promise.all(rooms.map(async (item) => {
+            await this.UploadImage(item, item.entityId);
+            const itemId = item.id.replace(/-/g, '').toUpperCase().trim();
+            const beds = items.filter(bed =>
+                bed.entityType === EntityType.BED &&
+                bed.roomRecordId == itemId &&
+                bed.status === Status.APPROVED
+            );
+            await Promise.all(beds.map((bed) => this.approveBed(bed, item.entityId)));
+        }
+        ));
+
+        const beds = items.filter(item => item.type === Type.UPDATE_BED && item.status == Status.APPROVED);
+        await Promise.all(beds.map(async (bed) => await this.UploadImage(bed, bed.entityId)));
 
     }
 
@@ -105,7 +147,7 @@ export class PendingRequestService {
 
 
         const items = request.items.filter(item => item.status === Status.APPROVED);
-        console.log(items);
+        // console.log(items);
         const apartmentItem = items.filter(item => item.entityType === EntityType.APARTMENT && item.status == Status.APPROVED)[0];
         const apartment = await this.approveApartment(apartmentItem);
 
@@ -114,9 +156,10 @@ export class PendingRequestService {
 
         await Promise.all(rooms.map(async (item) => {
             const room = await this.approveRoom(item, apartment.id);
+            const itemId = item.id.replace(/-/g, '').toUpperCase().trim();
             const beds = items.filter(bed =>
                 bed.entityType === EntityType.BED &&
-                bed.roomRecordId == item.id &&
+                bed.roomRecordId == itemId &&
                 bed.status === Status.APPROVED
             );
             await Promise.all(beds.map(bed => this.approveBed(bed, room.id)));
@@ -124,6 +167,8 @@ export class PendingRequestService {
         ));
 
     }
+
+
 
 
 
@@ -331,8 +376,6 @@ export class PendingRequestService {
         const requestItem = this.requestItemRepo.create({
             status: Status.PENDING,
             entityType: EntityType.APARTMENT,
-            referenceId: null,
-            referenceType: EntityType.APARTMENT,
             data: createApartmentDto,
             request: pendingRequest,
         });
@@ -343,8 +386,7 @@ export class PendingRequestService {
     }
 
 
-    async updateApartmentRequest(apartmentId: string,
-        updateApartmentDto: UpdateApartmentDto
+    async updateApartmentRequest(apartmentId: string, userId: string
     ): Promise<{ requestId: string }> {
 
         const existingRequest = await this.pendingRequestRepo
@@ -383,34 +425,17 @@ export class PendingRequestService {
                 .where("id = :requestId", { requestId: existingRequest.id })
                 .execute();
         }
-        const { descriptionEn, descriptionAr, gender } = updateApartmentDto;
 
         const pendingRequest = this.pendingRequestRepo.create({
             referenceId: apartmentId,
             referenceType: EntityType.APARTMENT,
             status: Status.PENDING,
+            userId,
             type: Type.UPDATE_APARTMENT,
             description: 'Provider is requesting to update an apartment.',
         });
 
         await this.pendingRequestRepo.save(pendingRequest);
-
-        const requestItem = this.requestItemRepo.create({
-            status: Status.PENDING,
-            entityType: EntityType.APARTMENT,
-            referenceId: null,
-            referenceType: EntityType.APARTMENT,
-
-            data: {
-                descriptionEn,
-                descriptionAr,
-                gender,
-            },
-            request: pendingRequest,
-        });
-
-        await this.requestItemRepo.save(requestItem);
-
         return { requestId: pendingRequest.id }
     }
 
@@ -425,10 +450,9 @@ export class PendingRequestService {
         const requestItem = this.requestItemRepo.create({
             status: Status.PENDING,
             entityType: EntityType.ROOM,
-            referenceId: null,
-            referenceType: EntityType.APARTMENT,
             data: createRoomtDto,
             request: request,
+            type: Type.CREATE_ROOM,
         });
 
         await this.requestItemRepo.save(requestItem);
@@ -448,11 +472,10 @@ export class PendingRequestService {
         const requestItem = this.requestItemRepo.create({
             status: Status.PENDING,
             entityType: EntityType.BED,
-            referenceId: null,
-            referenceType: EntityType.APARTMENT,
             roomRecordId,
             data: createBedDto,
             request: request,
+            type: Type.CREATE_BED
         });
 
         await this.requestItemRepo.save(requestItem);
@@ -500,6 +523,41 @@ export class PendingRequestService {
         await this.requestItemRepo.save(item);
     }
 
+    async updateRoomRequest(roomId: string, requestId: string) {
+
+        const request = await this.pendingRequestRepo.findOne({ id: requestId });
+
+        const requestItem = this.requestItemRepo.create({
+            status: Status.PENDING,
+            entityType: EntityType.ROOM,
+            entityId: roomId,
+            request: request,
+            type: Type.UPDATE_ROOM,
+
+        });
+
+        await this.requestItemRepo.save(requestItem);
+
+        return { requestId: request.id, requestItemId: requestItem.id };
+    }
+
+    async updateBedRequest(bedId: string, requestId: string) {
+
+        const request = await this.pendingRequestRepo.findOne({ id: requestId });
+
+        const requestItem = this.requestItemRepo.create({
+            status: Status.PENDING,
+            entityType: EntityType.BED,
+            entityId: bedId,
+            request: request,
+            type: Type.UPDATE_BED,
+
+        });
+
+        await this.requestItemRepo.save(requestItem);
+
+        return { requestId: request.id, requestItemId: requestItem.id };
+    }
 
 
     async approveApartment(item: RequestItem) {
@@ -507,20 +565,7 @@ export class PendingRequestService {
 
         const apartment = await this.apartmentService.createApartment(request.userId, item.data);
 
-        console.log(item.id);
-        const images = await this.imagesRepo
-            .createQueryBuilder('image')
-            .leftJoinAndSelect('image.Item', 'item')
-            .where('item.id = :itemId', { itemId: item.id })
-            .andWhere('image.status = :status', { status: Status.APPROVED })
-            .getMany();
-
-
-        // console.log("RequestItem:", item);
-        console.log("Images:", images.length);
-
-        await this.imageService.uploadImages(apartment.id, EntityType.APARTMENT, images.map(image => image.url));
-
+        await this.UploadImage(item, apartment.id);
         await this.apartmentService.uploadDocuments(apartment.id, item.document);
 
         return apartment;
@@ -528,30 +573,26 @@ export class PendingRequestService {
 
 
     async approveBed(item: RequestItem, roomId: string) {
-        const request = await this.pendingRequestRepo.findOne({ id: item.request.id })
         const bed = await this.bedService.createBed(roomId, item.data);
-        const images = await this.imagesRepo
-            .createQueryBuilder('image')
-            .leftJoinAndSelect('image.Item', 'item')
-            .where('item.id = :itemId', { itemId: item.id })
-            .andWhere('image.status = :status', { status: Status.APPROVED })
-            .getMany();
-        await this.imageService.uploadImages(bed.id, EntityType.BED, images.map(image => image.url));
+        await this.UploadImage(item, bed.id);
 
     }
 
 
     async approveRoom(item: RequestItem, apartmentId: string) {
         const room = await this.roomService.createRoom(apartmentId, item.data);
+        await this.UploadImage(item, room.id);
+        return room;
+    }
 
+    async UploadImage(item: RequestItem, entityId: string) {
         const images = await this.imagesRepo
             .createQueryBuilder('image')
             .leftJoinAndSelect('image.Item', 'item')
             .where('item.id = :itemId', { itemId: item.id })
             .andWhere('image.status = :status', { status: Status.APPROVED })
             .getMany();
-        await this.imageService.uploadImages(room.id, EntityType.ROOM, images.map(image => image.url));
-        return room;
+        await this.imageService.uploadImages(entityId, item.entityType, images.map(image => image.url));
     }
 
 
