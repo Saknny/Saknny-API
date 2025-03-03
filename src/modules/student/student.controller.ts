@@ -9,16 +9,19 @@ import {
   Get,
   Param,
   BadRequestException,
+  UploadedFile,
 } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
 import { UpdateStudentInput } from './dtos/inputs/update-student.input';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 import { currentUserType } from '@src/libs/types/current-user.type';
-import { fileUploadInterceptor } from './interceptors/file-upload.interceptor';
+import { imageUploadInterceptor } from './interceptors/image-upload.interceptor';
 import { PendingRequestService } from '../request/pendingRequest.service';
 import { EntityType } from '../request/entities/enum/entityType.enum';
 import { Type } from '../request/entities/enum/type.enum';
+import { cardUploadInterceptor } from './interceptors/card-upload.interceptor';
+import { fileUploadInterceptor } from './interceptors/file-upload.interceptor';
 
 @Controller('students')
 export class StudentController {
@@ -26,35 +29,7 @@ export class StudentController {
     private readonly studentService: StudentService,
     @Inject(forwardRef(() => PendingRequestService))
     private readonly pendingRequestService: PendingRequestService,
-  ) {}
-
-  @Patch('me')
-  @UseInterceptors(fileUploadInterceptor())
-  async updateStudent(
-    @currentUser() { id }: currentUserType,
-    @UploadedFiles()
-    files: { idCard?: Express.Multer.File[]; image?: Express.Multer.File[] },
-    @Body() body: UpdateStudentInput,
-  ) {
-    files = files || {};
-    if (files.idCard && files.idCard?.length > 0) {
-      if (Buffer.isBuffer(files.idCard[0].buffer)) {
-        body.idCard = files.idCard[0].buffer.toString('base64');
-      }
-    }
-
-    if (files.image && files.image?.length > 0) {
-      body.image = `/uploads/${files.image[0].filename}`;
-    }
-
-    return await this.pendingRequestService.CreateProfileRequest(
-      id,
-      EntityType.STUDENT,
-      body,
-      Type.PROFILE_UPDATE,
-    );
-    // return await this.studentService.updateStudent(id, body);
-  }
+  ) { }
 
   @Patch('complete-profile')
   @UseInterceptors(fileUploadInterceptor())
@@ -90,6 +65,38 @@ export class StudentController {
 
   }
 
+  @Patch('update-profile')
+  @UseInterceptors(imageUploadInterceptor())
+  async updateStudent(
+    @currentUser() { id }: currentUserType,
+    @UploadedFile() image: Express.Multer.File,
+    @Body() body: UpdateStudentInput,
+  ) {
+
+    if (image) {
+      body.image = `/uploads/${image.filename}`;
+    }
+
+    return await this.studentService.updateStudent(id, body);
+  }
+
+
+  @Patch('update-idCard')
+  @UseInterceptors(cardUploadInterceptor())
+  async updateIdCard(
+    @currentUser() { id }: currentUserType,
+    @UploadedFile() idCard?: Express.Multer.File) {
+
+    if (!idCard) {
+      throw new BadRequestException('ID Card is required');
+    }
+    if (Buffer.isBuffer(idCard.buffer)) {
+      const idCardBase64 = idCard.buffer.toString('base64');
+      return await this.pendingRequestService.UpdateCardRequest(id, idCardBase64, EntityType.STUDENT);
+    }
+
+
+  }
   @Get(':studentId')
   async getStudent(@Param('studentId') studentId: string) {
     return await this.studentService.getStudent(studentId);

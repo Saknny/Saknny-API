@@ -31,9 +31,6 @@ export class Bed extends BaseModel {
   descriptionAr: string;
 
 
-  @Column()
-  name: string;
-
 
   @CreateDateColumn()
   createdAt: Date;

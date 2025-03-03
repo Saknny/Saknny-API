@@ -34,9 +34,6 @@ export class Room extends BaseModel {
   })
   apartment: Apartment;
 
-  @Column({ nullable: true })
-  name: string;
-
 
   @Column('text')
   descriptionEn: string;

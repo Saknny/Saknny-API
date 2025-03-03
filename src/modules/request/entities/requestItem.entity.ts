@@ -68,11 +68,11 @@ export class RequestItem extends BaseModel {
     referenceType?: string;
 
 
-    @Column({nullable:true})
-    entityId?:string;
+    @Column({ nullable: true })
+    entityId?: string;
 
-    @Column({nullable:true})
-    entityName?:string;
+    @Column({ nullable: true })
+    entityName?: string;
 
     @ManyToOne(() => PendingRequest, (request) => request.items, {
         onDelete: "SET NULL",
@@ -80,4 +80,8 @@ export class RequestItem extends BaseModel {
         nullable: true,
     })
     request?: PendingRequest;
+
+
+    @Column({ nullable: true })
+    roomRecordId: string;
 }

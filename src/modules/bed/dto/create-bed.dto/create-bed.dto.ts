@@ -14,7 +14,6 @@ export class CreateBedDto {
   price: number;
 
 
-  @IsString()
-  name: string;
+
 
 }

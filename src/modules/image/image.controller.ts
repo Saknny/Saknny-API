@@ -20,13 +20,12 @@ export class ImageController {
 
     @Post(':id/upload-images')
     @UseInterceptors(ImageUploadFilesInterceptor())
-    async uploadImages(@Param('id') requestId: string
+    async uploadImages(@Param('id') requestItemId: string
         , @UploadedFiles() files: { images?: Express.Multer.File[] }
-        , @currentUser() user: currentUserType,
-         @Query('entityName') entityName: string) {
+        ) {
         const imageFilenames = files.images?.map(file => file.filename) || [];
 
-        return this.pendingRequestService.UploadImagesRequest( requestId, imageFilenames , entityName);
+        return this.pendingRequestService.UploadImagesRequest( requestItemId, imageFilenames);
     }
 
     @Patch(':id/update-image')

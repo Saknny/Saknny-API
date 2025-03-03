@@ -19,7 +19,7 @@ export class RoomService {
     private readonly roomRepository: BaseRepository<Room>,
     @InjectRepository(Apartment)
     private readonly apartmentRepo: BaseRepository<Apartment>,
-  ) {}
+  ) { }
 
   async createRoom(
     apartmentId: string,

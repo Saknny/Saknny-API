@@ -48,7 +48,6 @@ export class ApartmentService {
     userId: string,
     createApartmentDto: CreateApartmentDto,
   ): Promise<Apartment> {
-    const { descriptionEn, descriptionAr, gender } = createApartmentDto;
 
 
     const provider = await this.providerRepository.findOne({ userId });
@@ -57,10 +56,8 @@ export class ApartmentService {
     }
 
     const apartment = this.apartmentRepository.create({
-      descriptionEn,
-      descriptionAr,
-      provider,
-      gender,
+     ...createApartmentDto,
+     provider
     });
 
     await this.apartmentRepository.save(apartment);

@@ -4,7 +4,6 @@ import { ImageApproval } from "./imageApproval.entity";
 import { Provider } from "@src/modules/provider/entities/provider.entity";
 import { Status } from "./enum/status.enum";
 import { Type } from "./enum/type.enum";
-import { PendingProfile } from "./PendingProfile.Entity";
 import { PendingDocument } from "./pendingDocument.entity";
 import { RequestItem } from "./RequestItem.entity";
 import { EntityType } from "./enum/entityType.enum";

@@ -26,13 +26,19 @@ export class BedController {
       @Inject(forwardRef(() => PendingRequestService))
   private readonly pendingRequestService: PendingRequestService,) {}
 
-  @Post(':id/create')
+  @Post(':id/:roomRecordId/create')
   async createBed(
-    @Param('id') ApartmentRequestId: string,
+    @Param('id') apartmentRequestId: string,
+    @Param('roomRecordId') roomRecordId: string,
     @Body() createBedDto: CreateBedDto,
   ) {
-    return this.pendingRequestService.addBedRequest(ApartmentRequestId, createBedDto);
+    console.log('ApartmentRequestId:', apartmentRequestId);
+    console.log('roomRecordId:', roomRecordId);
+    console.log('createBedDto:', createBedDto);
+  
+    return this.pendingRequestService.addBedRequest(apartmentRequestId , roomRecordId, createBedDto);
   }
+  
 
   @Patch(':id/update')
   async updateBed(

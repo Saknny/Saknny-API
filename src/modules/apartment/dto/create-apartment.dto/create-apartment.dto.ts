@@ -10,11 +10,9 @@ export class CreateApartmentDto {
   @IsString()
   descriptionAr: string;
 
-  @IsString()
-  name: string;
 
   @IsNumber()
-  roomCount: Number;
+  roomCount: number;
 
   @IsOptional()
   @IsString()
