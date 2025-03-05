@@ -55,14 +55,15 @@ export class AuthService {
     return user;
   }
 
-  async verifyAccount(userId: string, otp: string) {
+  async verifyAccount(email: string, otp: string) {
     const user = await this.userRepo.findOneOrError(
-      { id: userId },
+      { verifiedEmail:email,
+        unVerifiedEmail:email
+       },
       ErrorCodeEnum.NOT_FOUND,
     );
-
     await this.otpService.verifyOtpOrError(
-      { otp, userId: user.id, useCase: OtpUseCaseEnum.VERIFY_ACCOUNT },
+      { otp, email, useCase: OtpUseCaseEnum.VERIFY_ACCOUNT },
       true,
     );
 
@@ -101,9 +102,9 @@ export class AuthService {
       { id: userId },
       ErrorCodeEnum.NOT_FOUND,
     );
-
+    const email=user.verifiedEmail ||user.unVerifiedEmail;
     await this.otpService.verifyOtpOrError(
-      { otp, userId: user.id, useCase: OtpUseCaseEnum.RESET_PASSWORD },
+      { email,otp, useCase: OtpUseCaseEnum.RESET_PASSWORD },
       true,
     );
 
@@ -144,9 +145,9 @@ export class AuthService {
       { id: userId },
       ErrorCodeEnum.NOT_FOUND,
     );
-
+    const email=user.verifiedEmail ||user.unVerifiedEmail;
     await this.otpService.verifyOtpOrError(
-      { otp, userId: user.id, useCase: OtpUseCaseEnum.UPDATE_EMAIL },
+      { email,otp, useCase: OtpUseCaseEnum.UPDATE_EMAIL },
       true,
     );
 
@@ -165,9 +166,9 @@ export class AuthService {
       { id: userId },
       ErrorCodeEnum.NOT_FOUND,
     );
-
+    const email=user.verifiedEmail ||user.unVerifiedEmail;
     await this.otpService.verifyOtpOrError(
-      { otp, userId: user.id, useCase: OtpUseCaseEnum.UPDATE_PASSWORD },
+      { email,otp, useCase: OtpUseCaseEnum.UPDATE_PASSWORD },
       true,
     );
 
