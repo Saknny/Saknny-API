@@ -55,8 +55,9 @@ export class AuthController {
   @Patch('verify-account')
   @Serialize(AuthResponse)
   @HttpCode(HttpStatus.OK)
-  async verifyAccount(@Body() { userId, otp }: VerifyUserInput) {
-    const user = await this.authService.verifyAccount(userId, otp);
+  async verifyAccount(@Body() { email, otp }: VerifyUserInput) {
+    console.log("here")
+    const user = await this.authService.verifyAccount(email, otp);
     const session = await this.sessionService.create(user);
     return await this.authService.appendAuthTokenToResponse(user, session);
   }

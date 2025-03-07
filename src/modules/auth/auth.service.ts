@@ -56,14 +56,12 @@ export class AuthService {
   }
 
   async verifyAccount(email: string, otp: string) {
-    const user = await this.userRepo.findOneOrError(
-      { verifiedEmail:email,
-        unVerifiedEmail:email
-       },
-      ErrorCodeEnum.NOT_FOUND,
-    );
+    const user = await this.userRepo
+    .createQueryBuilder("user")
+    .where("user.verifiedEmail = :email OR user.unVerifiedEmail = :email", { email })
+    .getOne();
     await this.otpService.verifyOtpOrError(
-      { otp, email, useCase: OtpUseCaseEnum.VERIFY_ACCOUNT },
+      { email,otp, useCase: OtpUseCaseEnum.VERIFY_ACCOUNT },
       true,
     );
 
@@ -75,9 +73,13 @@ export class AuthService {
   }
 
   async forgetPassword(email: string) {
-    const user = await this.userService.getLoginUserOrError({
-      $or: [{ verifiedEmail: email }, { unVerifiedEmail: email }],
-    });
+    const user = await this.userRepo
+    .createQueryBuilder("user")
+    .where("user.verifiedEmail = :email OR user.unVerifiedEmail = :email", { email })
+    .getOne();
+    if (!user) {
+      throw new BaseHttpException(ErrorCodeEnum.INVALID_EMAIL); 
+    }
 
     await this.otpService.sendOtp(user.id, OtpUseCaseEnum.RESET_PASSWORD);
 

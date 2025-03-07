@@ -36,11 +36,11 @@ export class UserResponse {
   })
   onboardingCompleted: boolean;
 
-  @Expose()
-  student: StudentResponse;
+  // @Expose()
+  // student: StudentResponse;
 
-  @Expose()
-  provider: ProviderResponse;
+  // @Expose()
+  // provider: ProviderResponse;
 }
 
 export class UserIdResponse {
