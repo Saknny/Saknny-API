@@ -1,21 +1,11 @@
-import { Expose, Type } from 'class-transformer';
-import { IsDate, IsString, Validate } from 'class-validator';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
+import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
+import { RentalRequest } from '@src/modules/booking-request/entity/rental-request.entity';
+import { Favorite } from '@src/modules/favoriteList/entities/favorite-list.entity';
+import { Status } from '@src/modules/request/entities/enum/status.enum';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
-import { IsEndDateAfterStartDate } from '../../../libs/utils/validators/is-endDate-after-startDate';
 import { User } from '../../user/entities/user.entity';
-import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
-import { FavoriteList } from '@src/modules/favoriteList/entities/favorite-list.entity';
-import { Status } from '@src/modules/request/entities/enum/status.enum';
-import { RentalRequest } from '@src/modules/booking-request/entity/rental-request.entity';
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
@@ -81,11 +71,11 @@ export class Student extends BaseModel {
   @JoinColumn({ name: 'bedId' })
   bed: Bed;
 
-  @OneToMany(() => FavoriteList, (favoriteList) => favoriteList.student, {
+  @OneToMany(() => Favorite, (Favorite) => Favorite.student, {
     nullable: true,
     onDelete: 'SET NULL',
   })
-  favoriteLists: FavoriteList[];
+  favorites: Favorite[];
 
   @OneToMany(() => RentalRequest, (request) => request.student)
   rentalRequests: RentalRequest[];

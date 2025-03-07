@@ -30,29 +30,23 @@ export class RentalRequestService {
 
   async createRequest(
     studentId: string,
-    roomId: string,
+    bedId: string,
     price: number,
     duration: number,
   ) {
+    const bed = await this.bedRepo.findOne({ id: bedId }, [
+      'room',
+      'room.apartment',
+    ]);
+
+    if (!bed || bed.status !== 'AVAILABLE') {
+      throw new BadRequestException('Bed is not available.');
+    }
+
+    const apartment = bed.room.apartment;
     const student = await this.studentRepo.findOne({ id: studentId });
 
     if (!student) throw new BadRequestException('Student not found.');
-
-    // Find an available bed in the room
-    const room = await this.roomRepo.findOne({ id: roomId }, [
-      'apartment',
-      'beds',
-    ]);
-
-    if (!room) throw new BadRequestException('Room not found.');
-
-    const availableBed = room.beds.find((bed) => bed.status === 'AVAILABLE');
-
-    if (!availableBed) {
-      throw new BadRequestException('No available beds in this room.');
-    }
-
-    const apartment = room.apartment;
 
     // Check gender compatibility
     if (apartment.gender && apartment.gender !== student.gender) {
@@ -61,23 +55,9 @@ export class RentalRequestService {
       );
     }
 
-    // Check if student has already requested any bed in this room
-    const existingRequest = await this.rentalRequestRepo.findOne({
-      student: { id: studentId },
-      bed: { room: { id: roomId } },
-      status: RentalStatusEnum.PENDING,
-    });
-
-    if (existingRequest) {
-      throw new BadRequestException(
-        'You have already requested a bed in this room.',
-      );
-    }
-
-    // Create and save the rental request
     return await this.rentalRequestRepo.createOne({
       student,
-      bed: availableBed,
+      bed,
       price,
       duration,
       status: RentalStatusEnum.PENDING,

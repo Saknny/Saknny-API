@@ -1,36 +1,23 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  OneToMany,
-  CreateDateColumn,
-  JoinColumn,
-  DeepPartial,
-} from 'typeorm';
-import { User } from '@src/modules/user/entities/user.entity';
-import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity';
-import { Student } from '@src/modules/student/entities/student.entity';
 import { BaseModel } from '@src/libs/database/base.model';
+import { DeepPartial } from '@src/libs/types/deep-partial.type';
+import { Student } from '@src/modules/student/entities/student.entity';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { FavoriteApartment } from './favorite-apartment.entity';
 
 @Entity()
-export class FavoriteList extends BaseModel {
-  constructor(input?: DeepPartial<FavoriteList>) {
+export class Favorite extends BaseModel {
+  constructor(input?: DeepPartial<Favorite>) {
     super(input);
   }
 
   @Column()
   name: string;
 
-  @Column({ nullable: true })
-  studentId: string;
-
-  @ManyToOne(() => Student, (Student) => Student.favoriteLists, {
+  @ManyToOne(() => Student, (student) => student.favorites, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'studentId' })
   student: Student;
 
-  @OneToMany(() => Apartment, (apartment) => apartment.favoriteList)
-  apartments: Apartment[];
+  @OneToMany(() => FavoriteApartment, (fp) => fp.favorite, { cascade: true })
+  favoriteApartments: FavoriteApartment[];
 }

@@ -26,7 +26,7 @@ export class RentalRequestController {
 
     return this.rentalRequestService.createRequest(
       user.student.id,
-      body.roomId,
+      body.bedId,
       body.price,
       body.duration,
     );

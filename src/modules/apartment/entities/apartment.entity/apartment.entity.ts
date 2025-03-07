@@ -1,23 +1,22 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  OneToMany,
-  ManyToOne,
-  OneToOne,
-  JoinColumn,
-} from 'typeorm';
-import { Room } from '@src/modules/room/entities/room.entity/room.entity';
-import { Provider } from '@src/modules/provider/entities/provider.entity';
 import { BaseModel } from '@src/libs/database/base.model';
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
+import { Provider } from '@src/modules/provider/entities/provider.entity';
+import { Room } from '@src/modules/room/entities/room.entity/room.entity';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  UpdateDateColumn,
+} from 'typeorm';
 
+import { FavoriteApartment } from '@src/modules/favoriteList/entities/favorite-apartment.entity';
 import { ApartmentDocument } from '../document.entity';
-import { FavoriteList } from '@src/modules/favoriteList/entities/favorite-list.entity';
-import { Status } from '@src/modules/request/entities/enum/status.enum';
+import { ApartmentLocation } from '../../enums/location.enum';
 @Entity()
 export class Apartment extends BaseModel {
   constructor(input?: DeepPartial<Apartment>) {
@@ -49,13 +48,11 @@ export class Apartment extends BaseModel {
   })
   provider: Provider;
 
-
   @Column({ nullable: true })
   roomCount: number;
 
   @OneToMany(() => Room, (room) => room.apartment)
   rooms: Room[];
-
 
   @Column({ default: 'PENDING' })
   status: string; // PENDING , APPROVED , PUBLISHED
@@ -75,16 +72,8 @@ export class Apartment extends BaseModel {
   @JoinColumn({ name: 'apartmentDocumentId' })
   document: ApartmentDocument;
 
-  @Column({ nullable: true })
-  favoriteListId: string;
-
-  @ManyToOne(() => FavoriteList, (favoriteList) => favoriteList.apartments, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'favoriteListId' })
-  favoriteList: FavoriteList;
-
+  @OneToMany(() => FavoriteApartment, (fa) => fa.apartment, { cascade: true })
+  favoriteApartments: FavoriteApartment[];
 
   @Column()
   tv: boolean;
@@ -94,7 +83,6 @@ export class Apartment extends BaseModel {
 
   @Column()
   stove: boolean;
-
 
   @Column()
   microwave: boolean;
@@ -118,25 +106,24 @@ export class Apartment extends BaseModel {
   wifi: boolean;
 
   @Column()
-  size: number;
-
-  @Column()
-  floor: number;
-
-  @Column()
   elavator: boolean;
 
   @Column()
   furnished: boolean;
 
   @Column()
+  size: number;
+
+  @Column()
+  floor: number;
+
+  @Column()
   bathrooms: number;
 
-
-
-
-
-
-
-
+  @Column({
+    type: 'enum',
+    enum: ApartmentLocation,
+    default: ApartmentLocation.ELSAIDY,
+  })
+  locationEnum: ApartmentLocation;
 }

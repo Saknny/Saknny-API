@@ -17,6 +17,7 @@ import { GetApartmentsDto } from './dto/get-apartments.dto';
 import { Status } from '../request/entities/enum/status.enum';
 import { ProviderSubscriptionService } from '../provider-subscription/provider-subscription.service';
 import { Student } from '../student/entities/student.entity';
+import { ApartmentLocation } from './enums/location.enum';
 
 @Injectable()
 export class ApartmentService {
@@ -39,25 +40,20 @@ export class ApartmentService {
     private readonly apartmentDocumentRepo: BaseRepository<ApartmentDocument>,
     @Inject(ProviderSubscriptionService)
     private readonly providerSubscriptionService: ProviderSubscriptionService,
-  ) { }
-
-
-
+  ) {}
 
   async createApartment(
     userId: string,
     createApartmentDto: CreateApartmentDto,
   ): Promise<Apartment> {
-
-
     const provider = await this.providerRepository.findOne({ userId });
     if (!provider) {
       throw new NotFoundException('Provider not found');
     }
 
     const apartment = this.apartmentRepository.create({
-     ...createApartmentDto,
-     provider
+      ...createApartmentDto,
+      provider,
     });
 
     await this.apartmentRepository.save(apartment);
@@ -103,18 +99,22 @@ export class ApartmentService {
   }
 
   async publishApartment(userId: string, apartmentId) {
-    const apartment = await this.apartmentRepository.findOneBy({ id: apartmentId });
+    const apartment = await this.apartmentRepository.findOneBy({
+      id: apartmentId,
+    });
     const provider = await this.providerRepository.findOneBy({ userId });
     if (!provider) {
       throw new NotFoundException('provider not found');
-
     }
 
     if (!apartment) {
       throw new NotFoundException('apartment not found');
     }
 
-    if (apartment.status == 'APPROVED' && this.providerSubscriptionService.checkSubscriptionLimit(provider.id)) {
+    if (
+      apartment.status == 'APPROVED' &&
+      this.providerSubscriptionService.checkSubscriptionLimit(provider.id)
+    ) {
       apartment.status = 'PUBLISHED';
       this.providerSubscriptionService.reduceMaxApartments(provider.id);
     }
@@ -271,6 +271,15 @@ export class ApartmentService {
     // Fetch recently viewed apartments
     const recentlyViewed = await this.getRecentlyViewed();
 
+    let apartmentsByLocation = [];
+    if (location) {
+      apartmentsByLocation = await this.getApartmentsByLocation(
+        ApartmentLocation.ELSABEEN,
+        6,
+        1,
+      );
+    }
+
     return {
       numberOfApartments,
       umberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0, // Parse to integer
@@ -278,7 +287,19 @@ export class ApartmentService {
       numberOfStudents,
       recentlyAdded,
       recentlyViewed: recentlyViewed.slice(0, 6),
+      apartmentsByLocation,
     };
   }
 
+  async getApartmentsByLocation(
+    location: ApartmentLocation,
+    limit: number,
+    page: number,
+  ) {
+    return this.apartmentRepository.find({
+      where: { locationEnum: location },
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+  }
 }
