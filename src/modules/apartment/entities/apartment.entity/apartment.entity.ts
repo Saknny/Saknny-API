@@ -16,8 +16,9 @@ import { BaseModel } from '@src/libs/database/base.model';
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
 
 import { ApartmentDocument } from '../document.entity';
-import { FavoriteList } from '@src/modules/favoriteList/entities/favorite-list.entity';
 import { Status } from '@src/modules/request/entities/enum/status.enum';
+import { Favorite } from '@src/modules/favoriteList/entities/favorite-list.entity';
+import { FavoriteApartment } from '@src/modules/favoriteList/entities/favorite-apartment.entity';
 @Entity()
 export class Apartment extends BaseModel {
   constructor(input?: DeepPartial<Apartment>) {
@@ -73,15 +74,8 @@ export class Apartment extends BaseModel {
   @JoinColumn({ name: 'apartmentDocumentId' })
   document: ApartmentDocument;
 
-  @Column({ nullable: true })
-  favoriteListId: string;
-
-  @ManyToOne(() => FavoriteList, (favoriteList) => favoriteList.apartments, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'favoriteListId' })
-  favoriteList: FavoriteList;
+  @OneToMany(() => FavoriteApartment, (fa) => fa.apartment, { cascade: true })
+  favoriteApartments: FavoriteApartment[];
 
   @Column()
   tv: boolean;

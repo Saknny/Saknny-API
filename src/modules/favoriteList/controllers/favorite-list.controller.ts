@@ -1,93 +1,112 @@
 import {
   Controller,
   Post,
-  Delete,
-  Patch,
   Get,
-  Param,
+  Delete,
   Body,
+  Param,
+  Query,
 } from '@nestjs/common';
-import { FavoriteListService } from '../services/favorite-list.service';
+import { FavoriteService } from '../services/favorite-list.service';
+import { UpdateFavoriteInput } from '../Dto/update-favorite.dto';
 import { currentUser } from '@src/libs/decorators/currentUser.decorator';
-import { User } from '@src/modules/user/entities/user.entity';
+import { currentUserType } from '@src/libs/types/current-user.type';
 
-@Controller('favorite-lists')
-export class FavoriteListController {
-  constructor(private readonly favoriteListService: FavoriteListService) {}
+@Controller('favorites')
+export class FavoriteController {
+  constructor(private readonly favoriteService: FavoriteService) {}
+
+  @Get('')
+  async getFavoriteLists(
+    @Query('limit') limit: number,
+    @Query('page') page: number,
+    @currentUser() user: currentUserType,
+  ) {
+    const studentId = user?.student?.id;
+    if (!studentId) throw new Error('Student not logged in');
+
+    return this.favoriteService.getFavoriteLists(studentId, { limit, page });
+  }
 
   @Post()
-  createFavoriteList(@currentUser() user: User, @Body('name') name: string) {
-    if (!user?.student) throw new Error('Student not found');
+  async createFavorite(
+    @Body() body: { name: string },
+    @currentUser() user: currentUserType,
+  ) {
+    const studentId = user?.student?.id;
+    if (!studentId) throw new Error('Student not logged in');
 
-    return this.favoriteListService.createFavoriteList(user.student.id, name);
+    return this.favoriteService.createFavorite(body.name, studentId);
   }
 
-  @Patch(':id')
-  renameFavoriteList(
-    @Param('id') listId: string,
-    @currentUser() user: User,
-    @Body('name') newName: string,
-  ) {
-    if (!user?.student) throw new Error('Student not found');
+  @Post('/update')
+  async updateFavorite(@Body() input: UpdateFavoriteInput) {
+    return this.favoriteService.updateFavorite(input);
+  }
 
-    return this.favoriteListService.renameFavoriteList(
-      user.student.id,
-      listId,
-      newName,
+  @Delete('/:favoriteId')
+  async deleteFavorite(@Param('favoriteId') favoriteId: string) {
+    return this.favoriteService.deleteFavorite(favoriteId);
+  }
+
+  @Post('/add-apartment')
+  async addApartmentToFavoriteList(
+    @Body()
+    body: {
+      apartmentId: string;
+      favoriteId: string;
+    },
+    @currentUser() user: currentUserType,
+  ) {
+    const studentId = user?.student?.id;
+    if (!studentId) throw new Error('Student not logged in');
+
+    return this.favoriteService.addApartmentToFavoriteList(
+      body.apartmentId,
+      body.favoriteId,
+      studentId,
     );
   }
 
-  @Delete(':id')
-  deleteFavoriteList(@Param('id') listId: string, @currentUser() user: User) {
-    if (!user?.student) throw new Error('Student not found');
-
-    return this.favoriteListService.deleteFavoriteList(user.student.id, listId);
-  }
-
-  @Post(':id/apartments')
-  addApartmentToFavoriteList(
-    @Param('id') listId: string,
-    @currentUser() user: User,
-    @Body('apartmentId') apartmentId: string,
-  ) {
-    if (!user?.student) throw new Error('Student not found');
-
-    return this.favoriteListService.addApartmentToFavoriteList(
-      user.student.id,
-      listId,
-      apartmentId,
-    );
-  }
-
-  @Delete('apartments/:apartmentId')
-  removeApartmentFromFavoriteList(
-    @currentUser() user: User,
+  @Delete('/remove-apartment/:apartmentId')
+  async removeApartmentFromFavoriteList(
     @Param('apartmentId') apartmentId: string,
+    @currentUser() user: currentUserType,
   ) {
-    if (!user?.student) throw new Error('Student not found');
+    const studentId = user?.student?.id;
+    if (!studentId) throw new Error('Student not logged in');
 
-    return this.favoriteListService.removeApartmentFromFavoriteList(
-      user.student.id,
+    return this.favoriteService.removeApartmentFromFavoriteList(
       apartmentId,
+      studentId,
     );
   }
 
-  @Get('my-favorite-lists')
-  getStudentFavoriteLists(@currentUser() user: User) {
-    if (!user?.student) throw new Error('Student not found');
-    return this.favoriteListService.getStudentFavoriteLists(user.student.id);
-  }
-
-  @Get(':id/apartments')
-  getFavoriteListApartments(
-    @Param('id') listId: string,
-    @currentUser() user: User,
+  @Get('/list-apartments/:favoriteId')
+  async getApartmentsForFavoriteList(
+    @Param('favoriteId') favoriteId: string,
+    @Query('limit') limit: number,
+    @Query('page') page: number,
   ) {
-    if (!user?.student) throw new Error('Student not found');
+    return this.favoriteService.getApartmentsForFavoriteList(favoriteId, {
+      limit,
+      page,
+    });
+  }
 
-    return this.favoriteListService.getFavoriteListApartments(
-      user.student.id,
-      listId,
-    );
+  @Get('/count/:favoriteId')
+  async getApartmentsCount(@Param('favoriteId') favoriteId: string) {
+    return this.favoriteService.getApartmentsCount(favoriteId);
+  }
+
+  @Get('/added/:apartmentId')
+  async addedToFavoriteList(
+    @Param('apartmentId') apartmentId: string,
+    @currentUser() user: currentUserType,
+  ) {
+    const studentId = user?.student?.id;
+    if (!studentId) throw new Error('Student not logged in');
+
+    return this.favoriteService.addedToFavoriteList(apartmentId, studentId);
   }
 }

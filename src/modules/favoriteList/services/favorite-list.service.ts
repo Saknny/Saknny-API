@@ -1,104 +1,119 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { FavoriteList } from '../entities/favorite-list.entity';
+import { FavoriteApartment } from '../entities/favorite-apartment.entity';
+import { Favorite } from '../entities/favorite-list.entity';
 import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity';
-import { InjectBaseRepository } from '@src/libs/decorators/inject-base-repository.decorator';
-import { BaseRepository } from '@src/libs/types/base-repository';
-import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum';
-import { BaseHttpException } from '@src/libs/application/exceptions/base-http-exception';
+import { UpdateFavoriteInput } from '../Dto/update-favorite.dto';
 
-// TODO: need to test
 @Injectable()
-export class FavoriteListService {
+export class FavoriteService {
   constructor(
-    @InjectBaseRepository(FavoriteList)
-    private favoriteListRepo: BaseRepository<FavoriteList>,
-    @InjectBaseRepository(Apartment)
-    private apartmentRepo: BaseRepository<Apartment>,
+    @InjectRepository(Favorite)
+    private readonly favoriteRepo: Repository<Favorite>,
+
+    @InjectRepository(FavoriteApartment)
+    private readonly favoriteApartmentRepo: Repository<FavoriteApartment>,
+
+    @InjectRepository(Apartment)
+    private readonly apartmentRepo: Repository<Apartment>,
   ) {}
 
-  async createFavoriteList(studentId: string, name: string) {
-    const favoriteList = this.favoriteListRepo.createOne({
-      name,
-      studentId,
+  async getFavoriteLists(
+    studentId: string,
+    pagination: { limit: number; page: number },
+  ) {
+    return await this.favoriteRepo.find({
+      where: { student: { id: studentId } },
+      take: pagination.limit,
+      skip: (pagination.page - 1) * pagination.limit,
     });
-
-    return favoriteList;
   }
 
-  async renameFavoriteList(studentId: string, listId: string, newName: string) {
-    const favoriteList = await this.favoriteListRepo.findOneOrError(
-      { id: listId, student: { id: studentId } },
-      ErrorCodeEnum.FAVORITE_LIST_NOT_FOUND,
-    );
-
-    favoriteList.name = newName;
-    return this.favoriteListRepo.save(favoriteList);
-  }
-
-  async deleteFavoriteList(studentId: string, listId: string) {
-    const favoriteList = await this.favoriteListRepo.findOne({
-      id: listId,
+  async createFavorite(name: string, studentId: string) {
+    const favorite = this.favoriteRepo.create({
+      name,
       student: { id: studentId },
     });
+    return await this.favoriteRepo.save(favorite);
+  }
 
-    if (!favoriteList) throw new NotFoundException('Favorite list not found');
+  async updateFavorite(input: UpdateFavoriteInput) {
+    await this.favoriteRepo.update(input.id, { name: input.name });
+    return this.favoriteRepo.findOne({ where: { id: input.id } });
+  }
 
-    return this.favoriteListRepo.remove(favoriteList);
+  async deleteFavorite(favoriteId: string) {
+    return await this.favoriteRepo.delete(favoriteId);
   }
 
   async addApartmentToFavoriteList(
-    studentId: string,
-    listId: string,
     apartmentId: string,
+    favoriteId: string,
+    studentId: string,
   ) {
-    const favoriteList = await this.favoriteListRepo.findOne({
-      id: listId,
-      student: { id: studentId },
+    const favorite = await this.favoriteRepo.findOne({
+      where: { id: favoriteId, student: { id: studentId } },
     });
 
-    if (!favoriteList) throw new NotFoundException('Favorite list not found');
+    if (!favorite) throw new Error('Favorite list not found');
 
-    const apartment = await this.apartmentRepo.findOneOrError(
-      { id: apartmentId },
-      ErrorCodeEnum.APARTMENT_NOT_FOUND,
-    );
+    const apartment = await this.apartmentRepo.findOne({
+      where: { id: apartmentId },
+    });
 
-    // Assign the apartment to the favorite list
-    apartment.favoriteList = favoriteList;
-    return this.apartmentRepo.save(apartment);
+    if (!apartment) throw new Error('Apartment not found');
+
+    const favoriteApartment = this.favoriteApartmentRepo.create({
+      favorite,
+      apartment,
+    });
+    return await this.favoriteApartmentRepo.save(favoriteApartment);
   }
 
   async removeApartmentFromFavoriteList(
-    studentId: string,
     apartmentId: string,
+    studentId: string,
   ) {
-    const apartment = await this.apartmentRepo.findOne({ id: apartmentId }, [
-      'favoriteList',
-    ]);
+    const favoriteApartment = await this.favoriteApartmentRepo
+      .createQueryBuilder('fa')
+      .leftJoinAndSelect('fa.favorite', 'favorite')
+      .where('favorite.studentId = :studentId', { studentId })
+      .andWhere('fa.apartmentId = :apartmentId', { apartmentId })
+      .getOne();
 
-    if (!apartment || apartment.favoriteList?.student?.id !== studentId) {
-      throw new BaseHttpException(ErrorCodeEnum.APARTMENT_NOT_FOUND);
-    }
+    if (!favoriteApartment)
+      throw new Error('Apartment not found in favorite list');
 
-    // Remove the relation
-    apartment.favoriteList = null;
-    return this.apartmentRepo.save(apartment);
+    return await this.favoriteApartmentRepo.remove(favoriteApartment);
   }
 
-  async getStudentFavoriteLists(studentId: string) {
-    return this.favoriteListRepo.find({
-      where: { student: { id: studentId } },
-      order: { createdAt: 'DESC' },
+  async getApartmentsForFavoriteList(
+    favoriteId: string,
+    pagination: { limit: number; page: number },
+  ) {
+    return await this.favoriteApartmentRepo.find({
+      where: { favorite: { id: favoriteId } },
+      take: pagination.limit,
+      skip: (pagination.page - 1) * pagination.limit,
+      relations: ['apartment'],
     });
   }
 
-  async getFavoriteListApartments(studentId: string, listId: string) {
-    return this.apartmentRepo.find({
-      where: { favoriteList: { id: listId, student: { id: studentId } } },
-      order: { createdAt: 'DESC' },
-      select: ['id', 'descriptionEn', 'descriptionAr'],
+  async getApartmentsCount(favoriteId: string) {
+    return await this.favoriteApartmentRepo.count({
+      where: { favorite: { id: favoriteId } },
     });
+  }
+
+  async addedToFavoriteList(apartmentId: string, studentId: string) {
+    const favoriteApartment = await this.favoriteApartmentRepo
+      .createQueryBuilder('fa')
+      .leftJoinAndSelect('fa.favorite', 'favorite')
+      .where('favorite.studentId = :studentId', { studentId })
+      .andWhere('fa.apartmentId = :apartmentId', { apartmentId })
+      .getOne();
+
+    return !!favoriteApartment;
   }
 }
