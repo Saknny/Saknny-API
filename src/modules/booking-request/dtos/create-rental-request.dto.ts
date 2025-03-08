@@ -2,7 +2,7 @@ import { IsNumber, IsPositive, IsString, Min } from 'class-validator';
 
 export class CreateRentalRequestDto {
   @IsString()
-  roomId: string;
+  bedId: string;
 
   @IsNumber()
   @IsPositive()

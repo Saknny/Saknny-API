@@ -49,13 +49,11 @@ export class Apartment extends BaseModel {
   })
   provider: Provider;
 
-
   @Column({ nullable: true })
   roomCount: number;
 
   @OneToMany(() => Room, (room) => room.apartment)
   rooms: Room[];
-
 
   @Column({ default: 'PENDING' })
   status: string; // PENDING , APPROVED , PUBLISHED
@@ -85,7 +83,6 @@ export class Apartment extends BaseModel {
   @JoinColumn({ name: 'favoriteListId' })
   favoriteList: FavoriteList;
 
-
   @Column()
   tv: boolean;
 
@@ -94,7 +91,6 @@ export class Apartment extends BaseModel {
 
   @Column()
   stove: boolean;
-
 
   @Column()
   microwave: boolean;
@@ -118,25 +114,17 @@ export class Apartment extends BaseModel {
   wifi: boolean;
 
   @Column()
-  size: number;
-
-  @Column()
-  floor: number;
-
-  @Column()
   elavator: boolean;
 
   @Column()
   furnished: boolean;
 
   @Column()
+  size: number;
+
+  @Column()
+  floor: number;
+
+  @Column()
   bathrooms: number;
-
-
-
-
-
-
-
-
 }
