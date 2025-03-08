@@ -1,24 +1,22 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  OneToMany,
-  ManyToOne,
-  OneToOne,
-  JoinColumn,
-} from 'typeorm';
-import { Room } from '@src/modules/room/entities/room.entity/room.entity';
-import { Provider } from '@src/modules/provider/entities/provider.entity';
 import { BaseModel } from '@src/libs/database/base.model';
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
+import { Provider } from '@src/modules/provider/entities/provider.entity';
+import { Room } from '@src/modules/room/entities/room.entity/room.entity';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  UpdateDateColumn,
+} from 'typeorm';
 
-import { ApartmentDocument } from '../document.entity';
-import { Status } from '@src/modules/request/entities/enum/status.enum';
-import { Favorite } from '@src/modules/favoriteList/entities/favorite-list.entity';
 import { FavoriteApartment } from '@src/modules/favoriteList/entities/favorite-apartment.entity';
+import { ApartmentDocument } from '../document.entity';
+import { ApartmentLocation } from '../../enums/location.enum';
 @Entity()
 export class Apartment extends BaseModel {
   constructor(input?: DeepPartial<Apartment>) {
@@ -121,4 +119,11 @@ export class Apartment extends BaseModel {
 
   @Column()
   bathrooms: number;
+
+  @Column({
+    type: 'enum',
+    enum: ApartmentLocation,
+    default: ApartmentLocation.ELSAIDY,
+  })
+  locationEnum: ApartmentLocation;
 }

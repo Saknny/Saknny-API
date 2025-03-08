@@ -23,6 +23,7 @@ import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.
 import { PendingRequestService } from '../request/pendingRequest.service';
 import { fileUploadInterceptor } from './interceptors/document.interceptor';
 import { GetApartmentsDto } from './dto/get-apartments.dto';
+import { ApartmentLocation } from './enums/location.enum';
 
 @Controller('apartment')
 export class ApartmentController {
@@ -38,7 +39,10 @@ export class ApartmentController {
     @Body() createApartmentDto: CreateApartmentDto,
   ) {
     console.log(createApartmentDto);
-    return this.pendingRequestService.createApartmentRequest(id, createApartmentDto);
+    return this.pendingRequestService.createApartmentRequest(
+      id,
+      createApartmentDto,
+    );
   }
 
   @Post(':id/Apartment-document')
@@ -51,7 +55,7 @@ export class ApartmentController {
     },
   ) {
     const document = files.document[0].buffer.toString('base64');
-    await this.pendingRequestService.UploadDocRequest(id , document)
+    await this.pendingRequestService.UploadDocRequest(id, document);
     // return await this.pendingRequestService.uploadDocumentRequest(id, document);
   }
 
@@ -66,9 +70,9 @@ export class ApartmentController {
   @Post(':id/updateRequest')
   async updateApartmentRequest(
     @currentUser() user: currentUserType,
-    @Param('id') id: string
+    @Param('id') id: string,
   ) {
-    return this.pendingRequestService.updateApartmentRequest(id , user.id);
+    return this.pendingRequestService.updateApartmentRequest(id, user.id);
   }
 
   @Get('recent')
@@ -109,10 +113,12 @@ export class ApartmentController {
       Number(limit),
     );
   }
+
   @Get('/home')
   async getHomeData() {
     return this.apartmentService.getHomeData();
   }
+
   @Get(':apartmentId')
   async getApartment(@Param('apartmentId') apartmentId: string) {
     return this.apartmentService.getApartment(apartmentId);
@@ -128,11 +134,20 @@ export class ApartmentController {
     return this.apartmentService.getApartments(filters);
   }
 
-  @Patch(':id/publish')
-  async publishApartment(@Param('id') id: string  ,
-  @currentUser()user: currentUserType) {
-    return this.apartmentService.publishApartment(user.id , id);
-
+  @Get('/by-location')
+  async getApartmentsByLocation(
+    @Query('location') location: ApartmentLocation,
+    @Query('limit') limit: number = 10,
+    @Query('page') page: number = 1,
+  ) {
+    return this.apartmentService.getApartmentsByLocation(location, limit, page);
   }
 
+  @Patch(':id/publish')
+  async publishApartment(
+    @Param('id') id: string,
+    @currentUser() user: currentUserType,
+  ) {
+    return this.apartmentService.publishApartment(user.id, id);
+  }
 }
