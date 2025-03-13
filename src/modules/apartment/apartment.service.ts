@@ -135,6 +135,7 @@ export class ApartmentService {
     return this.apartmentRepository.find({
       order: { createdAt: 'DESC' },
       take: limit,
+      
     });
   }
 
@@ -262,7 +263,7 @@ export class ApartmentService {
       .leftJoin('room.beds', 'bed') // Join with beds
       .select('COUNT(bed.id)::int', 'totalBeds') // Cast to integer with "::int"
       .getRawOne();
-
+    const location = ApartmentLocation.ELSABEEN;
     const numberOfProviders = await this.providerRepository.count();
     const numberOfStudents = await this.studentRepository.count();
     // Fetch recently added apartments
@@ -274,7 +275,7 @@ export class ApartmentService {
     let apartmentsByLocation = [];
     if (location) {
       apartmentsByLocation = await this.getApartmentsByLocation(
-        ApartmentLocation.ELSABEEN,
+        ApartmentLocation.ELSAIDY,
         6,
         1,
       );
@@ -282,7 +283,7 @@ export class ApartmentService {
 
     return {
       numberOfApartments,
-      umberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0, // Parse to integer
+      numberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0, 
       numberOfProviders,
       numberOfStudents,
       recentlyAdded,
