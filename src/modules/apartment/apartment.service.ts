@@ -139,11 +139,11 @@ export class ApartmentService {
     });
   }
 
-  async getRecentlyViewed(): Promise<Apartment[]> {
+  async getRecentlyViewed(limit = 10): Promise<Apartment[]> {
     return this.apartmentRepository.find({
       where: { lastViewedAt: Not(IsNull()) },
       order: { lastViewedAt: 'DESC' },
-      take: 10, // Limit to 10 results
+      take: limit, 
     });
   }
 
@@ -253,33 +253,30 @@ export class ApartmentService {
   }
 
   async getHomeData() {
-    // Fetch aggregated counts
+    
     const numberOfApartments = await this.apartmentRepository.count();
 
-    // FIXED: Count beds through proper relationships
+    
     const numberOfBeds = await this.apartmentRepository
       .createQueryBuilder('apartment')
-      .leftJoin('apartment.rooms', 'room') // Join with rooms
-      .leftJoin('room.beds', 'bed') // Join with beds
-      .select('COUNT(bed.id)::int', 'totalBeds') // Cast to integer with "::int"
+      .leftJoin('apartment.rooms', 'room') 
+      .leftJoin('room.beds', 'bed') 
+      .select('COUNT(bed.id)::int', 'totalBeds') 
       .getRawOne();
-    const location = ApartmentLocation.ELSABEEN;
     const numberOfProviders = await this.providerRepository.count();
     const numberOfStudents = await this.studentRepository.count();
-    // Fetch recently added apartments
+    
     const recentlyAdded = await this.getRecentApartments(6);
 
-    // Fetch recently viewed apartments
-    const recentlyViewed = await this.getRecentlyViewed();
+    
+    const recentlyViewed = await this.getRecentlyViewed(6);
 
     let apartmentsByLocation = [];
-    if (location) {
       apartmentsByLocation = await this.getApartmentsByLocation(
         ApartmentLocation.ELSAIDY,
         6,
         1,
       );
-    }
 
     return {
       numberOfApartments,

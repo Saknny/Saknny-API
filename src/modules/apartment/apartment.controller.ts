@@ -82,8 +82,8 @@ export class ApartmentController {
 
   // Get recently viewed apartments
   @Get('recently-viewed')
-  async getRecentlyViewedApartments() {
-    return this.apartmentService.getRecentlyViewed();
+  async getRecentlyViewedApartments(@Query('limit') limit?: number) {
+    return this.apartmentService.getRecentlyViewed(limit);
   }
 
   // Update lastViewedAt for an apartment
