@@ -73,11 +73,11 @@ export class Room extends BaseModel {
 
 
 
-  @Column()
-  cutains: boolean;
+  @Column({nullable:true})
+  curtains: boolean;
 
 
-  @Column()
-  balacony: boolean;
+  @Column({nullable:true})
+  balcony: boolean;
 
 }

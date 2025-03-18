@@ -135,6 +135,7 @@ export class ApartmentService {
     return this.apartmentRepository.find({
       order: { createdAt: 'DESC' },
       take: limit,
+      relations: ['rooms', 'rooms.beds'],
       
     });
   }
@@ -144,6 +145,7 @@ export class ApartmentService {
       where: { lastViewedAt: Not(IsNull()) },
       order: { lastViewedAt: 'DESC' },
       take: limit, 
+      relations: ['rooms', 'rooms.beds'],
     });
   }
 
@@ -298,6 +300,7 @@ export class ApartmentService {
       where: { locationEnum: location },
       take: limit,
       skip: (page - 1) * limit,
+      relations: ['rooms', 'rooms.beds'],
     });
   }
 }
