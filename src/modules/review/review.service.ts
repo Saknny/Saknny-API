@@ -67,12 +67,6 @@ export class ReviewService {
       throw new NotFoundException('Student or apartment not found');
     }
 
-    // Verify student has booked this apartment
-    const hasBooking = await this.validateStudentBooking(studentId, dto.apartmentId);
-    if (!hasBooking) {
-      throw new ForbiddenException('You must book a bed to review this apartment');
-    }
-
     const review = this.reviewRepo.create({
       ...dto,
       student,
@@ -86,38 +80,7 @@ export class ReviewService {
     return review;
   }
 
-  async createReport(studentId: string, dto: AddReviewDto){
-    const student = await this.studentRepo.findOneBy({ userId: studentId });
-    const apartment = await this.apartmentRepo.findOneBy({ id: dto.apartmentId });
 
-    if (!student || !apartment) {
-      throw new NotFoundException('Student or apartment not found');
-    }
-
-    const report = this.reviewRepo.create({
-        ...dto,
-        student,
-        apartment
-      });
-  
-      await this.reviewRepo.save(report);
-      const [reports, count] = await this.reviewRepo
-        .createQueryBuilder('review')
-        .where('review.apartmentId = :apartmentId', { apartmentId: dto.apartmentId })
-        .andWhere('review.report = :isReported', { isReported: true }) // Fix boolean condition
-        .getManyAndCount();
-
-    console.log(count);
-
-    await this.apartmentRepo.update(dto.apartmentId, {
-      status:"BLOCKED"
-    });
-    return reports;
-    
-  }
-  private async validateStudentBooking(studentId: string, apartmentId: string) {
-    return true;
-  }
 
   async updateApartmentRating(apartmentId: string) {
     const result = await this.reviewRepo

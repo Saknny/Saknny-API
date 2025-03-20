@@ -75,6 +75,15 @@ export class ApartmentController {
     return this.pendingRequestService.updateApartmentRequest(id, user.id);
   }
 
+  
+  @Get('blocked-Apartments')
+    async getBlockedApartments() {
+      console.log('entered!')
+      return await this.apartmentService.getBlockedApartments();
+  }
+
+  
+
   @Get('recent')
   async getRecentApartments(@Query('limit') limit?: number) {
     return this.apartmentService.getRecentApartments(limit);
@@ -151,8 +160,4 @@ export class ApartmentController {
     return this.apartmentService.publishApartment(user.id, id);
   }
 
-  @Get('blockedApartments')
-    async getBlockedApartments() {
-      return await this.apartmentService.getBlockedApartments();
-  }
 }

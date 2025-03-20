@@ -34,13 +34,7 @@ export class ReviewController {
         return this.reviewService.createReview(id, dto);
     }
 
-    @Post('addReport')
-    async addReport(
-        @currentUser() { id }: currentUserType,
-        @Body() dto: AddReviewDto
-    ){
-        return this.reviewService.createReport(id, dto);
-    }
+
 
   @Get('apartmentReviews')
   async getApartmentReview(

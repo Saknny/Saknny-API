@@ -15,9 +15,7 @@ export class AddReviewDto {
   @IsString()
   apartmentId: string;
 
-  @IsOptional()
-  @IsBoolean()
-  report?: Boolean;
+
 
 
 

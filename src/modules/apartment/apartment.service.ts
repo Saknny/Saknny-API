@@ -304,9 +304,14 @@ export class ApartmentService {
     });
   }
 
-  async getBlockedApartments(){
-    return this.apartmentRepository.find({
-      where:{status:"BLOCKED"}
-    })
+  async getBlockedApartments() {
+    const blockedApartments = this.apartmentRepository
+      .createQueryBuilder('apartment')
+      .where('apartment.status = :status', { status: 'BLOCKED' })
+      .getMany();
+    return blockedApartments;
   }
+  
+  
+
 }
