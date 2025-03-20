@@ -150,4 +150,9 @@ export class ApartmentController {
   ) {
     return this.apartmentService.publishApartment(user.id, id);
   }
+
+  @Get('blockedApartments')
+    async getBlockedApartments() {
+      return await this.apartmentService.getBlockedApartments();
+  }
 }

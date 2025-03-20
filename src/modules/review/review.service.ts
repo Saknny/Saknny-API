@@ -38,10 +38,7 @@ export class ReviewService {
         'review.id',
         'review.comment',
         'review.rating',
-        'review.createdAt',
-        'student.id',
-        'student.firstName',
-        'student.lastName',
+        'review.createdAt'
       ])
       .where('review.apartmentId = :apartmentId', { apartmentId:dto.apartmentId })
       .orderBy('review.createdAt', 'DESC') // Sort by latest reviews first
@@ -58,10 +55,6 @@ export class ReviewService {
         comment: review.comment,
         rating: review.rating,
         createdAt: review.createdAt,
-        student: {
-          id: review.student.id,
-          name: review.student.firstName+''+review.student.lastName,
-        }
       }))
     };
   
@@ -91,6 +84,36 @@ export class ReviewService {
     await this.updateApartmentRating(dto.apartmentId);
 
     return review;
+  }
+
+  async createReport(studentId: string, dto: AddReviewDto){
+    const student = await this.studentRepo.findOneBy({ userId: studentId });
+    const apartment = await this.apartmentRepo.findOneBy({ id: dto.apartmentId });
+
+    if (!student || !apartment) {
+      throw new NotFoundException('Student or apartment not found');
+    }
+
+    const report = this.reviewRepo.create({
+        ...dto,
+        student,
+        apartment
+      });
+  
+      await this.reviewRepo.save(report);
+      const [reports, count] = await this.reviewRepo
+        .createQueryBuilder('review')
+        .where('review.apartmentId = :apartmentId', { apartmentId: dto.apartmentId })
+        .andWhere('review.report = :isReported', { isReported: true }) // Fix boolean condition
+        .getManyAndCount();
+
+    console.log(count);
+
+    await this.apartmentRepo.update(dto.apartmentId, {
+      status:"BLOCKED"
+    });
+    return reports;
+    
   }
   private async validateStudentBooking(studentId: string, apartmentId: string) {
     return true;

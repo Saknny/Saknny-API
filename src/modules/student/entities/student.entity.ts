@@ -7,6 +7,7 @@ import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
 import { Review } from '@src/modules/review/entities/review.entity';
+import { Report } from '@src/modules/report/entities/report.entity';
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
@@ -83,4 +84,7 @@ export class Student extends BaseModel {
 
   @OneToMany(() => Review, (review) => review.student)
   reviews: Review[];
+
+  @OneToMany(() => Report, (report) => report.student)
+  reports: Report[];
 }

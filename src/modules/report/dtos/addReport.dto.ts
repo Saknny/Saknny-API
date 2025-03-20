@@ -1,11 +1,6 @@
 import { IsInt, IsNotEmpty, IsOptional, IsString, Min, Max, IsBoolean } from 'class-validator';
 
-export class AddReviewDto {
-  @IsNotEmpty()
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  rating: number;
+export class AddReportDto {
 
   @IsOptional()
   @IsString()
@@ -14,10 +9,6 @@ export class AddReviewDto {
   @IsNotEmpty()
   @IsString()
   apartmentId: string;
-
-  @IsOptional()
-  @IsBoolean()
-  report?: Boolean;
 
 
 

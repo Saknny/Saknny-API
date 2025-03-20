@@ -303,4 +303,10 @@ export class ApartmentService {
       relations: ['rooms', 'rooms.beds'],
     });
   }
+
+  async getBlockedApartments(){
+    return this.apartmentRepository.find({
+      where:{status:"BLOCKED"}
+    })
+  }
 }

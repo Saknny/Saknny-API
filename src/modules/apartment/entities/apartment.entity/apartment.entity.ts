@@ -18,6 +18,7 @@ import { FavoriteApartment } from '@src/modules/favoriteList/entities/favorite-a
 import { ApartmentDocument } from '../document.entity';
 import { ApartmentLocation } from '../../enums/location.enum';
 import { Review } from '@src/modules/review/entities/review.entity';
+import { Report } from '@src/modules/report/entities/report.entity';
 @Entity()
 export class Apartment extends BaseModel {
   constructor(input?: DeepPartial<Apartment>) {
@@ -56,7 +57,7 @@ export class Apartment extends BaseModel {
   rooms: Room[];
 
   @Column({ default: 'PENDING' })
-  status: string; // PENDING , APPROVED , PUBLISHED
+  status: string; // PENDING , APPROVED , PUBLISHED ,BLOCKED
 
   // TODO: make it GenderENUM
   @Column({ nullable: true })
@@ -134,4 +135,8 @@ export class Apartment extends BaseModel {
 
   @Column({ type: 'float', default: 0 }) 
   averageRating: number;
+
+  @OneToMany(() => Report, (report) => report.apartment)
+  reports: Report[];
+
 }

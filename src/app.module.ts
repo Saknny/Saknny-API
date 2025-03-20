@@ -34,6 +34,7 @@ import { SubscriptionPlanModule } from './modules/subscription-plan/subscription
 import { UserModule } from './modules/user/user.module';
 import { BookingRequestModule } from './modules/booking-request/booking-request.module';
 import { ReviewModule } from './modules/review/review.module';
+import { ReportModule } from './modules/report/report.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -64,6 +65,7 @@ import { ReviewModule } from './modules/review/review.module';
     BedModule,
     ApartmentModule,
     ReviewModule,
+    ReportModule,
     // ServeStaticModule.forRoot({
     //   rootPath: join(process.cwd(), 'public'),
     //   serveStaticOptions: {
