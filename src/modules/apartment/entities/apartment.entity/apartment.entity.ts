@@ -17,6 +17,7 @@ import {
 import { FavoriteApartment } from '@src/modules/favoriteList/entities/favorite-apartment.entity';
 import { ApartmentDocument } from '../document.entity';
 import { ApartmentLocation } from '../../enums/location.enum';
+import { Review } from '@src/modules/review/entities/review.entity';
 @Entity()
 export class Apartment extends BaseModel {
   constructor(input?: DeepPartial<Apartment>) {
@@ -126,4 +127,11 @@ export class Apartment extends BaseModel {
     default: ApartmentLocation.ELSAIDY,
   })
   locationEnum: ApartmentLocation;
+
+
+  @OneToMany(() => Review, (review) => review.apartment)
+  reviews: Review[];
+
+  @Column({ type: 'float', default: 0 }) 
+  averageRating: number;
 }

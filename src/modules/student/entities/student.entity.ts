@@ -6,6 +6,7 @@ import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
+import { Review } from '@src/modules/review/entities/review.entity';
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
@@ -79,4 +80,7 @@ export class Student extends BaseModel {
 
   @OneToMany(() => RentalRequest, (request) => request.student)
   rentalRequests: RentalRequest[];
+
+  @OneToMany(() => Review, (review) => review.student)
+  reviews: Review[];
 }

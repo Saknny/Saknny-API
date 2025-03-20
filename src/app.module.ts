@@ -33,6 +33,7 @@ import { StudentModule } from './modules/student/student.module';
 import { SubscriptionPlanModule } from './modules/subscription-plan/subscription-plan.module';
 import { UserModule } from './modules/user/user.module';
 import { BookingRequestModule } from './modules/booking-request/booking-request.module';
+import { ReviewModule } from './modules/review/review.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -62,6 +63,7 @@ import { BookingRequestModule } from './modules/booking-request/booking-request.
     RoomModule,
     BedModule,
     ApartmentModule,
+    ReviewModule,
     // ServeStaticModule.forRoot({
     //   rootPath: join(process.cwd(), 'public'),
     //   serveStaticOptions: {
