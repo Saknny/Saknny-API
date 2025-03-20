@@ -6,12 +6,16 @@ import { unlink } from 'fs/promises';
 import { Image } from './image.entity';
 import { EntityType } from '../request/entities/enum/entityType.enum';
 import { ImageDto } from './dto/image.dto';
+import { ApartmentImagesResponseDto } from '../apartment/dto/image-response.dto';
+import { Apartment } from '../apartment/entities/apartment.entity/apartment.entity';
 
 @Injectable()
 export class ImageService {
     constructor(
         @InjectRepository(Image)
         private readonly imageRepo: BaseRepository<Image>,
+        @InjectRepository(Apartment)
+        private readonly apartmentRepo: BaseRepository<Apartment>,
     ) { }
 
     async uploadImages(enityId: string, entityType: EntityType, imageFilenames: string[]): Promise<Image[]> {
@@ -69,6 +73,90 @@ export class ImageService {
         console.log(images);
         return images;
     }
+
+    async getApartmentImages(apartmentId: string): Promise<ApartmentImagesResponseDto> {
+        // Get apartment images
+        const updateId = ( id: string ): string => {
+            return id.replace(/-/g, '').toUpperCase().trim();
+          };
+        const apartmentImages = await this.imageRepo.find({
+          where: {
+            entityType: EntityType.APARTMENT,
+            entityId: updateId(apartmentId)
+          }
+        });
+        console.log(apartmentImages)
+        // Get all rooms for the apartment
+        const apartmentWithRooms = await this.apartmentRepo
+        .createQueryBuilder('apartment')
+        .leftJoinAndSelect('apartment.rooms', 'room')
+        .leftJoinAndSelect('room.beds', 'bed')
+        .where('apartment.id = :apartmentId', { apartmentId })
+        .getOne();
+
+        console.log(apartmentWithRooms)
+      
+        if (!apartmentWithRooms) {
+          throw new NotFoundException('Apartment not found');
+        }
+      
+        // Get all room IDs and bed IDs
+        const roomIds = apartmentWithRooms.rooms.map(room => updateId(room.id));
+        const bedIds = apartmentWithRooms.rooms.flatMap(room => 
+          room.beds.map(bed => updateId(bed.id))
+        );
+      
+        // Get all room images in one query
+        console.log("room ids after update ")
+        console.log( roomIds.map(id=> updateId(id)));
+        const roomImages = await this.imageRepo
+          .createQueryBuilder('image')
+          .where('image.entityType = :type AND image.entityId IN (:...ids)', {
+            type: EntityType.ROOM,
+            ids: roomIds.map(id=> updateId(id))
+          })
+          .getMany();
+      
+        // Get all bed images in one query
+        const bedImages = await this.imageRepo
+          .createQueryBuilder('image')
+          .where('image.entityType = :type AND image.entityId IN (:...ids)', {
+            type: EntityType.BED,
+            ids: bedIds.map(id=>updateId(id))
+          })
+          .getMany();
+
+        console.log(bedImages)
+      
+        // Structure the response
+        return {
+            apartmentImages: apartmentImages.map(img => ({
+              id: img.id,
+              entityType: img.entityType,
+              imageUrl: img.imageUrl
+            })),
+            rooms: apartmentWithRooms.rooms.map(room => ({
+              roomId: room.id, // Only return room ID
+              roomImages: roomImages
+                .filter(img => img.entityId === updateId(room.id))
+                .map(img => ({
+                  id: img.id,
+                  entityType: img.entityType,
+                  imageUrl: img.imageUrl
+                })),
+              beds: room.beds.map(bed => ({
+                bedId: bed.id, // Only return bed ID
+                bedImages: bedImages
+                  .filter(img => img.entityId === updateId(bed.id))
+                  .map(img => ({
+                    id: img.id,
+                    entityType: img.entityType,
+                    imageUrl: img.imageUrl
+                  }))
+              }))
+            }))
+          };
+      }
 }
 
 

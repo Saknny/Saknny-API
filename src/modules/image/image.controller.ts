@@ -8,6 +8,8 @@ import { Type } from "../request/entities/enum/type.enum";
 import { EntityType } from "../request/entities/enum/entityType.enum";
 import { ImageUploadFilesInterceptor } from "./interceptors/interceptor.upload-files";
 import { ImageDto } from "./dto/image.dto";
+import { Serialize } from "@src/libs/interceptors/serialize.interceptor";
+import { ApartmentImagesResponseDto } from "../apartment/dto/image-response.dto";
 
 
 @Controller('image')
@@ -54,5 +56,12 @@ export class ImageController {
     @Get('')
     async getImage(@Body() imageDto:ImageDto) {
         return this.imageService.getImage(imageDto);
+    }
+   
+    @Get('apartments/:id/images')
+    async getApartmentImages(
+    @Param('id') apartmentId: string
+    ) {
+    return this.imageService.getApartmentImages(apartmentId);
     }
 }

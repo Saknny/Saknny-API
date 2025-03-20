@@ -6,9 +6,9 @@ export class ImageDto {
 
 
 
-    @IsString()
-    @IsNotEmpty()
-    imageUrl: string;
+    // @IsString()
+    // @IsNotEmpty()
+    // imageUrl: string;
 
     @IsEnum(EntityType)
     entityType: EntityType;
@@ -16,7 +16,7 @@ export class ImageDto {
     @IsString()
     entityId: string;
 
-    @IsString()
-    description: string;
+    // @IsString()
+    // description: string;
 
 }

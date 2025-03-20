@@ -39,9 +39,9 @@ export class CreateRoomDto {
   ceilingFan: boolean;
 
   @IsBoolean()
-  cutains: boolean;
+  curtains: boolean;
 
 
   @IsBoolean()
-  balacony: boolean;
+  balcony: boolean;
 }
