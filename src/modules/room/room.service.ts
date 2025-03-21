@@ -5,7 +5,6 @@ import { Room } from './entities/room.entity/room.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
 import { ApartmentService } from '../apartment/apartment.service';
 import { Apartment } from '../apartment/entities/apartment.entity/apartment.entity';
-
 import { join } from 'path';
 import { unlink } from 'fs/promises';
 import { CreateRoomDto } from './dto/create-room.dto/create-room.dto';
@@ -19,7 +18,7 @@ export class RoomService {
     private readonly roomRepository: BaseRepository<Room>,
     @InjectRepository(Apartment)
     private readonly apartmentRepo: BaseRepository<Apartment>,
-  ) { }
+  ) {}
 
   async createRoom(
     apartmentId: string,
@@ -70,7 +69,7 @@ export class RoomService {
   async getRoom(roomId: string): Promise<Room> {
     const room = await this.roomRepository.findOne(
       { id: roomId, apartment: { status: 'PUBLISHED' } },
-      ['apartment'],
+      ['apartment, beds'],
     );
 
     if (!room) {
