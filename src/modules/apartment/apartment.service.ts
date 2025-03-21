@@ -7,7 +7,7 @@ import { Room } from '../room/entities/room.entity/room.entity';
 import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
-import { Not, Repository, IsNull } from 'typeorm';
+import { Not, Repository, IsNull, FindManyOptions } from 'typeorm';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.dto';
@@ -135,12 +135,18 @@ export class ApartmentService {
     return apartment;
   }
 
-  async getRecentApartments(limit = 10): Promise<Apartment[]> {
-    return this.apartmentRepository.find({
+  async getRecentApartments(limit?: number): Promise<Apartment[]> {
+    const findOptions: FindManyOptions<Apartment> = {
       order: { createdAt: 'DESC' },
-      take: limit,
-      relations: ['rooms', 'rooms.beds'],
-    });
+      relations: ['rooms', 'rooms.beds']
+    };
+  
+    // Only add take if limit is provided and valid
+    if (limit && limit > 0) {
+      findOptions.take = limit;
+    }
+  
+    return this.apartmentRepository.find(findOptions);
   }
 
   async getRecentlyViewed(limit = 6): Promise<Apartment[]> {
