@@ -86,7 +86,12 @@ export class ApartmentController {
 
   @Get('recent')
   async getRecentApartments(@Query('limit') limit?: number) {
-    return this.apartmentService.getRecentApartments(limit);
+
+    const apartments = await this.apartmentService.getRecentApartments(limit ? Number(limit) : undefined);
+    
+    return {
+      recentlyAdded: apartments
+    };
   }
 
   // Get recently viewed apartments
