@@ -14,22 +14,30 @@ import { ApartmentDocument } from './entities/document.entity';
 import { ProviderSubscriptionModule } from '../provider-subscription/provider-subscription.module';
 import { Student } from '../student/entities/student.entity';
 import { Image } from '../image/image.entity';
+import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.entity';
 
 @Module({
-  imports: [DatabaseModule.forFeature([Apartment, Room, Bed, Provider, ApartmentDocument,Student
-  ])
-
-    , ServeStaticModule.forRoot({
+  imports: [
+    DatabaseModule.forFeature([
+      Apartment,
+      Room,
+      Bed,
+      Provider,
+      ApartmentDocument,
+      Student,
+      FavoriteApartment,
+    ]),
+    ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // Ensure this path exists
       serveRoot: '/', // This means the files will be served at the root URL
       exclude: ['/api*'], // Exclude API routes from static serving
     }),
-  forwardRef(() => PendingRequestModule),
-    ProviderSubscriptionModule],
+    forwardRef(() => PendingRequestModule),
+    ProviderSubscriptionModule,
+  ],
 
   providers: [ApartmentService],
   controllers: [ApartmentController],
-  exports: [ApartmentService]
-
+  exports: [ApartmentService],
 })
-export class ApartmentModule { }
+export class ApartmentModule {}

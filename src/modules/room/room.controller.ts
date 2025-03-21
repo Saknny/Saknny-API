@@ -1,35 +1,36 @@
 import {
-  Controller,
-  Post,
-  Param,
-  UploadedFiles,
-  UseInterceptors,
-  Patch,
-  UploadedFile,
-  NotFoundException,
-  Delete,
   Body,
+  Controller,
+  Delete,
   forwardRef,
-  Inject,
   Get,
+  Inject,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
 
-import { RoomService } from './room.service';
+import { PendingRequestService } from '../request/pendingRequest.service';
 import { CreateRoomDto } from './dto/create-room.dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto/update-room.dto';
-import { PendingRequestService } from '../request/pendingRequest.service';
+import { RoomService } from './room.service';
 @Controller('room')
 export class RoomController {
-  constructor(private readonly roomService: RoomService   ,
-     @Inject(forwardRef(() => PendingRequestService))
-      private readonly pendingRequestService: PendingRequestService,) {}
+  constructor(
+    private readonly roomService: RoomService,
+    @Inject(forwardRef(() => PendingRequestService))
+    private readonly pendingRequestService: PendingRequestService,
+  ) {}
 
   @Post(':id/create')
   async createRoom(
     @Param('id') apartmentRequestId: string,
     @Body() createRoomDto: CreateRoomDto,
   ) {
-    return this.pendingRequestService.addRoomRequest(apartmentRequestId, createRoomDto);
+    return this.pendingRequestService.addRoomRequest(
+      apartmentRequestId,
+      createRoomDto,
+    );
   }
 
   @Patch(':id/updateInfo')
@@ -40,20 +41,13 @@ export class RoomController {
     return this.roomService.updateRoom(roomId, updateRoomDto);
   }
 
-
-
-  
   @Post(':id/:requestId/updateRequest')
   async updateRoomRequest(
     @Param('id') roomId: string,
-    @Param('requestId') requestId:string 
-
+    @Param('requestId') requestId: string,
   ) {
     return this.pendingRequestService.updateRoomRequest(roomId, requestId);
   }
-
-
-
 
   @Delete(':id/delete')
   async deleteRoom(@Param('id') roomId: string) {

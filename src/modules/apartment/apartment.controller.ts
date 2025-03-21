@@ -75,14 +75,11 @@ export class ApartmentController {
     return this.pendingRequestService.updateApartmentRequest(id, user.id);
   }
 
-  
   @Get('blocked-Apartments')
-    async getBlockedApartments() {
-      console.log('entered!')
-      return await this.apartmentService.getBlockedApartments();
+  async getBlockedApartments() {
+    console.log('entered!');
+    return await this.apartmentService.getBlockedApartments();
   }
-
-  
 
   @Get('recent')
   async getRecentApartments(@Query('limit') limit?: number) {
@@ -124,8 +121,8 @@ export class ApartmentController {
   }
 
   @Get('/home')
-  async getHomeData() {
-    return this.apartmentService.getHomeData();
+  async getHomeData(@currentUser() user: currentUserType) {
+    return this.apartmentService.getHomeData(user?.student?.id);
   }
 
   @Get(':apartmentId')
@@ -159,5 +156,4 @@ export class ApartmentController {
   ) {
     return this.apartmentService.publishApartment(user.id, id);
   }
-
 }

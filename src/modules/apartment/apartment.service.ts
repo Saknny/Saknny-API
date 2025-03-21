@@ -18,6 +18,7 @@ import { Status } from '../request/entities/enum/status.enum';
 import { ProviderSubscriptionService } from '../provider-subscription/provider-subscription.service';
 import { Student } from '../student/entities/student.entity';
 import { ApartmentLocation } from './enums/location.enum';
+import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.entity';
 
 @Injectable()
 export class ApartmentService {
@@ -35,6 +36,9 @@ export class ApartmentService {
     private readonly bedRepository: BaseRepository<Bed>,
     @InjectRepository(Student)
     private readonly studentRepository: BaseRepository<Student>,
+
+    @InjectRepository(FavoriteApartment)
+    private readonly favoriteApartmentRepository: BaseRepository<FavoriteApartment>,
 
     @InjectRepository(ApartmentDocument)
     private readonly apartmentDocumentRepo: BaseRepository<ApartmentDocument>,
@@ -136,15 +140,14 @@ export class ApartmentService {
       order: { createdAt: 'DESC' },
       take: limit,
       relations: ['rooms', 'rooms.beds'],
-      
     });
   }
 
-  async getRecentlyViewed(limit = 10): Promise<Apartment[]> {
+  async getRecentlyViewed(limit = 6): Promise<Apartment[]> {
     return this.apartmentRepository.find({
       where: { lastViewedAt: Not(IsNull()) },
       order: { lastViewedAt: 'DESC' },
-      take: limit, 
+      take: limit,
       relations: ['rooms', 'rooms.beds'],
     });
   }
@@ -254,40 +257,52 @@ export class ApartmentService {
     };
   }
 
-  async getHomeData() {
-    
+  async getHomeData(studentId?: string) {
     const numberOfApartments = await this.apartmentRepository.count();
 
-    
     const numberOfBeds = await this.apartmentRepository
       .createQueryBuilder('apartment')
-      .leftJoin('apartment.rooms', 'room') 
-      .leftJoin('room.beds', 'bed') 
-      .select('COUNT(bed.id)::int', 'totalBeds') 
+      .leftJoin('apartment.rooms', 'room')
+      .leftJoin('room.beds', 'bed')
+      .select('COUNT(bed.id)::int', 'totalBeds')
       .getRawOne();
+
     const numberOfProviders = await this.providerRepository.count();
     const numberOfStudents = await this.studentRepository.count();
-    
     const recentlyAdded = await this.getRecentApartments(6);
-
-    
     const recentlyViewed = await this.getRecentlyViewed(6);
+    const apartmentsByLocation = await this.getApartmentsByLocation(
+      ApartmentLocation.ELSAIDY,
+      6,
+      1,
+    );
 
-    let apartmentsByLocation = [];
-      apartmentsByLocation = await this.getApartmentsByLocation(
-        ApartmentLocation.ELSAIDY,
-        6,
-        1,
-      );
+    // Fetch the favorite apartments for this student
+    let favoriteApartmentIds: string[] = [];
+    if (studentId) {
+      const favoriteApartments = await this.favoriteApartmentRepository.find({
+        where: { favorite: { student: { id: studentId } } },
+        relations: ['apartment'],
+      });
+
+      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+    }
+
+    // Add `isFavorite` field to each apartment
+    const markFavorite = (apartments: Apartment[]) =>
+      apartments.map((apartment) => ({
+        ...apartment,
+        isFavorite: favoriteApartmentIds.includes(apartment.id),
+      }));
 
     return {
       numberOfApartments,
-      numberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0, 
+      numberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0,
       numberOfProviders,
       numberOfStudents,
-      recentlyAdded,
-      recentlyViewed: recentlyViewed.slice(0, 6),
-      apartmentsByLocation,
+      recentlyAdded: markFavorite(recentlyAdded),
+      recentlyViewed: markFavorite(recentlyViewed),
+      apartmentsByLocation: markFavorite(apartmentsByLocation),
     };
   }
 
@@ -311,7 +326,4 @@ export class ApartmentService {
       .getMany();
     return blockedApartments;
   }
-  
-  
-
 }
