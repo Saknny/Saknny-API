@@ -52,17 +52,21 @@ export class FavoriteService {
     favoriteId: string,
     studentId: string,
   ) {
-    const favorite = await this.favoriteRepo.findOne({
-      where: { id: favoriteId, student: { id: studentId } },
-    });
+      const favorite = await this.favoriteRepo
+      .createQueryBuilder('favorite')
+      .leftJoinAndSelect('favorite.student', 'student')
+      .where('favorite.id = :favoriteId', { favoriteId })
+      .andWhere('student.id = :studentId', { studentId })
+      .getOne();
 
     if (!favorite) throw new Error('Favorite list not found');
 
-    const apartment = await this.apartmentRepo.findOne({
-      where: { id: apartmentId },
-    });
+    // 2. Get full apartment entity using QueryBuilder
+    const apartment = await this.apartmentRepo
+      .createQueryBuilder('apartment')
+      .where('apartment.id = :apartmentId', { apartmentId })
+      .getOne();
 
-    if (!apartment) throw new Error('Apartment not found');
 
     const favoriteApartment = this.favoriteApartmentRepo.create({
       favorite,
