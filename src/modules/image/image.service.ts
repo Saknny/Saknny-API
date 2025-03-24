@@ -75,16 +75,22 @@ export class ImageService {
     }
 
     async getApartmentImages(apartmentId: string): Promise<ApartmentImagesResponseDto> {
+        const baseUrl = 'https://c09d-197-63-186-91.ngrok-free.app'
+        const uploadPath = '/uploads'
         // Get apartment images
         const updateId = ( id: string ): string => {
             return id.replace(/-/g, '').toUpperCase().trim();
           };
-        const apartmentImages = await this.imageRepo.find({
+        // Get apartment images with full URL
+        const apartmentImages = (await this.imageRepo.find({
           where: {
             entityType: EntityType.APARTMENT,
             entityId: updateId(apartmentId)
           }
-        });
+        })).map(img => ({
+          ...img,
+          imageUrl: `${baseUrl}${uploadPath}/${img.entityType}/${img.imageUrl}`
+        }));
         console.log(apartmentImages)
         // Get all rooms for the apartment
         const apartmentWithRooms = await this.apartmentRepo
@@ -109,23 +115,29 @@ export class ImageService {
         // Get all room images in one query
         console.log("room ids after update ")
         console.log( roomIds.map(id=> updateId(id)));
-        const roomImages = await this.imageRepo
+        // Get room images with full URL
+        const roomImages = (await this.imageRepo
           .createQueryBuilder('image')
           .where('image.entityType = :type AND image.entityId IN (:...ids)', {
             type: EntityType.ROOM,
-            ids: roomIds.map(id=> updateId(id))
+            ids: roomIds.map(updateId)
           })
-          .getMany();
-      
-        // Get all bed images in one query
-        const bedImages = await this.imageRepo
+          .getMany()).map(img => ({
+            ...img,
+            imageUrl: `${baseUrl}${uploadPath}/${img.entityType}/${img.imageUrl}`
+          }));
+
+        // Get bed images with full URL
+        const bedImages = (await this.imageRepo
           .createQueryBuilder('image')
           .where('image.entityType = :type AND image.entityId IN (:...ids)', {
             type: EntityType.BED,
-            ids: bedIds.map(id=>updateId(id))
+            ids: bedIds.map(updateId)
           })
-          .getMany();
-
+          .getMany()).map(img => ({
+            ...img,
+            imageUrl: `${baseUrl}${uploadPath}/${img.entityType}/${img.imageUrl}`
+          }));
         console.log(bedImages)
       
         // Structure the response

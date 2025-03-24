@@ -13,7 +13,7 @@ export const ImageUploadFilesInterceptor = () =>
                     return callback(new Error('entityType is required'), null);
                 }
 
-                const uploadPath = `./uploads/${entityType}`;
+                const uploadPath =`./uploads/${ entityType}`;
 
                 if (!fs.existsSync(uploadPath)) {
                     fs.mkdirSync(uploadPath, { recursive: true });

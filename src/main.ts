@@ -43,17 +43,36 @@ function setTemplateEngine(app: NestExpressApplication) {
 async function bootstrap(): Promise<void> {
   initializeTransactionalContext();
   if (get('NODE_ENV').asString() === 'production') initializeLogging();
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    cors: { origin: '*' },
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.enableCors({
+    origin: [
+      'http://45.88.223.182:8000', // Add server IP
+      'https://neatly-rare-aardvark.ngrok-free.app',
+      'http://localhost:3000',
+    ],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
+    exposedHeaders: ['ngrok-skip-browser-warning'], // MUST BE ADDED HERE
+    methods: ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
   });
-
   app.setGlobalPrefix('api');
 
   setupMiddlewares(app);
   setTemplateEngine(app);
   if (get('NODE_ENV').asString() === 'production') setupRateLimiter(app);
+  
+
+  // In setupMiddlewares:
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' }, // Add this line
+    }),
+  );
 
   app.use('/api/payment/webhook', bodyParser.raw({ type: 'application/json' }));
+  app.use('/uploads', express.static('C:/Users/Tiger Store/Desktop/GRAD PROJECT/Saknny-API/uploads'));
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
