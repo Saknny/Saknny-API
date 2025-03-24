@@ -75,7 +75,7 @@ export class ImageService {
     }
 
     async getApartmentImages(apartmentId: string): Promise<ApartmentImagesResponseDto> {
-        const baseUrl = 'https://c09d-197-63-186-91.ngrok-free.app'
+        const baseUrl = 'http://localhost:4000'
         const uploadPath = '/uploads'
         // Get apartment images
         const updateId = ( id: string ): string => {

@@ -13,8 +13,7 @@ import { StudentModule } from "../student/student.module";
 import { ApartmentDocument } from "../apartment/entities/document.entity";
 import { PendingDocument } from "./entities/pendingDocument.entity";
 import { ImageModule } from "../image/image.module";
-import { RequestItem } from "./entities/RequestItem.entity";
-
+import { RequestItem } from "./entities/requestItem.entity";
 @Module({
     imports: [DatabaseModule.forFeature([PendingRequest, Provider, ImageApproval, PendingDocument , RequestItem])
         , forwardRef(() => ApartmentModule),

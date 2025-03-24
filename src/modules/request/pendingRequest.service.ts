@@ -22,7 +22,7 @@ import { StudentService } from '../student/student.service';
 import { ProviderService } from '../provider/provider.service';
 import { ImageService } from '../image/image.service';
 import { CreateApartmentDto } from '../apartment/dto/create-apartment.dto/create-apartment.dto';
-import { RequestItem } from './entities/RequestItem.entity';
+import { RequestItem } from "./entities/requestItem.entity";
 import { CreateRoomDto } from '../room/dto/create-room.dto/create-room.dto';
 import { CreateBedDto } from '../bed/dto/create-bed.dto/create-bed.dto';
 import { UpdateApartmentDto } from '../apartment/dto/update-apartment.dto/update-apartment.dto';

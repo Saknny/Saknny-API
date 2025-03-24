@@ -42,6 +42,9 @@ import { ReportModule } from './modules/report/report.module';
       useFactory: () => databaseConfig,
       async dataSourceFactory(options) {
         if (!options) throw new Error('Invalid options passed');
+        if (!dataSource.isInitialized) {
+                await dataSource.initialize();
+        }
         return addTransactionalDataSource(dataSource as any);
       },
     }),

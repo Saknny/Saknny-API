@@ -5,7 +5,7 @@ import { PendingRequest } from "./pendingRequest.entity";
 import { Status } from "./enum/status.enum";
 import { Type } from "./enum/type.enum";
 import { EntityType } from "./enum/entityType.enum";
-import { RequestItem } from "./RequestItem.entity";
+import { RequestItem } from "./requestItem.entity";
 
 @Entity()
 export class ImageApproval extends BaseModel {
