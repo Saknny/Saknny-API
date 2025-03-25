@@ -505,9 +505,11 @@ export class PendingRequestService {
         Item: item,
       }),
     );
-    await this.imagesRepo.save(images);
+    const savedImages=await this.imagesRepo.save(images);
 
     await this.requestItemRepo.save(item);
+    return savedImages.map((image) => image.id);
+
   }
 
   async UploadDocRequest(requestId: string, document: string) {

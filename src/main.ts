@@ -46,7 +46,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
     origin: [
-      'http://45.88.223.182:8000', // Add server IP
+      'http://45.88.223.182:4000', // Add server IP
       'https://neatly-rare-aardvark.ngrok-free.app',
       'http://localhost:3000',
     ],

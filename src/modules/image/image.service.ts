@@ -75,7 +75,7 @@ export class ImageService {
     }
 
     async getApartmentImages(apartmentId: string): Promise<ApartmentImagesResponseDto> {
-        const baseUrl = 'http://localhost:4000'
+        const baseUrl = 'http://45.88.223.182:4000'
         const uploadPath = '/uploads'
         // Get apartment images
         const updateId = ( id: string ): string => {
