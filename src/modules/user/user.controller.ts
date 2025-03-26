@@ -13,7 +13,7 @@ import { currentUser } from '../../libs/decorators/currentUser.decorator';
 import { Serialize } from '../../libs/interceptors/serialize.interceptor';
 import { UserIdResponse, UserResponse } from './dtos/responses/user.response';
 import { currentUserType } from '../../libs/types/current-user.type';
-import { CompleteUserProfileInput } from './dtos/inputs/update-user.input';
+import { CompleteUserProfileInput, UpdateUserInfo } from './dtos/inputs/update-user.input';
 import { Transactional } from 'typeorm-transactional';
 import { UserEmailInput } from './dtos/inputs/user-filter.input';
 import { Auth } from '@src/libs/decorators/auth.decorator';
@@ -43,6 +43,25 @@ export class UserController {
   @Auth({ allow: 'authenticated' })
   async deleteCurrentUser(@currentUser() user: currentUserType) {
     return await this.userService.deleteCurrentUser(user);
+  }
+
+  @Get()
+  async getAllUsers(){
+    return this.userService.getAllUsers();
+  }
+  @Get(":id")
+  async getUser(@Param("id") id :string){
+    return this.userService.getUserById(id);
+  }
+
+  @Patch(":id")
+  async updateUser(@Param("id") id :string , @Body() user : UpdateUserInfo){
+    return this.userService.updateUser(id , user);
+  }
+
+  @Delete(":id")
+  async deleteUser(@Param("id") id :string){
+  return this.userService.deleteUser(id)
   }
 
 

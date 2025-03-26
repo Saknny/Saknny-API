@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectBaseRepository } from '../../libs/decorators/inject-base-repository.decorator';
 import { User } from './entities/user.entity';
 import { BaseRepository, WhereOptions } from '../../libs/types/base-repository';
-import { FindOptionsWhere } from 'typeorm';
+import { DeepPartial, FindOptionsWhere } from 'typeorm';
 import { ErrorCodeEnum } from '../../libs/application/exceptions/error-code.enum';
 import { BaseHttpException } from '../../libs/application/exceptions/base-http-exception';
-import { CompleteUserProfileInput } from './dtos/inputs/update-user.input';
+import { CompleteUserProfileInput, UpdateUserInfo } from './dtos/inputs/update-user.input';
 import { Student } from '../student/entities/student.entity';
 import { Provider } from '../provider/entities/provider.entity';
 import { UserTransformer } from './transformer/user.transformer';
@@ -92,5 +92,41 @@ export class UserService {
 
   async deleteAllUser() {
     await this.userRepo.deleteAll({});
+  }
+
+
+
+  async getAllUsers(): Promise<User[]> {
+    return this.userRepo.find();
+  }
+
+  async getUserById(id: string): Promise<User> {
+    const user = await this.userRepo.findOneBy({ id });
+    
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    
+    return user;
+  }
+
+  async updateUser(id: string, updateUserDto: UpdateUserInfo): Promise<User> {
+    const user = await this.getUserById(id);
+    
+    const updateData: DeepPartial<User> = {
+      
+    };
+    // Merge existing user with updated data
+    const updatedUser = this.userRepo.merge(user, updateData);
+    
+    return this.userRepo.save(updatedUser);
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    const result = await this.userRepo.delete(id);
+    
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
   }
 }

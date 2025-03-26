@@ -13,14 +13,21 @@ export class AdminController {
     private readonly adminService: AdminService,
 
     private readonly pendingRequestService: PendingRequestService,
-  ) {}
+  ) { }
+
+  @Get('request/:id')
+  async getRequest(@Param('id') id: string) {
+    return await this.pendingRequestService.getRequest(id);
+  }
 
   @Get('pending-requests')
   async getPendingRequests() {
     return await this.pendingRequestService.getPendingRequests();
   }
 
-  
+
+
+
 
   @Patch('request-approval')
   async requestApproval(@Body() body: RequestDto) {
