@@ -58,7 +58,7 @@ export class PendingRequestService {
 
     @Inject(forwardRef(() => StudentService))
     private readonly studentService: StudentService,
-  ) {}
+  ) { }
 
   async updateRequestApproval(body: RequestDto) {
     const request = await this.pendingRequestRepo
@@ -203,9 +203,27 @@ export class PendingRequestService {
   }
 
   async getPendingRequests() {
-    return await this.pendingRequestRepo.find({
-      where: { status: Status.PENDING },
-    });
+    const requests = await this.pendingRequestRepo
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.items', 'items')
+      .leftJoinAndSelect('items.request', 'requestItemRequest')
+      .leftJoinAndSelect('items.images', 'images')
+      .where('request.status = :status', { status: Status.PENDING })
+      .getMany();
+    // console.log(requests);
+    return requests;
+  }
+
+  async getRequest(id: string) {
+    const request = await this.pendingRequestRepo
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.items', 'items')
+      .leftJoinAndSelect('items.request', 'requestItemRequest')
+      .leftJoinAndSelect('items.images', 'images')
+      .where('request.id = :id', { id })
+      .getOne();
+    console.log(request);
+    return request;
   }
 
   async getRequestItems(id: string) {
@@ -505,7 +523,7 @@ export class PendingRequestService {
         Item: item,
       }),
     );
-    const savedImages=await this.imagesRepo.save(images);
+    const savedImages = await this.imagesRepo.save(images);
 
     await this.requestItemRepo.save(item);
     return savedImages.map((image) => image.id);
