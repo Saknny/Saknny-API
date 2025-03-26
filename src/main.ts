@@ -71,8 +71,8 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  app.use('/api/payment/webhook', bodyParser.raw({ type: 'application/json' }));
-  app.use('/uploads', express.static('C:/Users/Tiger Store/Desktop/GRAD PROJECT/Saknny-API/uploads'));
+  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
+
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
