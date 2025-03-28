@@ -101,8 +101,8 @@ export class Apartment extends BaseModel {
   @Column()
   standFan: boolean;
 
-  @Column()
-  Iron: boolean;
+  @Column({nullable:true})
+  iron: boolean;
 
   @Column()
   wifi: boolean;

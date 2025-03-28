@@ -68,9 +68,10 @@ export class RoomService {
 
   async getRoom(roomId: string): Promise<Room> {
     const room = await this.roomRepository.findOne(
-      { id: roomId, apartment: { status: 'PUBLISHED' } },
-      ['apartment, beds'],
-    );
+      { id:roomId },
+      ['apartment', 'beds'],
+      );
+    
 
     if (!room) {
       throw new NotFoundException('Room not found');

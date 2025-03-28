@@ -64,7 +64,7 @@ export class BedService {
 
   async getBed(id: string): Promise<Bed> {
     const bed = await this.bedRepository.findOne(
-      { id, room: { apartment: { status: 'PUBLISHED' } } },
+      { id, room: { apartment: { status: 'APPROVED' } } },//SHOULD BE PUBLISHED 
       ['room', 'student'],
     );
 

@@ -200,17 +200,43 @@ export class ApartmentService {
     };
   }
 
-  async getApartment(id: string) {
+  async getApartment(id: string,studentId?: string) {
     const apartment = await this.apartmentRepository.findOne(
-      { id, status: 'PUBLISHED' },
+      { id, status: 'APPROVED' },//SHOULD BE PUBLISHED
       ['provider', 'rooms', 'rooms.beds'],
     );
 
     if (!apartment) {
       throw new NotFoundException('Apartment not found');
     }
+    let favoriteApartmentIds: string[] = [];
+    if (studentId) {
+      const favoriteApartments = await this.favoriteApartmentRepository.find({
+        where: { favorite: { student: { id: studentId } } },
+        relations: ['apartment'],
+      });
 
-    return apartment;
+      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+    }
+
+    // Add `isFavorite` field to each apartment
+    const markFavorite = (apartment: Apartment) => ({
+      ...apartment,
+      isFavorite: favoriteApartmentIds.includes(apartment.id),
+    });
+
+    const response = {
+      provider: apartment.provider, // Keep provider at the top level
+      apartment: {
+        ...apartment, // Spread all apartment properties inside user
+        isFavorite: favoriteApartmentIds.includes(apartment.id),
+      },
+    };
+  
+    // Remove `provider` from `user` object
+    delete response.apartment.provider;
+  
+    return response;
   }
 
   async getApartmentBoard(id: string) {

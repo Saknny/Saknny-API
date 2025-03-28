@@ -131,8 +131,9 @@ export class ApartmentController {
   }
 
   @Get(':apartmentId')
-  async getApartment(@Param('apartmentId') apartmentId: string) {
-    return this.apartmentService.getApartment(apartmentId);
+  async getApartment(@Param('apartmentId') apartmentId: string
+  ,@currentUser() user: currentUserType) {
+    return this.apartmentService.getApartment(apartmentId,user?.student?.id);
   }
 
   @Get(':apartmentId/board')
