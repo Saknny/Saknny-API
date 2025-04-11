@@ -49,25 +49,38 @@ export class FavoriteService {
 
   async addApartmentToFavoriteList(
     apartmentId: string,
-    favoriteId: string,
     studentId: string,
   ) {
-      const favorite = await this.favoriteRepo
-      .createQueryBuilder('favorite')
-      .leftJoinAndSelect('favorite.student', 'student')
-      .where('favorite.id = :favoriteId', { favoriteId })
-      .andWhere('student.id = :studentId', { studentId })
-      .getOne();
-
-    if (!favorite) throw new Error('Favorite list not found');
-
+    
+    let favorite = await this.favoriteRepo
+    .createQueryBuilder('favorite')
+    .leftJoinAndSelect('favorite.student', 'student') // Join the student relation
+    .where('student.id = :studentId', { studentId })   // Filter by student ID
+    .andWhere('favorite.name = :name', { name: 'My Favorites' }) // Filter by list name
+    .getOne(); // Get single res
+    console.log(favorite)
+    if (!favorite) {
+      favorite = this.favoriteRepo.create({
+        name: 'My Favorites',
+        student: { id: studentId },
+      });
+      await this.favoriteRepo.save(favorite);
+    }
     // 2. Get full apartment entity using QueryBuilder
     const apartment = await this.apartmentRepo
       .createQueryBuilder('apartment')
       .where('apartment.id = :apartmentId', { apartmentId })
       .getOne();
-
-
+    // Prevent duplicates
+    const existing = await this.favoriteApartmentRepo
+  .createQueryBuilder('fa')
+  .leftJoinAndSelect('fa.favorite', 'favorite')
+  .leftJoinAndSelect('fa.apartment', 'apartment')
+  .where('favorite.id = :favoriteId', { favoriteId: favorite.id })
+  .andWhere('apartment.id = :apartmentId', { apartmentId })
+  .getOne();
+    if (existing) throw new Error('Apartment already in favorites');
+    
     const favoriteApartment = this.favoriteApartmentRepo.create({
       favorite,
       apartment,
@@ -93,15 +106,29 @@ export class FavoriteService {
   }
 
   async getApartmentsForFavoriteList(
-    favoriteId: string,
-    pagination: { limit: number; page: number },
-  ) {
-    return await this.favoriteApartmentRepo.find({
-      where: { favorite: { id: favoriteId } },
-      take: pagination.limit,
-      skip: (pagination.page - 1) * pagination.limit,
-      relations: ['apartment'],
-    });
+    studentId: string, // Now accepts studentId instead of favoriteId
+  pagination: { limit: number; page: number },
+) {
+  // 1. Find "My Favorites" list for this student
+  const favorite = await this.favoriteRepo
+    .createQueryBuilder('favorite')
+    .leftJoinAndSelect('favorite.student', 'student')
+    .where('student.id = :studentId', { studentId })
+    .andWhere('favorite.name = :name', { name: 'My Favorites' })
+    .getOne();
+
+  if (!favorite) {
+    return []; // Return empty array if no list exists
+  }
+
+  // 2. Get apartments using QueryBuilder
+  return this.favoriteApartmentRepo
+    .createQueryBuilder('fa')
+    .leftJoinAndSelect('fa.apartment', 'apartment')
+    .where('fa.favoriteId = :favoriteId', { favoriteId: favorite.id })
+    .take(pagination.limit)
+    .skip((pagination.page - 1) * pagination.limit)
+    .getMany();
   }
 
   async getApartmentsCount(favoriteId: string) {

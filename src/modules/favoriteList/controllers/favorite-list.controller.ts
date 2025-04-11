@@ -54,7 +54,6 @@ export class FavoriteController {
     @Body()
     body: {
       apartmentId: string;
-      favoriteId: string;
     },
     @currentUser() user: currentUserType,
   ) {
@@ -63,7 +62,6 @@ export class FavoriteController {
 
     return this.favoriteService.addApartmentToFavoriteList(
       body.apartmentId,
-      body.favoriteId,
       studentId,
     );
   }
@@ -82,13 +80,14 @@ export class FavoriteController {
     );
   }
 
-  @Get('/list-apartments/:favoriteId')
+  @Get('/list-apartments')
   async getApartmentsForFavoriteList(
-    @Param('favoriteId') favoriteId: string,
     @Query('limit') limit: number,
     @Query('page') page: number,
+    @currentUser() user: currentUserType
   ) {
-    return this.favoriteService.getApartmentsForFavoriteList(favoriteId, {
+    const studentId = user?.student?.id;
+    return this.favoriteService.getApartmentsForFavoriteList( studentId,{
       limit,
       page,
     });
