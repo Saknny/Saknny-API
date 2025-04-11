@@ -25,10 +25,7 @@ export class AdminController {
     return await this.pendingRequestService.getItem(id);
   }
 
-  @Get('Requestitems/:id')
-  async getRequestitems(@Param('id') id: string) {
-    return await this.pendingRequestService.getRequestItems(id);
-  }
+
 
   @Get('pending-requests')
   async getPendingRequests() {
