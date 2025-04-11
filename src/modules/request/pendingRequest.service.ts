@@ -222,7 +222,19 @@ export class PendingRequestService {
       .leftJoinAndSelect('items.images', 'images')
       .where('request.id = :id', { id })
       .getOne();
-    console.log(request);
+    const baseUrl = 'http://45.88.223.182:4000';
+    const uploadPath = '/uploads';
+    if (request?.items) {
+      for (const item of request.items) {
+        if (item.images) {
+          item.images = item.images.map(img => ({
+            ...img,
+            url: `${baseUrl}${uploadPath}/${item.entityType}/${img.url}`
+          }));
+        }
+      }
+    }
+
     return request;
   }
 
@@ -233,8 +245,38 @@ export class PendingRequestService {
       .where('request.id = :id', { id })
       .where('item.status = :status', { status: Status.PENDING })
       .getMany();
+    const baseUrl = 'http://45.88.223.182:4000';
+    const uploadPath = '/uploads';
+
+    for (const item of items) {
+      if (item.images) {
+        item.images = item.images.map(img => ({
+          ...img,
+          url: `${baseUrl}${uploadPath}/${item.entityType}/${img.url}`
+        }));
+      }
+    }
 
     return items;
+  }
+  async getItem(id: string) {
+    const item = await this.requestItemRepo
+      .createQueryBuilder('item')
+      .leftJoinAndSelect('item.request', 'request')
+      .where('request.id = :id', { id })
+      .where('item.status = :status', { status: Status.PENDING })
+      .getOne();
+
+    const baseUrl = 'http://45.88.223.182:4000';
+    const uploadPath = '/uploads';
+
+    if (item.images) {
+      item.images = item.images.map(img => ({
+        ...img,
+        url: `${baseUrl}${uploadPath}/${item.entityType}/${img.url}`
+      }));
+    }
+    return item;
   }
 
   async CreateProfileRequest(

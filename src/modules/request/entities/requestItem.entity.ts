@@ -43,7 +43,7 @@ export class RequestItem extends BaseModel {
         onUpdate: "CASCADE",
         nullable: true,
     })
-    images?: ImageApproval;
+    images?: ImageApproval[];
 
     @Column({ type: "jsonb", nullable: true })
     data?: any;

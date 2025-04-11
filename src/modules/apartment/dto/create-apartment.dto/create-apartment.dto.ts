@@ -65,4 +65,7 @@ export class CreateApartmentDto {
   @IsNumber()
   bathrooms: number;
 
+    @IsString()
+    title:string
+
 }

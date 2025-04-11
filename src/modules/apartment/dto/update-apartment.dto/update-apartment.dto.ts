@@ -1,6 +1,9 @@
 import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class UpdateApartmentDto {
+     @IsString()
+     title: string
+
      @IsOptional()
      @IsString()
      descriptionEn: string;

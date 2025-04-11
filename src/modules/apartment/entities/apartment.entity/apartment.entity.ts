@@ -139,4 +139,6 @@ export class Apartment extends BaseModel {
   @OneToMany(() => Report, (report) => report.apartment)
   reports: Report[];
 
+  @Column({ nullable: true })
+  title:string;
 }
