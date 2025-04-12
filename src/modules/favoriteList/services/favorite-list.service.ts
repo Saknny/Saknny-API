@@ -85,7 +85,7 @@ export class FavoriteService {
       favorite,
       apartment,
     });
-    return await this.favoriteApartmentRepo.save(favoriteApartment);
+    await this.favoriteApartmentRepo.save(favoriteApartment);
   }
 
   async removeApartmentFromFavoriteList(
@@ -102,7 +102,7 @@ export class FavoriteService {
     if (!favoriteApartment)
       throw new Error('Apartment not found in favorite list');
 
-    return await this.favoriteApartmentRepo.remove(favoriteApartment);
+    await this.favoriteApartmentRepo.remove(favoriteApartment);
   }
 
   async getApartmentsForFavoriteList(
@@ -122,13 +122,29 @@ export class FavoriteService {
   }
 
   // 2. Get apartments using QueryBuilder
-  return this.favoriteApartmentRepo
+  const favoriteApartments = await this.favoriteApartmentRepo
     .createQueryBuilder('fa')
     .leftJoinAndSelect('fa.apartment', 'apartment')
     .where('fa.favoriteId = :favoriteId', { favoriteId: favorite.id })
     .take(pagination.limit)
     .skip((pagination.page - 1) * pagination.limit)
     .getMany();
+     // 3. Extract apartment IDs from favorite entries
+  const favoriteApartmentIds = favoriteApartments.map(fa => fa.apartment.id);
+
+  // 4. Create the markFavorite function
+  const markFavorite = (apartments: Apartment[]) => 
+    apartments.map(apartment => ({
+      ...apartment,
+      isFavorite: favoriteApartmentIds.includes(apartment.id)
+    }));
+
+  // 5. Apply to the results
+  const apartments = favoriteApartments.map(fa => fa.apartment);
+  return {
+    favorites:markFavorite(apartments)
+  }
+  
   }
 
   async getApartmentsCount(favoriteId: string) {
