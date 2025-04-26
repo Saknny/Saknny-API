@@ -654,4 +654,32 @@ export class PendingRequestService {
       images.map((image) => image.url),
     );
   }
+
+  async getPendingProfileRequests() {
+    const requests = await this.pendingRequestRepo
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.items', 'items')
+      .leftJoinAndSelect('items.request', 'requestItemRequest')
+      .where('request.status = :status', { status: Status.PENDING })
+      .andWhere('request.type = :type', { type: Type.PROFILE_COMPLETE })
+      .getMany();
+  
+    const baseUrl = 'http://45.88.223.182:4000';
+    const uploadPath = '/uploads';
+  
+    // Iterate through each request and its items
+    for (const request of requests) {
+      for (const item of request.items) {
+        // Check if data contains an image and modify the image URL
+        if (item.data && item.data.image) {
+          item.data.image = baseUrl + item.data.image;
+        }
+      }
+    }
+  
+    return requests;
+  }
+  
+  
+  
 }

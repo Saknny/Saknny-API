@@ -47,15 +47,16 @@ export class StudentController {
     if (!files.idCard || files.idCard.length === 0) {
       throw new BadRequestException('ID Card is required');
     }
-    if (files.idCard && files.idCard?.length > 0) {
-      if (Buffer.isBuffer(files.idCard[0].buffer)) {
-        completeProfileDto.idCard = files.idCard[0].buffer.toString('base64');
-      }
-    }
+    // Process idCard (stored in memory)
+  if (files.idCard?.[0]?.buffer) {
+    completeProfileDto.idCard = files.idCard[0].buffer.toString('base64');
+  }
 
-    if (files.image && files.image.length > 0) {
-      completeProfileDto.image = `/uploads/${files.image[0].filename}`;
-    }
+  // Process image (stored in disk)
+  if (files.image?.[0]?.filename) {
+    completeProfileDto.image = `/uploads/${files.image[0].filename}`;
+  }
+
     return await this.pendingRequestService.CreateProfileRequest(
       id,
       EntityType.STUDENT,
@@ -63,6 +64,13 @@ export class StudentController {
       Type.PROFILE_COMPLETE,
     );
 
+  }
+
+  @Get('profile')
+  async getProfile(
+  @currentUser() { id }: currentUserType) {
+    console.log(id)
+    return await this.studentService.getStudentProfile(id);
   }
 
   @Patch('update-profile')
@@ -106,4 +114,6 @@ export class StudentController {
   async getStudentBoard(@Param('studentId') studentId: string) {
     return await this.studentService.getStudentBoard(studentId);
   }
+
+
 }

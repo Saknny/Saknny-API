@@ -144,4 +144,30 @@ export class StudentService {
     await this.studentRepo.save(student);
 
   }
+
+  async getStudentProfile(userId: string) {
+    const student = await this.studentRepo
+      .createQueryBuilder('student') 
+      .leftJoinAndSelect('student.user', 'user')  
+      .leftJoinAndSelect('student.bed', 'bed')  
+      .leftJoinAndSelect('student.favorites', 'favorites') 
+      .leftJoinAndSelect('student.rentalRequests', 'rentalRequests') 
+      .leftJoinAndSelect('student.reviews', 'reviews')  
+      .leftJoinAndSelect('student.reports', 'reports')  
+      .where('student.userId = :userId', { userId }) 
+      .getOne();  
+
+    if (!student) {
+      throw new NotFoundException(`Student with ID ${userId} not found`);
+    }
+
+    
+    const baseUrl ='http://45.88.223.182:4000';
+    const studentDto = {
+      ...student,  
+      image: student.image ? baseUrl + student.image : null, 
+    };
+
+    return studentDto;
+  }
 }

@@ -32,6 +32,11 @@ export class AdminController {
     return await this.pendingRequestService.getPendingRequests();
   }
 
+  @Get('pending-profile-requests')
+  async getPendingProfileRequests() {
+    return await this.pendingRequestService.getPendingProfileRequests();
+  }
+
 
 
 
