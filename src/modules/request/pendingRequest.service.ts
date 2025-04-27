@@ -679,6 +679,33 @@ export class PendingRequestService {
   
     return requests;
   }
+
+  async getPendingProfileRequestById(requestId: string) {
+    const request = await this.pendingRequestRepo
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.items', 'items')
+      .leftJoinAndSelect('items.request', 'requestItemRequest')
+      .where('request.id = :requestId', { requestId })
+      .andWhere('request.status = :status', { status: Status.PENDING })
+      .andWhere('request.type = :type', { type: Type.PROFILE_COMPLETE })
+      .getOne();
+  
+    if (!request) {
+      throw new NotFoundException(`Request with ID ${requestId} not found`);
+    }
+  
+    const baseUrl = 'http://45.88.223.182:4000';
+    const uploadPath = '/uploads';
+  
+    for (const item of request.items) {
+      if (item.data && item.data.image) {
+        item.data.image = baseUrl + item.data.image;
+      }
+    }
+  
+    return request;
+  }
+  
   
   
   
