@@ -96,9 +96,53 @@ export class UserService {
 
 
 
-  async getAllUsers(): Promise<User[]> {
-    return this.userRepo.find();
+  
+
+  async getAllUsersWithDetails(): Promise<User[]> {
+    const users=await this.userRepo.find({
+      relations: ['provider', 'student'],
+      order: { createdAt: 'DESC' }, 
+    });
+
+  const baseUrl = 'http://45.88.223.182:4000/';
+
+  return users.map((user) => {
+    if (user.student?.image) {
+      user.student.image = baseUrl + user.student.image.replace(/^\/+/, '');
+    }
+
+    if (user.provider?.image) {
+      user.provider.image = baseUrl + user.provider.image.replace(/^\/+/, '');
+    }
+
+    return user;
+  });
   }
+
+  //find user by id 
+  async getUserWithDetailsById(id: string): Promise<User | null> {
+    const user = await this.userRepo
+    .createQueryBuilder('user')
+    .leftJoinAndSelect('user.student', 'student')
+    .leftJoinAndSelect('user.provider', 'provider')
+    .where('user.id = :id', { id })
+    .getOne();
+    
+    if (!user) return null;
+  
+    const baseUrl = 'http://45.88.223.182:4000/';
+  
+    if (user.student?.image) {
+      user.student.image = baseUrl + user.student.image.replace(/^\/+/, '');
+    }
+  
+    if (user.provider?.image) {
+      user.provider.image = baseUrl + user.provider.image.replace(/^\/+/, '');
+    }
+  
+    return user;
+  }
+  
 
   async getUserById(id: string): Promise<User> {
     const user = await this.userRepo.findOneBy({ id });
@@ -116,17 +160,24 @@ export class UserService {
     const updateData: DeepPartial<User> = {
       
     };
-    // Merge existing user with updated data
+    
     const updatedUser = this.userRepo.merge(user, updateData);
     
     return this.userRepo.save(updatedUser);
   }
 
-  async deleteUser(id: string): Promise<void> {
-    const result = await this.userRepo.delete(id);
-    
-    if (result.affected === 0) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+  
+  async deleteUserById(id: string): Promise<void> {
+    const user = await this.userRepo
+    .createQueryBuilder('user')
+    .leftJoinAndSelect('user.student', 'student')
+    .leftJoinAndSelect('user.provider', 'provider')
+    .where('user.id = :id', { id })
+    .getOne();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
     }
+  
+    await this.userRepo.remove(user);
   }
 }

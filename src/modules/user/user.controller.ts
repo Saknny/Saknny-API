@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthenticationGuard } from '../../libs/guards/strategy.guards/jwt.guard';
@@ -21,7 +22,14 @@ import { Auth } from '@src/libs/decorators/auth.decorator';
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
+  @Get(':id')
+  async getUserById(@Param('id') id: string) {
+    const user = await this.userService.getUserWithDetailsById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
   @Get(':email')
   @Serialize(UserIdResponse)
   async getUserIdByEmail(@Param() { email }: UserEmailInput) {
@@ -45,24 +53,37 @@ export class UserController {
     return await this.userService.deleteCurrentUser(user);
   }
 
+
   @Get()
-  async getAllUsers(){
-    return this.userService.getAllUsers();
+  async getAllUsers() {
+    const users = await this.userService.getAllUsersWithDetails();
+    return users.map(user => ({
+      id: user.id,
+      email: user.verifiedEmail,
+      role: user.role,
+      isBlocked: user.isBlocked,
+      favLang: user.favLang,
+      lastSeenAt: user.lastSeenAt,
+      student: user.student ?? null,
+      provider: user.provider ?? null,
+    }));
   }
-  @Get(":id")
-  async getUser(@Param("id") id :string){
-    return this.userService.getUserById(id);
-  }
+
+
 
   @Patch(":id")
   async updateUser(@Param("id") id :string , @Body() user : UpdateUserInfo){
     return this.userService.updateUser(id , user);
   }
 
-  @Delete(":id")
-  async deleteUser(@Param("id") id :string){
-  return this.userService.deleteUser(id)
-  }
+
+  @Delete(':id')
+async deleteUser(@Param('id') id: string): Promise<{ message: string }> {
+  await this.userService.deleteUserById(id);
+  return { message: 'User and related entity deleted successfully.' };
+}
+
+  
 
 
 }

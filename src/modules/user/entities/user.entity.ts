@@ -79,10 +79,12 @@ export class User extends BaseModel {
   @OneToMany(() => Otp, (otp) => otp.user)
   otps: Otp[];
 
-  @OneToOne(() => Provider, (org) => org.user, { eager: true })
+  @OneToOne(() => Provider, (org) => org.user, { eager: true , cascade: true,
+    onDelete: 'CASCADE',})
   provider: Provider;
 
-  @OneToOne(() => Student, (Student) => Student.user, { eager: true })
+  @OneToOne(() => Student, (Student) => Student.user, { eager: true , cascade: true,
+    onDelete: 'CASCADE',})
   student: Student;
 
   @OneToMany(() => ChatUser, (chatUser) => chatUser.user)
