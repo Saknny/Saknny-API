@@ -45,7 +45,7 @@ export class CreateApartmentDto {
   standFan: boolean;
 
   @IsBoolean()
-  Iron: boolean;
+  iron: boolean;
 
   @IsBoolean()
   wifi: boolean;
