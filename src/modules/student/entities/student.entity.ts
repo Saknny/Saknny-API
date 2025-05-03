@@ -8,6 +8,7 @@ import { DeepPartial } from '../../../libs/types/deep-partial.type';
 import { User } from '../../user/entities/user.entity';
 import { Review } from '@src/modules/review/entities/review.entity';
 import { Report } from '@src/modules/report/entities/report.entity';
+import { PendingRequest } from '@src/modules/request/entities/pendingRequest.entity';
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
@@ -87,4 +88,8 @@ export class Student extends BaseModel {
 
   @OneToMany(() => Report, (report) => report.student)
   reports: Report[];
+
+  @OneToMany(() => PendingRequest, (request) => request.sentByStudent)
+  requests: PendingRequest[];
+
 }

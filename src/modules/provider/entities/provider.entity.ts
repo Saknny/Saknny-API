@@ -67,4 +67,8 @@ export class Provider extends BaseModel {
   @OneToMany(() => ProviderSubscription, (sub) => sub.provider)
   subscriptions: ProviderSubscription[];
 
+  @OneToMany(() => PendingRequest, (request) => request.sentByProvider)
+  requests: PendingRequest[];
+
+
 }

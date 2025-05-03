@@ -7,6 +7,7 @@ import { Type } from "./enum/type.enum";
 import { PendingDocument } from "./pendingDocument.entity";
 import { RequestItem } from "./requestItem.entity";
 import { EntityType } from "./enum/entityType.enum";
+import { Student } from "@src/modules/student/entities/student.entity";
 
 @Entity()
 export class PendingRequest extends BaseModel {
@@ -55,6 +56,13 @@ export class PendingRequest extends BaseModel {
         nullable: true,
     })
     items?: RequestItem[];
+
+    @ManyToOne(() => Provider, (provider) => provider.requests)
+    sentByProvider: Provider;
+    
+
+    @ManyToOne(() => Student, (student) => student.requests)
+    sentByStudent: Student;
 
 
 }

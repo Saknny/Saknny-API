@@ -204,12 +204,16 @@ export class PendingRequestService {
 
   async getPendingRequests() {
     const requests = await this.pendingRequestRepo
-      .createQueryBuilder('request')
-      .leftJoinAndSelect('request.items', 'items')
-      .leftJoinAndSelect('items.request', 'requestItemRequest')
-      .leftJoinAndSelect('items.images', 'images')
-      .where('request.status = :status', { status: Status.PENDING })
-      .getMany();
+    .createQueryBuilder('request')
+    .leftJoinAndSelect('request.items', 'items')
+    .leftJoinAndSelect('items.request', 'requestItemRequest')
+    .leftJoinAndSelect('items.images', 'images')
+    .leftJoinAndSelect('request.sentByProvider', 'provider')
+    .leftJoinAndSelect('provider.user', 'providerUser')
+    .leftJoinAndSelect('request.sentByStudent', 'student')
+    .leftJoinAndSelect('student.user', 'studentUser')
+    .where('request.status = :status', { status: Status.PENDING })
+    .getMany();
 
     const baseUrl = 'http://45.88.223.182:4000';
     const uploadPath = '/uploads';
