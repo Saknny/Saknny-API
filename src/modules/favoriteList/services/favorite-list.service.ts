@@ -118,7 +118,7 @@ export class FavoriteService {
     .getOne();
 
   if (!favorite) {
-    return {}; // Return empty array if no list exists
+    return {favorites: []}; // Return empty array if no list exists
   }
 
   // 2. Get apartments using QueryBuilder
@@ -129,7 +129,8 @@ export class FavoriteService {
     .take(pagination.limit)
     .skip((pagination.page - 1) * pagination.limit)
     .getMany();
-     // 3. Extract apartment IDs from favorite entries
+
+    
   const favoriteApartmentIds = favoriteApartments.map(fa => fa.apartment.id);
 
   // 4. Create the markFavorite function
