@@ -4,9 +4,9 @@ export class CreateRentalRequestDto {
   @IsString()
   bedId: string;
 
-  @IsNumber()
-  @IsPositive()
-  price: number;
+  // @IsNumber()
+  // @IsPositive()
+  // price: number;
 
   @IsNumber()
   @Min(1, { message: 'Duration must be at least 1 month' })

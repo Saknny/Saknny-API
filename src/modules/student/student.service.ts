@@ -51,6 +51,7 @@ export class StudentService {
     student.linkedin = completeProfileDto.linkedin;
     student.phone = completeProfileDto.phone;
     student.university = completeProfileDto.university;
+    student.gender=completeProfileDto.gender;
 
     return this.studentRepo.save(student);
   }

@@ -27,7 +27,6 @@ export class RentalRequestController {
     return this.rentalRequestService.createRequest(
       user.student.id,
       body.bedId,
-      body.price,
       body.duration,
     );
   }
@@ -57,14 +56,14 @@ export class RentalRequestController {
     return this.rentalRequestService.renewRequest(id, body.duration);
   }
 
-  @Get('student/:studentId')
+  @Get('student')
   async getRequestsForStudent(@currentUser() user: User) {
     if (!user?.student) throw new NotFoundException('Student not found');
 
     return this.rentalRequestService.getRequestsForStudent(user.student.id);
   }
 
-  @Get('provider/:providerId')
+  @Get('provider')
   async getRequestsForProvider(@currentUser() user: User) {
     if (!user?.provider) throw new NotFoundException('Provider not found');
 

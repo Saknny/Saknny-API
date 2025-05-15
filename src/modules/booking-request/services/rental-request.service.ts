@@ -31,7 +31,6 @@ export class RentalRequestService {
   async createRequest(
     studentId: string,
     bedId: string,
-    price: number,
     duration: number,
   ) {
     const bed = await this.bedRepo.findOne({ id: bedId }, [
@@ -58,7 +57,7 @@ export class RentalRequestService {
     return await this.rentalRequestRepo.createOne({
       student,
       bed,
-      price,
+      price:bed.price,
       duration,
       status: RentalStatusEnum.PENDING,
     });
@@ -84,7 +83,7 @@ export class RentalRequestService {
     bed.status = 'RESERVED';
     bed.student = request.student;
     await this.bedRepo.save(bed);
-
+    const room = bed.room;
     const apartment = bed.room.apartment;
 
     // If first approval and gender is not set, set it
@@ -92,7 +91,20 @@ export class RentalRequestService {
       apartment.gender = request.student.gender;
       await this.apartmentRepo.save(apartment);
     }
+    
+    // ✅ Update ROOM status
+    const roomBeds = await this.bedRepo.find({ where: { room: { id: room.id } } });
 
+    const allReserved = roomBeds.every((b) => b.status === 'RESERVED');
+    const someReserved = roomBeds.some((b) => b.status === 'RESERVED');
+
+    if (allReserved) {
+      room.status = 'BOOKED';
+    } else if (someReserved) {
+      room.status = 'PARTIALLY_BOOKED';
+    }
+
+    await this.roomRepo.save(room);
     // If all beds are reserved, mark apartment as booked
     const allBeds = await this.bedRepo.find({ where: { room: { apartment } } });
     if (allBeds.every((b) => b.status === 'RESERVED')) {
@@ -127,11 +139,29 @@ export class RentalRequestService {
     request.status = RentalStatusEnum.CANCELED;
     await this.rentalRequestRepo.save(request);
 
+    
     const bed = request.bed;
+    const room = bed.room;
     bed.status = 'AVAILABLE';
     bed.student = null;
     await this.bedRepo.save(bed);
 
+
+    //  Update ROOM status
+    const roomBeds = await this.bedRepo.find({ where: { room: { id: room.id } } });
+
+    const roomAllAvailable = roomBeds.every((b) => b.status === 'AVAILABLE');
+    const roomSomeReserved = roomBeds.some((b) => b.status === 'RESERVED');
+
+    if (roomAllAvailable) {
+      room.status = 'UNBOOKED';
+    } else if (roomSomeReserved) {
+      room.status = 'PARTIALLY_BOOKED';
+    } else {
+      room.status = 'BOOKED';
+    }
+
+    await this.roomRepo.save(room);
     // Check if apartment should be unbooked
     const apartment = bed.room.apartment;
     const allBeds = await this.bedRepo.find({ where: { room: { apartment } } });

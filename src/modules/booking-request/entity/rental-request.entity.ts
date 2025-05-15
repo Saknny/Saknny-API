@@ -27,4 +27,11 @@ export class RentalRequest extends BaseModel {
 
   @Column({ type: 'enum', enum: RentalStatusEnum })
   status: RentalStatusEnum;
+
+  @Column({ type: 'date', nullable: true })
+  startDate: Date;
+
+  @Column({ type: 'date', nullable: true })
+  endDate: Date;
+
 }
