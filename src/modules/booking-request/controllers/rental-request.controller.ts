@@ -69,4 +69,16 @@ export class RentalRequestController {
 
     return this.rentalRequestService.getRequestsForProvider(user.provider.id);
   }
+    @Get('provider/:id')
+  async getRequestForProviderById(
+    @currentUser() user: User,
+    @Param('id') requestId: string,
+  ) {
+    if (!user?.provider) {
+      throw new NotFoundException('Provider not found');
+    }
+
+    return this.rentalRequestService.getRequestForProviderById(user.provider.id, requestId);
+  }
+
 }

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectBaseRepository } from '@src/libs/decorators/inject-base-repository.decorator';
 import { RentalRequest } from '../entity/rental-request.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
@@ -215,4 +215,32 @@ export class RentalRequestService {
       relations: ['student', 'bed', 'bed.room', 'bed.room.apartment'],
     });
   }
+  // Get one request for a provider's apartments
+  async getRequestForProviderById(providerId: string, requestId: string) {
+  const apartments = await this.apartmentRepo.find({
+    where: { provider: { id: providerId } },
+    relations: ['rooms', 'rooms.beds'],
+  });
+
+    const bedIds = apartments.flatMap((apartment) =>
+      apartment.rooms.flatMap((room) => room.beds.map((bed) => bed.id)),
+    );
+
+    const request = await this.rentalRequestRepo
+    .createQueryBuilder('request')
+    .leftJoinAndSelect('request.student', 'student')
+    .leftJoinAndSelect('request.bed', 'bed')
+    .leftJoinAndSelect('bed.room', 'room')
+    .leftJoinAndSelect('room.apartment', 'apartment')
+    .where('request.id = :requestId', { requestId })
+    .andWhere('bed.id IN (:...bedIds)', { bedIds })
+    .getOne();
+
+    if (!request) {
+      throw new NotFoundException('Request not found or does not belong to this provider');
+    }
+
+    return request;
+  }
+
 }
