@@ -297,6 +297,7 @@ export class PendingRequestService {
       major: profileData?.major ?? null,
       lastName: profileData?.lastName ?? null,
       firstName: profileData?.firstName ?? null,
+      bio: profileData?.bio ?? null,
     };
 
     let request = await this.pendingRequestRepo

@@ -24,6 +24,7 @@ import { PendingRequestService } from '../request/pendingRequest.service';
 import { fileUploadInterceptor } from './interceptors/document.interceptor';
 import { GetApartmentsDto } from './dto/get-apartments.dto';
 import { ApartmentLocation } from './enums/location.enum';
+import { SearchApartmentsDto } from './dto/search-apartments.dto';
 
 @Controller('apartment')
 export class ApartmentController {
@@ -75,6 +76,11 @@ export class ApartmentController {
     return this.pendingRequestService.updateApartmentRequest(id, user.id);
   }
 
+  // search endpoint 
+  @Get('search')
+  async searchApartments(@Query() query: SearchApartmentsDto) {
+    return this.apartmentService.searchApartments(query);
+  }
   @Get('blocked-Apartments')
   async getBlockedApartments() {
     console.log('entered!');
@@ -103,6 +109,13 @@ export class ApartmentController {
     return this.apartmentService.updateLastViewed(id);
   }
 
+  @Get('locations')
+  getLocations() {
+    const locations = this.apartmentService.getApartmentLocations();
+    return {
+       locations,
+    };
+}
   // TODO: we need one endpoint with different filters and sort
   //filter by price
   @Get('filter-by-bed-price')
@@ -162,4 +175,7 @@ export class ApartmentController {
   ) {
     return this.apartmentService.publishApartment(user.id, id);
   }
+
+  
+
 }

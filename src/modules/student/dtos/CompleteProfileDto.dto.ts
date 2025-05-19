@@ -66,4 +66,8 @@ export class CompleteProfileDto {
   @IsOptional()
   @IsString()
   gender?:string;
+
+  @IsOptional()
+  @IsString()
+  bio?:string;
 }

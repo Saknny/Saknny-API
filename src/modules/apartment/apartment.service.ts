@@ -7,7 +7,7 @@ import { Room } from '../room/entities/room.entity/room.entity';
 import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
-import { Not, Repository, IsNull, FindManyOptions } from 'typeorm';
+import { Not, Repository, IsNull, FindManyOptions, Brackets } from 'typeorm';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.dto';
@@ -19,6 +19,7 @@ import { ProviderSubscriptionService } from '../provider-subscription/provider-s
 import { Student } from '../student/entities/student.entity';
 import { ApartmentLocation } from './enums/location.enum';
 import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.entity';
+import { SearchApartmentsDto } from './dto/search-apartments.dto';
 
 @Injectable()
 export class ApartmentService {
@@ -357,5 +358,66 @@ export class ApartmentService {
       .where('apartment.status = :status', { status: 'BLOCKED' })
       .getMany();
     return blockedApartments;
+  }
+
+
+async searchApartments(query: SearchApartmentsDto) {
+  const { page, limit, sortBy, sortOrder, ...filters } = query;
+  const offset = (page - 1) * limit;
+
+  const qb = this.apartmentRepository
+    .createQueryBuilder('apartment')
+    .leftJoinAndSelect('apartment.rooms', 'room')
+    .leftJoinAndSelect('room.beds', 'bed');
+
+  // Apply filters (existing logic)
+  if (filters.locationEnum) {
+    qb.andWhere('apartment.locationEnum = :location', { 
+      location: filters.locationEnum 
+    });
+  }
+
+  if (filters.text) {
+    const likeText = `%${filters.text}%`;
+    const trimmedText = filters.text.trim();
+    qb.andWhere(
+      new Brackets((subQb) => {
+        subQb
+          .where('apartment.title ILIKE :text', { text: likeText })
+          .orWhere('apartment.descriptionEn ILIKE :text', { text: likeText })
+          .orWhere('apartment.descriptionAr ILIKE :text', { text: likeText })
+          .orWhere('room.descriptionEn ILIKE :text', { text: likeText })
+          .orWhere('room.descriptionAr ILIKE :text', { text: likeText })
+          .orWhere('bed.descriptionEn ILIKE :text', { text: likeText })
+          .orWhere('bed.descriptionAr ILIKE :text', { text: likeText })
+          // Gender exact match (case-insensitive)
+          .orWhere('LOWER(apartment.gender) = LOWER(:trimmedText)', { trimmedText });
+      }),
+    );
+  }
+
+  if (filters.minPrice !== undefined) {
+    qb.andWhere('bed.price >= :minPrice', { minPrice: filters.minPrice });
+  }
+
+  if (filters.maxPrice !== undefined) {
+    qb.andWhere('bed.price <= :maxPrice', { maxPrice: filters.maxPrice });
+  }
+  qb.orderBy(`apartment.${sortBy}`, sortOrder); 
+  
+  qb.skip(offset).take(limit);
+
+  const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+
+  return {
+    data: apartments,
+  };
+}
+
+  getApartmentLocations(): string[] {
+    // Extract enum values while preserving order
+    return Object.values(ApartmentLocation).filter(
+      (value) => typeof value === 'string'
+    ) as string[];
   }
 }

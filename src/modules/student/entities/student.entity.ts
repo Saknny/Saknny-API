@@ -51,6 +51,9 @@ export class Student extends BaseModel {
   @Column({ nullable: true })
   major: string;
 
+  @Column({ nullable: true })
+  bio: string;
+
   @Column({ type: 'boolean', default: false, nullable: true })
   smoking: boolean;
 
