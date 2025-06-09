@@ -22,9 +22,11 @@ import { PendingRequestService } from '../request/pendingRequest.service';
 
 @Controller('beds')
 export class BedController {
-  constructor(private readonly bedService: BedService,
+  constructor(
+    private readonly bedService: BedService,
     @Inject(forwardRef(() => PendingRequestService))
-    private readonly pendingRequestService: PendingRequestService,) { }
+    private readonly pendingRequestService: PendingRequestService,
+  ) {}
 
   @Post(':id/:roomRecordId/create')
   async createBed(
@@ -32,10 +34,12 @@ export class BedController {
     @Param('roomRecordId') roomRecordId: string,
     @Body() createBedDto: CreateBedDto,
   ) {
-
-    return this.pendingRequestService.addBedRequest(apartmentRequestId, roomRecordId, createBedDto);
+    return this.pendingRequestService.addBedRequest(
+      apartmentRequestId,
+      roomRecordId,
+      createBedDto,
+    );
   }
-
 
   @Patch(':id/updateInfo')
   async updateBedInfo(
@@ -44,7 +48,6 @@ export class BedController {
   ) {
     return this.bedService.updateBed(bedId, updateBedDto);
   }
-
 
   @Post(':id/:requestId/updateRequest')
   async updateBedRequest(

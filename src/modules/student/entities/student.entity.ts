@@ -9,6 +9,7 @@ import { User } from '../../user/entities/user.entity';
 import { Review } from '@src/modules/review/entities/review.entity';
 import { Report } from '@src/modules/report/entities/report.entity';
 import { PendingRequest } from '@src/modules/request/entities/pendingRequest.entity';
+import { RoomRentalRequest } from '@src/modules/booking-request/entity/room-rental-request.entity';
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
@@ -86,6 +87,9 @@ export class Student extends BaseModel {
   @OneToMany(() => RentalRequest, (request) => request.student)
   rentalRequests: RentalRequest[];
 
+  @OneToMany(() => RoomRentalRequest, (request) => request.student)
+  roomRentalRequests: RoomRentalRequest[];
+
   @OneToMany(() => Review, (review) => review.student)
   reviews: Review[];
 
@@ -94,5 +98,4 @@ export class Student extends BaseModel {
 
   @OneToMany(() => PendingRequest, (request) => request.sentByStudent)
   requests: PendingRequest[];
-
 }
