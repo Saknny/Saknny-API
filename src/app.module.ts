@@ -35,6 +35,8 @@ import { UserModule } from './modules/user/user.module';
 import { BookingRequestModule } from './modules/booking-request/booking-request.module';
 import { ReviewModule } from './modules/review/review.module';
 import { ReportModule } from './modules/report/report.module';
+import { UniversityModule } from './modules/university/university.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -91,6 +93,7 @@ import { ReportModule } from './modules/report/report.module';
     ProviderSubscriptionModule,
     ScheduleModule.forRoot(),
     BookingRequestModule,
+    UniversityModule
   ],
   controllers: [],
   providers: [
