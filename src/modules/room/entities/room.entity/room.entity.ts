@@ -12,6 +12,7 @@ import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
 import { Apartment } from '@src/modules/apartment/entities/apartment.entity/apartment.entity';
 import { BaseModel } from '@src/libs/database/base.model';
 import { DeepPartial } from '@src/libs/types/deep-partial.type';
+import { RoomRentalRequest } from '@src/modules/booking-request/entity/room-rental-request.entity';
 
 @Entity()
 export class Room extends BaseModel {
@@ -34,7 +35,6 @@ export class Room extends BaseModel {
   })
   apartment: Apartment;
 
-
   @Column('text')
   descriptionEn: string;
 
@@ -56,7 +56,6 @@ export class Room extends BaseModel {
   @Column({ default: 'UNBOOKED' })
   status: string;
 
-
   @Column()
   wardrobe: boolean;
 
@@ -66,18 +65,15 @@ export class Room extends BaseModel {
   @Column()
   nightStand: boolean;
 
-
   @Column()
   ceilingFan: boolean;
 
-
-
-
-  @Column({nullable:true})
+  @Column({ nullable: true })
   curtains: boolean;
 
-
-  @Column({nullable:true})
+  @Column({ nullable: true })
   balcony: boolean;
 
+  @OneToMany(() => RoomRentalRequest, (request) => request.room)
+  rentalRequests: RoomRentalRequest[];
 }

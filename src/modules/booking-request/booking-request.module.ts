@@ -7,12 +7,21 @@ import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { RentalRequestController } from './controllers/rental-request.controller';
 import { RentalRequestService } from './services/rental-request.service';
 import { Student } from '../student/entities/student.entity';
+import { RoomRentalRequest } from './entity/room-rental-request.entity';
+import { RoomRentalController } from './controllers/room-rental-request.controller';
 
 @Module({
   imports: [
-    DatabaseModule.forFeature([RentalRequest, Apartment, Room, Bed, Student]),
+    DatabaseModule.forFeature([
+      RentalRequest,
+      RoomRentalRequest,
+      Apartment,
+      Room,
+      Bed,
+      Student,
+    ]),
   ],
-  controllers: [RentalRequestController],
+  controllers: [RentalRequestController, RoomRentalController],
   providers: [RentalRequestService],
   exports: [RentalRequestService],
 })
