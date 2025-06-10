@@ -1,34 +1,41 @@
-import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { MiddlewareConsumer, Module, ValidationPipe } from '@nestjs/common';
-import { StudentModule } from './modules/student/student.module';
-import { SessionModule } from './modules/session/session.module';
-import { NotificationModule } from './modules/notification/notification.module';
-import { SecurityGroupModule } from './modules/security-group/security-group.module';
-import { HttpExceptionFilter } from './libs/application/exceptions/exception-filter';
+import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
+import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DatabaseModule } from './configs/database/database.module';
 import { databaseConfig, dataSource } from './configs/database/postgres.config';
-import { addTransactionalDataSource } from 'typeorm-transactional';
-import { ConfigModule } from '@nestjs/config';
+import { HttpExceptionFilter } from './libs/application/exceptions/exception-filter';
 import { LoggerModule } from './libs/application/logger/logger.module';
-import { QueueModule } from './libs/queue/queue.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { ResponseInterceptor } from './libs/interceptors/response.interceptor';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
-import { ProviderModule } from './modules/provider/provider.module';
-import { UserModule } from './modules/user/user.module';
-import { OtpModule } from './modules/otp/otp.module';
-import { PubSubModule } from './libs/redis-pubsub/pubsub.module';
-import { ChatModule } from './modules/chat/chat.module';
-import { PaymentModule } from './modules/payment/payment.module';
 import { UploaderModule } from './libs/application/uploader/uploader.module';
-import { ProfileModule } from './modules/profile/profile.module';
-import { ContextAuthService } from './libs/application/context/context-auth.service';
-import { AdminModule } from './modules/admin/admin.module';
+import { ResponseInterceptor } from './libs/interceptors/response.interceptor';
 import { AuthMiddleware } from './libs/middlewares/auth.middleware';
-import { BedModule } from './modules/bed/bed.module';
-import { RoomModule } from './modules/room/room.module';
+import { QueueModule } from './libs/queue/queue.module';
+import { PubSubModule } from './libs/redis-pubsub/pubsub.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { ApartmentModule } from './modules/apartment/apartment.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { BedModule } from './modules/bed/bed.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { FavoriteModule } from './modules/favoriteList/favorite.module';
+import { ImageModule } from './modules/image/image.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { OtpModule } from './modules/otp/otp.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { ProfileModule } from './modules/profile/profile.module';
+import { ProviderSubscriptionModule } from './modules/provider-subscription/provider-subscription.module';
+import { ProviderModule } from './modules/provider/provider.module';
+import { PendingRequestModule } from './modules/request/pendingRequest.module';
+import { RoomModule } from './modules/room/room.module';
+import { SecurityGroupModule } from './modules/security-group/security-group.module';
+import { SessionModule } from './modules/session/session.module';
+import { StudentModule } from './modules/student/student.module';
+import { SubscriptionPlanModule } from './modules/subscription-plan/subscription-plan.module';
+import { UserModule } from './modules/user/user.module';
+import { BookingRequestModule } from './modules/booking-request/booking-request.module';
+import { ReviewModule } from './modules/review/review.module';
+import { ReportModule } from './modules/report/report.module';
+import { UniversityModule } from './modules/university/university.module';
 
 @Module({
   imports: [
@@ -37,10 +44,13 @@ import { ApartmentModule } from './modules/apartment/apartment.module';
       useFactory: () => databaseConfig,
       async dataSourceFactory(options) {
         if (!options) throw new Error('Invalid options passed');
+        if (!dataSource.isInitialized) {
+                await dataSource.initialize();
+        }
         return addTransactionalDataSource(dataSource as any);
       },
     }),
-    QueueModule.register(),
+    QueueModule,
     AuthModule,
     ProviderModule,
     LoggerModule,
@@ -59,6 +69,8 @@ import { ApartmentModule } from './modules/apartment/apartment.module';
     RoomModule,
     BedModule,
     ApartmentModule,
+    ReviewModule,
+    ReportModule,
     // ServeStaticModule.forRoot({
     //   rootPath: join(process.cwd(), 'public'),
     //   serveStaticOptions: {
@@ -71,6 +83,17 @@ import { ApartmentModule } from './modules/apartment/apartment.module';
     BedModule,
     RoomModule,
     ApartmentModule,
+    PendingRequestModule,
+    FavoriteModule,
+    ImageModule,
+    SubscriptionPlanModule,
+    ProviderSubscriptionModule,
+    PaymentModule,
+    SubscriptionPlanModule,
+    ProviderSubscriptionModule,
+    ScheduleModule.forRoot(),
+    BookingRequestModule,
+    UniversityModule
   ],
   controllers: [],
   providers: [

@@ -51,9 +51,18 @@ export class OtpService {
   }
 
   async verifyOtpOrError(verifyOtpInput: VerifyOtpInput, shouldDelete = false) {
-    const { userId, otp, useCase } = verifyOtpInput;
+    const { email, otp, useCase } = verifyOtpInput;
+    const user = await this.userRepo
+    .createQueryBuilder("user")
+    .where("user.verifiedEmail = :email OR user.unVerifiedEmail = :email", { email })
+    .getOne();
+  
+    if (!user) {
+      throw new BaseHttpException(ErrorCodeEnum.NOT_FOUND);
+    }
+    const userId=user.id;
     const storedOtp = await this.otpRepo.findOne({
-      userId,
+      userId:user.id,
       useCase,
       expiresAt: MoreThan(new Date(Date.now())),
     });

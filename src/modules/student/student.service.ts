@@ -4,7 +4,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Student } from './entities/student.entity';
 import { CompleteProfileDto } from './dtos/CompleteProfileDto.dto';
 import { UpdateStudentInput } from './dtos/inputs/update-student.input';
-
+import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum';
+import { Status } from '../request/entities/enum/status.enum';
 
 @Injectable()
 export class StudentService {
@@ -17,7 +18,7 @@ export class StudentService {
     if (!student) {
       throw new NotFoundException('student not found');
     }
-    student.isReviewed = true;
+
     await this.studentRepo.save(student);
     return student;
   }
@@ -31,13 +32,13 @@ export class StudentService {
     if (!student) {
       throw new Error('Student not found');
     }
-
-    if (completeProfileDto.idCardImage) {
-      student.idCardImage = completeProfileDto.idCardImage;
+    student.status = Status.APPROVED;
+    if (completeProfileDto.idCard) {
+      student.idCard = completeProfileDto.idCard;
     }
 
-    if (completeProfileDto.profilePicture) {
-      student.profilePictureUrl = completeProfileDto.profilePicture;
+    if (completeProfileDto.image) {
+      student.image = completeProfileDto.image;
     }
 
     student.major = completeProfileDto.major;
@@ -50,16 +51,13 @@ export class StudentService {
     student.linkedin = completeProfileDto.linkedin;
     student.phone = completeProfileDto.phone;
     student.university = completeProfileDto.university;
-    student.isReviewed = false;
-    student.isTrusted = false;
+    student.gender=completeProfileDto.gender;
+    student.bio=completeProfileDto.bio;
+
     return this.studentRepo.save(student);
   }
 
-  async updateStudent(
-    userId: string,
-    attrs: Partial<Student>
-  ) {
-
+  async updateStudent(userId: string, attrs: Partial<Student>) {
     const student = await this.studentRepo.findOne({ userId });
 
     if (!student) {
@@ -75,13 +73,11 @@ export class StudentService {
     if (attrs.linkedin) {
       student.linkedin = attrs.linkedin;
     }
-    if (attrs.idCardImage) {
-      student.idCardImage = attrs.idCardImage;
-      student.isReviewed = false;
-      student.isTrusted = false;
+    if (attrs.idCard) {
+      student.idCard = attrs.idCard;
     }
-    if (attrs.profilePictureUrl) {
-      student.profilePictureUrl = attrs.profilePictureUrl;
+    if (attrs.image) {
+      student.image = attrs.image;
     }
     if (attrs.gender) {
       student.gender = attrs.gender;
@@ -118,21 +114,62 @@ export class StudentService {
     return student;
   }
 
-  async getUnReviewedStudents(): Promise<Student[]> {
-    return this.studentRepo.find({
-      where: {
-        isReviewed: false
-      },
-    });
-  }
+  async getStudent(id: string) {
+    const student = await this.studentRepo.findOne(
+      { id, status: Status.APPROVED },
+      ['user'],
+    );
 
-  async updateStudentApproval(id: string, isTrusted: boolean): Promise<Student> {
-    const student = await this.studentRepo.findOneBy({ id });
     if (!student) {
-      throw new NotFoundException(`student not found`);
+      throw new NotFoundException('student not found');
     }
-    student.isTrusted = isTrusted;
-    return this.studentRepo.save(student);
+
+    return student;
   }
 
+  async getStudentBoard(id: string) {
+    const student = await this.studentRepo.findOne({ id }, ['user']);
+
+    if (!student) {
+      throw new NotFoundException('student not found');
+    }
+
+    return student;
+  }
+
+  async updateCard(userId: string, idCard: string) {
+    const student = await this.studentRepo.findOneBy({ userId });
+    if (!student) {
+      throw new NotFoundException('student not found');
+    }
+    student.idCard = idCard;
+    await this.studentRepo.save(student);
+
+  }
+
+  async getStudentProfile(userId: string) {
+    const student = await this.studentRepo
+      .createQueryBuilder('student') 
+      .leftJoinAndSelect('student.user', 'user')  
+      .leftJoinAndSelect('student.bed', 'bed')  
+      .leftJoinAndSelect('student.favorites', 'favorites') 
+      .leftJoinAndSelect('student.rentalRequests', 'rentalRequests') 
+      .leftJoinAndSelect('student.reviews', 'reviews')  
+      .leftJoinAndSelect('student.reports', 'reports')  
+      .where('student.userId = :userId', { userId }) 
+      .getOne();  
+
+    if (!student) {
+      throw new NotFoundException(`Student with ID ${userId} not found`);
+    }
+
+    
+    const baseUrl ='http://45.88.223.182:4000';
+    const studentDto = {
+      ...student,  
+      image: student.image ? baseUrl + student.image : null, 
+    };
+
+    return studentDto;
+  }
 }

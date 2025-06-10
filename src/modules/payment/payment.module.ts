@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
-import { PaymentService } from './payment.service';
+import { StripeService } from './stripe.service';
 import { PaymentController } from './payment.controller';
-import { HttpModule } from '@nestjs/axios';
-import { DatabaseModule } from '../../configs/database/database.module';
-import { Payment } from './entities/payment.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Payment } from './payment.entity/payment.entity';
+import { StripeWebhookService } from './stripe-webhook.service';
+import { ProviderSubscription } from '../provider-subscription/provider-subscription.entity/provider-subscription.entity';
 
 @Module({
-  imports: [HttpModule, DatabaseModule.forFeature([Payment])],
+  imports: [TypeOrmModule.forFeature([Payment , ProviderSubscription])],
   controllers: [PaymentController],
-  providers: [PaymentService],
+  providers: [StripeService,StripeWebhookService],
+  exports: [StripeService,StripeWebhookService],
 })
 export class PaymentModule {}

@@ -3,22 +3,54 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Provider } from './entities/provider.entity';
 import { CompleteProviderProfileInput } from './dtos/inputs/complete-profile.input';
+import { Apartment } from '../apartment/entities/apartment.entity/apartment.entity';
+import { InjectBaseRepository } from '@src/libs/decorators/inject-base-repository.decorator';
+import { BaseRepository } from '@src/libs/types/base-repository';
+import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum';
+import { Status } from '../request/entities/enum/status.enum';
 
 @Injectable()
 export class ProviderService {
   constructor(
-    @InjectRepository(Provider)
-    private readonly providerRepository: Repository<Provider>,
-  ) { }
+    @InjectBaseRepository(Provider)
+    private readonly providerRepository: BaseRepository<Provider>,
+    @InjectRepository(Apartment)
+    private readonly apartmentRepository: Repository<Apartment>,
+  ) {}
 
   async getById(id: string) {
     const provider = await this.providerRepository.findOneBy({ id });
+
     if (!provider) {
       throw new NotFoundException('provider not found');
     }
-    provider.isReviewed = true;
+
     await this.providerRepository.save(provider);
-    return provider
+
+    return provider;
+  }
+
+  async provider(id: string) {
+    const provider = await this.providerRepository.findOne(
+      { id, status: Status.APPROVED },
+      ['user'],
+    );
+
+    if (!provider) {
+      throw new NotFoundException('Provider not found');
+    }
+
+    return provider;
+  }
+
+  async providerBoard(id: string) {
+    const provider = await this.providerRepository.findOne({ id }, ['user']);
+
+    if (!provider) {
+      throw new NotFoundException('Provider not found');
+    }
+
+    return provider;
   }
 
   async updateProfile(userId: string, attrs: Partial<Provider>) {
@@ -26,6 +58,7 @@ export class ProviderService {
     if (!provider) {
       throw new NotFoundException('provider not found');
     }
+    provider.status = Status.APPROVED;
     if (attrs.facebook) {
       provider.facebook = attrs.facebook;
     }
@@ -37,8 +70,6 @@ export class ProviderService {
     }
     if (attrs.idCard) {
       provider.idCard = attrs.idCard;
-      provider.isReviewed = false;
-      provider.isTrusted = false;
     }
     if (attrs.image) {
       provider.image = attrs.image;
@@ -59,22 +90,29 @@ export class ProviderService {
     return this.providerRepository.save(provider);
   }
 
+  //provider list all his apartments
+  async getProviderApartments(userId: string): Promise<Apartment[]> {
+    const provider = await this.providerRepository
+      .createQueryBuilder('provider')
+      .leftJoinAndSelect('provider.apartments', 'apartments')
+      .leftJoinAndSelect('apartments.rooms', 'rooms')
+      .where('provider.userId = :userId', { userId })
+      .getOne();
 
-  async updateProviderApproval(id: string, isTrusted: boolean): Promise<Provider> {
-    const provider = await this.providerRepository.findOneBy({ id });
     if (!provider) {
-      throw new NotFoundException(`Provider not found`);
+      throw new NotFoundException('Provider not found');
     }
-    provider.isTrusted = isTrusted;
-    return this.providerRepository.save(provider);
+
+    return provider.apartments || [];
   }
 
-  async getUnReviewedProviders(): Promise<Provider[]> {
-    return this.providerRepository.find({
-      where: {
-        isReviewed: false
-      },
-    });
+  async updateCard(userId:string , idCard:string){
+    const provider = await this.providerRepository.findOneBy({ userId });
+    if (!provider) {
+      throw new NotFoundException('provider not found');
+    }
+    provider.idCard =idCard;
+    await this.providerRepository.save(provider);
+
   }
 }
-
