@@ -26,6 +26,8 @@ import { RequestItem } from "./entities/requestItem.entity";
 import { CreateRoomDto } from '../room/dto/create-room.dto/create-room.dto';
 import { CreateBedDto } from '../bed/dto/create-bed.dto/create-bed.dto';
 import { UpdateApartmentDto } from '../apartment/dto/update-apartment.dto/update-apartment.dto';
+import { ProfileCompleteEnum } from '../user/enums/profile-complete.enum';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class PendingRequestService {
@@ -58,6 +60,9 @@ export class PendingRequestService {
 
     @Inject(forwardRef(() => StudentService))
     private readonly studentService: StudentService,
+    
+@Inject(forwardRef(() => UserService))
+    private readonly userService: UserService
   ) { }
 
   async updateRequestApproval(body: RequestDto) {
@@ -391,8 +396,15 @@ export class PendingRequestService {
       .where('request.id = :id', { id: body.id })
       .getOne();
 
+      
     const item = request.items[0];
-
+    if (body.status === Status.REJECTED) {
+    await this.userService.updateProfileCompleteStatus(
+      request.userId,
+      ProfileCompleteEnum.UNVERIFIED
+    );
+    return; // Exit early
+  }
     switch (item.entityType) {
       case EntityType.PROVIDER:
         await this.providerService.updateProfile(request.userId, item.data);
@@ -401,6 +413,11 @@ export class PendingRequestService {
         await this.studentService.completeProfile(request.userId, item.data);
         break;
     }
+    // 3. Update user's profileComplete status to VERIFIED
+    await this.userService.updateProfileCompleteStatus(
+      request.userId,
+      ProfileCompleteEnum.VERIFIED
+    );
   }
 
   async ApproveCardRequest(body: RequestDto) {

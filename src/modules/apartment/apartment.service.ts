@@ -20,6 +20,7 @@ import { Student } from '../student/entities/student.entity';
 import { ApartmentLocation } from './enums/location.enum';
 import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.entity';
 import { SearchApartmentsDto } from './dto/search-apartments.dto';
+import { currentUserType } from '@src/libs/types/current-user.type';
 
 @Injectable()
 export class ApartmentService {
@@ -290,7 +291,7 @@ export class ApartmentService {
     };
   }
 
-  async getHomeData(studentId?: string) {
+  async getHomeData(studentId?: string, user?: currentUserType) {
     const numberOfApartments = await this.apartmentRepository.count();
 
     const numberOfBeds = await this.apartmentRepository
@@ -329,6 +330,13 @@ export class ApartmentService {
       }));
 
     return {
+      user: {
+      id: user?.id,
+      email: user?.verifiedEmail,
+      role: user?.role,
+      profileComplete: user?.profileComplete
+      // Add any other user fields you need
+    },
       numberOfApartments,
       numberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0,
       numberOfProviders,

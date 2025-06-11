@@ -22,6 +22,8 @@ import { EntityType } from '../request/entities/enum/entityType.enum';
 import { Type } from '../request/entities/enum/type.enum';
 import { cardUploadInterceptor } from './interceptors/card-upload.interceptor';
 import { fileUploadInterceptor } from './interceptors/file-upload.interceptor';
+import { ProfileCompleteEnum } from '../user/enums/profile-complete.enum';
+import { UserService } from '../user/user.service';
 
 @Controller('students')
 export class StudentController {
@@ -29,6 +31,8 @@ export class StudentController {
     private readonly studentService: StudentService,
     @Inject(forwardRef(() => PendingRequestService))
     private readonly pendingRequestService: PendingRequestService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
   ) { }
 
   @Patch('complete-profile')
@@ -57,6 +61,11 @@ export class StudentController {
     completeProfileDto.image = `/uploads/${files.image[0].filename}`;
   }
 
+  // Update profile status via UserService (not directly via repository)
+    await this.userService.updateProfileCompleteStatus(
+      id,
+      ProfileCompleteEnum.PENDING,
+    );
     return await this.pendingRequestService.CreateProfileRequest(
       id,
       EntityType.STUDENT,

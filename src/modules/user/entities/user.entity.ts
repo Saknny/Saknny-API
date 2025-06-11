@@ -21,6 +21,7 @@ import { Otp } from '../../otp/entities/otp.entity';
 import { Profile } from '../../profile/entities/profile.entity';
 import { SecurityGroup } from '../../security-group/entities/security-group.entity';
 import { UserRoleEnum } from '../enums/user.enum';
+import { ProfileCompleteEnum } from '../enums/profile-complete.enum';
 
 @Entity()
 export class User extends BaseModel {
@@ -52,6 +53,12 @@ export class User extends BaseModel {
 
   @Column({ enum: UserRoleEnum })
   role: UserRoleEnum;
+
+  @Column({
+    enum: ProfileCompleteEnum,
+    default: ProfileCompleteEnum.UNVERIFIED
+  })
+  profileComplete: ProfileCompleteEnum;
 
   @Column({ default: false })
   isBlocked?: boolean;

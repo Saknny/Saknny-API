@@ -10,6 +10,7 @@ import { Student } from '../student/entities/student.entity';
 import { Provider } from '../provider/entities/provider.entity';
 import { UserTransformer } from './transformer/user.transformer';
 import { UserRoleEnum } from './enums/user.enum';
+import { ProfileCompleteEnum } from './enums/profile-complete.enum';
 
 @Injectable()
 export class UserService {
@@ -179,5 +180,13 @@ export class UserService {
     }
   
     await this.userRepo.remove(user);
+  }
+
+
+  async updateProfileCompleteStatus(
+    userId: string,
+    status: ProfileCompleteEnum,
+  ): Promise<void> {
+    await this.userRepo.update(userId, { profileComplete: status });
   }
 }

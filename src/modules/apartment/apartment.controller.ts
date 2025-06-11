@@ -140,7 +140,7 @@ export class ApartmentController {
 
   @Get('/home')
   async getHomeData(@currentUser() user: currentUserType) {
-    return this.apartmentService.getHomeData(user?.student?.id);
+    return this.apartmentService.getHomeData(user?.student?.id, user);
   }
 
   @Get(':apartmentId')

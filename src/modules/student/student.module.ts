@@ -5,10 +5,13 @@ import { StudentController } from './student.controller';
 import { StudentService } from './student.service';
 import { StudentTransformer } from './transformer/student.transformer';
 import { PendingRequestModule } from '../request/pendingRequest.module';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [DatabaseModule.forFeature([Student]),
-  forwardRef(() => PendingRequestModule)],
+  forwardRef(() => PendingRequestModule),
+  forwardRef(() => UserModule),
+  ],
   controllers: [StudentController],
   providers: [StudentService, StudentTransformer],
   exports: [StudentService, StudentTransformer],
