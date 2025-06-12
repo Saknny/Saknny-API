@@ -78,8 +78,8 @@ export class ApartmentController {
 
   // search endpoint 
   @Get('search')
-  async searchApartments(@Query() query: SearchApartmentsDto) {
-    return this.apartmentService.searchApartments(query);
+  async searchApartments(@Query() query: SearchApartmentsDto,@currentUser() user: currentUserType) {
+    return this.apartmentService.searchApartments(query,user);
   }
   @Get('blocked-Apartments')
   async getBlockedApartments() {

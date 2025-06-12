@@ -302,7 +302,7 @@ export class RentalRequestService {
   async approveRoomRequest(requestId: string) {
     const request = await this.roomRentalRequestRepo.findOne(
       { id: requestId },
-      ['room', 'room.beds'],
+      ['room', 'room.beds','room.apartment'],
     );
 
     const anyBedReserved = request.room.beds.some(
@@ -317,12 +317,54 @@ export class RentalRequestService {
     request.status = RentalStatusEnum.ACCEPTED;
 
     // Reject all bed requests for this room
-    await this.rentalRequestRepo.update(
-      { bed: { room: { id: request.room.id } } },
-      { status: RentalStatusEnum.REJECTED },
+    await this.rentalRequestRepo
+    .createQueryBuilder()
+    .update()
+    .set({ status: RentalStatusEnum.REJECTED })
+    .where('bedId IN ' +
+          this.roomRentalRequestRepo
+            .createQueryBuilder()
+            .subQuery()
+            .select('bed.id')
+            .from('bed', 'bed')
+            .where('bed.roomId = :roomId', { roomId: request.room.id })
+            .getQuery())
+    .setParameters({ roomId: request.room.id })
+    .execute();
+
+
+    // update room status 
+    request.room.status = 'BOOKED';
+    await this.roomRepo.save(request.room);
+    // update bed status 
+   const beds = await this.bedRepo.find({
+    where: { room: { id: request.room.id } },
+    });
+
+    for (const bed of beds) {
+      bed.status = 'RESERVED'; // or BedStatusEnum.RESERVED
+       await this.bedRepo.save(bed);
+    }
+
+    //  update apartment status
+
+    const apartment = await this.apartmentRepo
+    .createQueryBuilder('apartment')
+    .leftJoinAndSelect('apartment.rooms', 'room')
+    .leftJoinAndSelect('room.beds', 'bed')
+    .where('apartment.id = :apartmentId', { apartmentId: request.room.apartment.id })
+    .getOne();
+    const allBedsReserved = apartment.rooms.every(room =>
+      room.beds.every(bed => bed.status === 'RESERVED')
     );
 
-    return this.roomRentalRequestRepo.save(request);
+    if (allBedsReserved) {
+      apartment.status = 'BOOKED';
+      await this.apartmentRepo.save(apartment);
+    }
+
+   
+    return await this.roomRentalRequestRepo.save(request);
   }
 
   async getAllRoomRequests(studentId: string, paginate: PaginatorInput) {

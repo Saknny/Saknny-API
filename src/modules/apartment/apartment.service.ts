@@ -369,7 +369,7 @@ export class ApartmentService {
   }
 
 
-async searchApartments(query: SearchApartmentsDto) {
+async searchApartments(query: SearchApartmentsDto,user:currentUserType) {
   const { page, limit, sortBy, sortOrder, ...filters } = query;
   const offset = (page - 1) * limit;
 
@@ -417,9 +417,28 @@ async searchApartments(query: SearchApartmentsDto) {
 
   const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
 
-  return {
-    data: apartments,
-  };
+
+  // Fetch the favorite apartments for this student
+    let favoriteApartmentIds: string[] = [];
+    if (user.id) {
+      console.log("blabla")
+    const favoriteApartments = await this.favoriteApartmentRepository.find({
+        where: { favorite: { student: { userId: user.id } } },
+        relations: ['apartment'],
+      });
+
+      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+    }
+
+    // Add `isFavorite` field to each apartment
+    const markFavorite = (apartments: Apartment[]) =>
+      apartments.map((apartment) => ({
+        ...apartment,
+        isFavorite: favoriteApartmentIds.includes(apartment.id),
+      }));
+return {
+  data: markFavorite(apartments)
+};
 }
 
   getApartmentLocations(): string[] {
