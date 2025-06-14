@@ -14,6 +14,7 @@ import { RentalStatusEnum } from '../enums/rental-status.enum';
 import { In } from 'typeorm';
 import { RoomRentalRequest } from '../entity/room-rental-request.entity';
 import { PaginatorInput } from '@src/libs/application/paginator/paginator.input';
+import { FavoriteApartment } from '@src/modules/favoriteList/entities/favorite-apartment.entity';
 
 @Injectable()
 export class RentalRequestService {
@@ -35,19 +36,23 @@ export class RentalRequestService {
 
     @InjectBaseRepository(Room)
     private readonly roomRepo: BaseRepository<Room>,
+    @InjectBaseRepository(FavoriteApartment)
+    private readonly favoriteApartmentRepository: BaseRepository<FavoriteApartment>,
+    
   ) {}
 
   async createRequest(studentId: string, bedId: string, duration: number) {
     const bed = await this.bedRepo.findOne({ id: bedId }, [
       'room',
       'room.apartment',
+      
     ]);
 
     if (!bed || bed.status !== 'AVAILABLE') {
       throw new BadRequestException('Bed is not available.');
     }
 
-    const apartment = bed.room.apartment;
+    let apartment = bed.room.apartment;
     const student = await this.studentRepo.findOne({ id: studentId });
 
     if (!student) throw new BadRequestException('Student not found.');
@@ -58,14 +63,37 @@ export class RentalRequestService {
         'Apartment gender restriction does not match student.',
       );
     }
-
-    return await this.rentalRequestRepo.createOne({
+    // Fetch the favorite apartments for this student
+    let favoriteApartmentIds: string[] = [];
+        if (studentId) {
+          console.log("blabla")
+          const favoriteApartments = await this.favoriteApartmentRepository.find({
+            where: { favorite: { student: { id: studentId} } },
+            relations: ['apartment'],
+          });
+    
+          favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+    }
+    
+        // Add `isFavorite` field to each apartment
+    const markApartmentFavorite = (apartment: Apartment, favoriteApartmentIds: string[]) => ({
+        ...apartment,
+        isFavorite: favoriteApartmentIds.includes(apartment.id),
+      });
+    apartment =markApartmentFavorite(apartment,favoriteApartmentIds)
+    await this.apartmentRepo.save(apartment)
+    const request= await this.rentalRequestRepo.createOne({
       student,
       bed,
       price: bed.price,
       duration,
       status: RentalStatusEnum.PENDING,
     });
+    
+    return {
+      request,
+     apartment: markApartmentFavorite(apartment,favoriteApartmentIds)
+    }
   }
 
   async approveRequest(requestId: string) {

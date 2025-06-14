@@ -32,7 +32,7 @@ export class ApartmentController {
     private readonly apartmentService: ApartmentService,
     @Inject(forwardRef(() => PendingRequestService))
     private readonly pendingRequestService: PendingRequestService,
-  ) {}
+  ) { }
 
   @Post('create')
   async createApartment(
@@ -45,6 +45,14 @@ export class ApartmentController {
       createApartmentDto,
     );
   }
+
+  @Get("matching")
+  async getRankedMatchingApartments(
+    @currentUser() user: currentUserType
+  ) {
+    return this.apartmentService.getRankedMatchingApartments(user?.student?.id)
+  }
+
 
   @Post(':id/Apartment-document')
   @UseInterceptors(fileUploadInterceptor())
@@ -78,8 +86,8 @@ export class ApartmentController {
 
   // search endpoint 
   @Get('search')
-  async searchApartments(@Query() query: SearchApartmentsDto,@currentUser() user: currentUserType) {
-    return this.apartmentService.searchApartments(query,user);
+  async searchApartments(@Query() query: SearchApartmentsDto, @currentUser() user: currentUserType) {
+    return this.apartmentService.searchApartments(query, user);
   }
   @Get('blocked-Apartments')
   async getBlockedApartments() {
@@ -88,10 +96,10 @@ export class ApartmentController {
   }
 
   @Get('recent')
-  async getRecentApartments(@Query('limit') limit?: number) {
+  async getRecentApartments( @currentUser() user: currentUserType,@Query('limit') limit?: number) {
 
-    const apartments = await this.apartmentService.getRecentApartments(limit ? Number(limit) : undefined);
-    
+    const apartments = await this.apartmentService.getRecentApartments(user?.id,limit ? Number(limit) : undefined);
+
     return {
       recentlyAdded: apartments
     };
@@ -99,8 +107,8 @@ export class ApartmentController {
 
   // Get recently viewed apartments
   @Get('recently-viewed')
-  async getRecentlyViewedApartments(@Query('limit') limit?: number) {
-    return this.apartmentService.getRecentlyViewed(limit);
+  async getRecentlyViewedApartments( @currentUser() user: currentUserType,@Query('limit') limit?: number ) {
+    return this.apartmentService.getRecentlyViewed(user?.id,limit);
   }
 
   // Update lastViewedAt for an apartment
@@ -113,9 +121,9 @@ export class ApartmentController {
   getLocations() {
     const locations = this.apartmentService.getApartmentLocations();
     return {
-       locations,
+      locations,
     };
-}
+  }
   // TODO: we need one endpoint with different filters and sort
   //filter by price
   @Get('filter-by-bed-price')
@@ -145,8 +153,8 @@ export class ApartmentController {
 
   @Get(':apartmentId')
   async getApartment(@Param('apartmentId') apartmentId: string
-  ,@currentUser() user: currentUserType) {
-    return this.apartmentService.getApartment(apartmentId,user?.student?.id);
+    , @currentUser() user: currentUserType) {
+    return this.apartmentService.getApartment(apartmentId, user?.student?.id);
   }
 
   @Get(':apartmentId/board')
@@ -176,6 +184,7 @@ export class ApartmentController {
     return this.apartmentService.publishApartment(user.id, id);
   }
 
-  
+
+
 
 }

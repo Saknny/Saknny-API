@@ -9,6 +9,7 @@ import { RentalRequestService } from './services/rental-request.service';
 import { Student } from '../student/entities/student.entity';
 import { RoomRentalRequest } from './entity/room-rental-request.entity';
 import { RoomRentalController } from './controllers/room-rental-request.controller';
+import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.entity';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RoomRentalController } from './controllers/room-rental-request.controll
       Room,
       Bed,
       Student,
+      FavoriteApartment,
     ]),
   ],
   controllers: [RentalRequestController, RoomRentalController],

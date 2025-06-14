@@ -44,6 +44,9 @@ async function bootstrap(): Promise<void> {
   initializeTransactionalContext();
   if (get('NODE_ENV').asString() === 'production') initializeLogging();
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+   // 👇 Add this for Stripe webhooks (MUST come before other middleware)
+  app.use('/api/payment/webhook', bodyParser.raw({ type: 'application/json' }));
+
   app.enableCors({
     origin: [
       'http://45.88.223.182:4000', // Add server IP
