@@ -38,21 +38,20 @@ export class RentalRequestService {
     private readonly roomRepo: BaseRepository<Room>,
     @InjectBaseRepository(FavoriteApartment)
     private readonly favoriteApartmentRepository: BaseRepository<FavoriteApartment>,
-    
-  ) {}
+
+  ) { }
 
   async createRequest(studentId: string, bedId: string, duration: number) {
     const bed = await this.bedRepo.findOne({ id: bedId }, [
       'room',
       'room.apartment',
-      
     ]);
 
     if (!bed || bed.status !== 'AVAILABLE') {
       throw new BadRequestException('Bed is not available.');
     }
 
-    let apartment = bed.room.apartment;
+    const apartment = bed.room.apartment;
     const student = await this.studentRepo.findOne({ id: studentId });
 
     if (!student) throw new BadRequestException('Student not found.');
@@ -63,37 +62,14 @@ export class RentalRequestService {
         'Apartment gender restriction does not match student.',
       );
     }
-    // Fetch the favorite apartments for this student
-    let favoriteApartmentIds: string[] = [];
-        if (studentId) {
-          console.log("blabla")
-          const favoriteApartments = await this.favoriteApartmentRepository.find({
-            where: { favorite: { student: { id: studentId} } },
-            relations: ['apartment'],
-          });
-    
-          favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
-    }
-    
-        // Add `isFavorite` field to each apartment
-    const markApartmentFavorite = (apartment: Apartment, favoriteApartmentIds: string[]) => ({
-        ...apartment,
-        isFavorite: favoriteApartmentIds.includes(apartment.id),
-      });
-    apartment =markApartmentFavorite(apartment,favoriteApartmentIds)
-    await this.apartmentRepo.save(apartment)
-    const request= await this.rentalRequestRepo.createOne({
+
+    return await this.rentalRequestRepo.createOne({
       student,
       bed,
       price: bed.price,
       duration,
       status: RentalStatusEnum.PENDING,
     });
-    
-    return {
-      request,
-     apartment: markApartmentFavorite(apartment,favoriteApartmentIds)
-    }
   }
 
   async approveRequest(requestId: string) {
@@ -330,7 +306,7 @@ export class RentalRequestService {
   async approveRoomRequest(requestId: string) {
     const request = await this.roomRentalRequestRepo.findOne(
       { id: requestId },
-      ['room', 'room.beds','room.apartment'],
+      ['room', 'room.beds', 'room.apartment'],
     );
 
     const anyBedReserved = request.room.beds.some(
@@ -346,42 +322,42 @@ export class RentalRequestService {
 
     // Reject all bed requests for this room
     await this.rentalRequestRepo
-    .createQueryBuilder()
-    .update()
-    .set({ status: RentalStatusEnum.REJECTED })
-    .where('bedId IN ' +
-          this.roomRentalRequestRepo
-            .createQueryBuilder()
-            .subQuery()
-            .select('bed.id')
-            .from('bed', 'bed')
-            .where('bed.roomId = :roomId', { roomId: request.room.id })
-            .getQuery())
-    .setParameters({ roomId: request.room.id })
-    .execute();
+      .createQueryBuilder()
+      .update()
+      .set({ status: RentalStatusEnum.REJECTED })
+      .where('bedId IN ' +
+        this.roomRentalRequestRepo
+          .createQueryBuilder()
+          .subQuery()
+          .select('bed.id')
+          .from('bed', 'bed')
+          .where('bed.roomId = :roomId', { roomId: request.room.id })
+          .getQuery())
+      .setParameters({ roomId: request.room.id })
+      .execute();
 
 
     // update room status 
     request.room.status = 'BOOKED';
     await this.roomRepo.save(request.room);
     // update bed status 
-   const beds = await this.bedRepo.find({
-    where: { room: { id: request.room.id } },
+    const beds = await this.bedRepo.find({
+      where: { room: { id: request.room.id } },
     });
 
     for (const bed of beds) {
       bed.status = 'RESERVED'; // or BedStatusEnum.RESERVED
-       await this.bedRepo.save(bed);
+      await this.bedRepo.save(bed);
     }
 
     //  update apartment status
 
     const apartment = await this.apartmentRepo
-    .createQueryBuilder('apartment')
-    .leftJoinAndSelect('apartment.rooms', 'room')
-    .leftJoinAndSelect('room.beds', 'bed')
-    .where('apartment.id = :apartmentId', { apartmentId: request.room.apartment.id })
-    .getOne();
+      .createQueryBuilder('apartment')
+      .leftJoinAndSelect('apartment.rooms', 'room')
+      .leftJoinAndSelect('room.beds', 'bed')
+      .where('apartment.id = :apartmentId', { apartmentId: request.room.apartment.id })
+      .getOne();
     const allBedsReserved = apartment.rooms.every(room =>
       room.beds.every(bed => bed.status === 'RESERVED')
     );
@@ -391,7 +367,7 @@ export class RentalRequestService {
       await this.apartmentRepo.save(apartment);
     }
 
-   
+
     return await this.roomRentalRequestRepo.save(request);
   }
 
