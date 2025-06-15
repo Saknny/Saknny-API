@@ -90,10 +90,15 @@ async getApartmentsByGender( @currentUser() user: currentUserType,@Query() filte
   }
 
   // search endpoint 
-  @Get('search')
-  async searchApartments(@Query() query: SearchApartmentsDto, @currentUser() user: currentUserType) {
-    return this.apartmentService.searchApartments(query, user);
-  }
+@Get('search')
+async searchApartments(
+  @Query() query: SearchApartmentsDto,
+  @currentUser() user: currentUserType
+) {
+  return this.apartmentService.searchApartments(query, user);
+}
+
+
   @Get('blocked-Apartments')
   async getBlockedApartments() {
     console.log('entered!');

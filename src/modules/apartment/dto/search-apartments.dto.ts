@@ -1,5 +1,5 @@
 import { ApartmentLocation } from '../enums/location.enum';
-import { IsOptional, IsEnum, IsString, IsNumber, Min, IsInt, Max } from 'class-validator';
+import { IsOptional, IsEnum, IsString, IsNumber, Min, IsInt, Max, IsBoolean } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class SearchApartmentsDto {
@@ -45,4 +45,8 @@ export class SearchApartmentsDto {
   @IsOptional()
   @IsEnum(['ASC', 'DESC'])
   sortOrder: 'ASC' | 'DESC' = 'DESC'; // Default sort order
+
+  @IsOptional()
+  @IsString()
+  filterByGender?: string;
 }

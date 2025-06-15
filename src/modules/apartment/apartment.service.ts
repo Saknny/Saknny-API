@@ -138,7 +138,7 @@ export class ApartmentService {
     return apartment;
   }
 
-  async getRecentApartments(userId:string,limit?: number): Promise<Apartment[]> {
+  async getRecentApartments(userId: string, limit?: number): Promise<Apartment[]> {
     const findOptions: FindManyOptions<Apartment> = {
       order: { createdAt: 'DESC' },
       relations: ['rooms', 'rooms.beds']
@@ -149,7 +149,7 @@ export class ApartmentService {
       findOptions.take = limit;
     }
 
-    const apartments=await this.apartmentRepository.find(findOptions);
+    const apartments = await this.apartmentRepository.find(findOptions);
     // Fetch the favorite apartments for this student
     let favoriteApartmentIds: string[] = [];
     if (userId) {
@@ -168,23 +168,23 @@ export class ApartmentService {
         ...apartment,
         isFavorite: favoriteApartmentIds.includes(apartment.id),
       }));
-      return  markFavorite(apartments) ;
-      
+    return markFavorite(apartments);
+
   }
 
-  async getRecentlyViewed(userId:string,limit = 6) {
-    const apartments=await this.apartmentRepository.find({
+  async getRecentlyViewed(userId: string, limit = 6) {
+    const apartments = await this.apartmentRepository.find({
       where: { lastViewedAt: Not(IsNull()) },
       order: { lastViewedAt: 'DESC' },
       take: limit,
       relations: ['rooms', 'rooms.beds'],
     });
-// Fetch the favorite apartments for this student
+    // Fetch the favorite apartments for this student
     let favoriteApartmentIds: string[] = [];
     if (userId) {
       console.log("blabla")
       const favoriteApartments = await this.favoriteApartmentRepository.find({
-        where: { favorite: { student: { userId: userId} } },
+        where: { favorite: { student: { userId: userId } } },
         relations: ['apartment'],
       });
 
@@ -197,11 +197,11 @@ export class ApartmentService {
         ...apartment,
         isFavorite: favoriteApartmentIds.includes(apartment.id),
       }));
-      
-      return {
-        apartments:markFavorite(apartments)
-      }
+
+    return {
+      apartments: markFavorite(apartments)
     }
+  }
 
   async updateLastViewed(id: string): Promise<Apartment> {
     const apartment = await this.apartmentRepository.findOne({ id });
@@ -346,8 +346,8 @@ export class ApartmentService {
 
     const numberOfProviders = await this.providerRepository.count();
     const numberOfStudents = await this.studentRepository.count();
-    const recentlyAdded = await this.getRecentApartments(user.id,6);
-    const recentlyViewed = await this.getRecentlyViewed(user.id,6);
+    const recentlyAdded = await this.getRecentApartments(user.id, 6);
+    const recentlyViewed = await this.getRecentlyViewed(user.id, 6);
     const apartmentsByLocation = await this.getApartmentsByLocation(
       ApartmentLocation.ELSAIDY,
       6,
@@ -385,7 +385,7 @@ export class ApartmentService {
       numberOfProviders,
       numberOfStudents,
       recentlyAdded: markFavorite(recentlyAdded),
-      recentlyViewed:recentlyViewed,
+      recentlyViewed: recentlyViewed,
       apartmentsByLocation: markFavorite(apartmentsByLocation),
     };
   }
@@ -454,6 +454,11 @@ export class ApartmentService {
     if (filters.maxPrice !== undefined) {
       qb.andWhere('bed.price <= :maxPrice', { maxPrice: filters.maxPrice });
     }
+
+    if (filters.filterByGender && user?.student?.gender) {
+      qb.andWhere('apartment.gender = :gender', { gender: filters.filterByGender });
+    }
+
     qb.orderBy(`apartment.${sortBy}`, sortOrder);
 
     qb.skip(offset).take(limit);
@@ -495,88 +500,88 @@ export class ApartmentService {
 
 
   async getRankedMatchingApartments(studentId: string) {
-  const currentStudent = await this.studentRepository
-    .createQueryBuilder('student')
-    .select(['student.id', 'student.major', 'student.university', 'student.hobbies'])
-    .where('student.id = :studentId', { studentId })
-    .getOne();
+    const currentStudent = await this.studentRepository
+      .createQueryBuilder('student')
+      .select(['student.id', 'student.major', 'student.university', 'student.hobbies'])
+      .where('student.id = :studentId', { studentId })
+      .getOne();
 
-  if (!currentStudent) throw new Error('Student not found');
+    if (!currentStudent) throw new Error('Student not found');
 
-  const studentMajor = currentStudent.major;
-  const studentUniversity = currentStudent.university;
-  const studentHobbies = currentStudent.hobbies ?? [];
+    const studentMajor = currentStudent.major;
+    const studentUniversity = currentStudent.university;
+    const studentHobbies = currentStudent.hobbies ?? [];
 
-  console.log('\n🧍‍♂️ Current Student:');
-  console.log(`Major: ${studentMajor}`);
-  console.log(`University: ${studentUniversity}`);
-  console.log(`Hobbies: ${studentHobbies.join(', ') || 'None'}`);
+    console.log('\n🧍‍♂️ Current Student:');
+    console.log(`Major: ${studentMajor}`);
+    console.log(`University: ${studentUniversity}`);
+    console.log(`Hobbies: ${studentHobbies.join(', ') || 'None'}`);
 
-  // Step 1: Subquery for per-roommate match score
-  const subQuery = this.studentRepository
-    .createQueryBuilder('roommate')
-    .select([
-      'apartment.id AS apartment_id',
-      `
+    // Step 1: Subquery for per-roommate match score
+    const subQuery = this.studentRepository
+      .createQueryBuilder('roommate')
+      .select([
+        'apartment.id AS apartment_id',
+        `
       (
         CASE WHEN roommate.major = :major THEN 1 ELSE 0 END +
         CASE WHEN roommate.university = :university THEN 1 ELSE 0 END +
         ${studentHobbies.length > 0
           ? studentHobbies
-              .map((hobby, i) => `CASE WHEN roommate.hobbies LIKE :hobby${i} THEN 1 ELSE 0 END`)
-              .join(' + ')
+            .map((hobby, i) => `CASE WHEN roommate.hobbies LIKE :hobby${i} THEN 1 ELSE 0 END`)
+            .join(' + ')
           : '0'}
       ) AS match_score`
-    ])
-    .innerJoin('roommate.bed', 'bed')
-    .innerJoin('bed.room', 'room')
-    .innerJoin('room.apartment', 'apartment')
-    .where('roommate.id != :studentId', { studentId });
+      ])
+      .innerJoin('roommate.bed', 'bed')
+      .innerJoin('bed.room', 'room')
+      .innerJoin('room.apartment', 'apartment')
+      .where('roommate.id != :studentId', { studentId });
 
-  subQuery.setParameter('major', studentMajor);
-  subQuery.setParameter('university', studentUniversity);
-  studentHobbies.forEach((hobby, i) => {
-    subQuery.setParameter(`hobby${i}`, `%${hobby}%`);
-  });
+    subQuery.setParameter('major', studentMajor);
+    subQuery.setParameter('university', studentUniversity);
+    studentHobbies.forEach((hobby, i) => {
+      subQuery.setParameter(`hobby${i}`, `%${hobby}%`);
+    });
 
-  // Step 2: Main query - join subquery, load apartment -> rooms -> beds
-  const apartmentsWithScore = await this.apartmentRepository
-    .createQueryBuilder('apartment')
-    .leftJoinAndSelect('apartment.rooms', 'room')
-    .leftJoinAndSelect('room.beds', 'bed')
-    .innerJoin(
-      '(' + subQuery.getQuery() + ')',
-      'scored',
-      'scored.apartment_id = apartment.id'
-    )
-    .addSelect('CEIL(AVG(scored.match_score))', 'avg_match_score')
-    .groupBy('apartment.id')
-    .addGroupBy('room.id')
-    .addGroupBy('bed.id')
-    .orderBy('avg_match_score', 'DESC')
-    .setParameters(subQuery.getParameters())
-    .getRawAndEntities();
+    // Step 2: Main query - join subquery, load apartment -> rooms -> beds
+    const apartmentsWithScore = await this.apartmentRepository
+      .createQueryBuilder('apartment')
+      .leftJoinAndSelect('apartment.rooms', 'room')
+      .leftJoinAndSelect('room.beds', 'bed')
+      .innerJoin(
+        '(' + subQuery.getQuery() + ')',
+        'scored',
+        'scored.apartment_id = apartment.id'
+      )
+      .addSelect('CEIL(AVG(scored.match_score))', 'avg_match_score')
+      .groupBy('apartment.id')
+      .addGroupBy('room.id')
+      .addGroupBy('bed.id')
+      .orderBy('avg_match_score', 'DESC')
+      .setParameters(subQuery.getParameters())
+      .getRawAndEntities();
 
-  const { entities: apartments, raw } = apartmentsWithScore;
+    const { entities: apartments, raw } = apartmentsWithScore;
 
-  // Attach match score to apartment entities
-  const result = apartments.map((apt, i) => ({
-    ...apt,
-    avgMatchScore: Number(raw[i].avg_match_score),
-  }));
+    // Attach match score to apartment entities
+    const result = apartments.map((apt, i) => ({
+      ...apt,
+      avgMatchScore: Number(raw[i].avg_match_score),
+    }));
 
-  // Log
-  console.log('\n🏡 Apartments with Rooms and Beds Ranked by Average Match Score:\n');
-  result.forEach((apt) => {
-    console.log(`Apartment ID: ${apt.id} | Match Score: ${apt.avgMatchScore}`);
-  });
+    // Log
+    console.log('\n🏡 Apartments with Rooms and Beds Ranked by Average Match Score:\n');
+    result.forEach((apt) => {
+      console.log(`Apartment ID: ${apt.id} | Match Score: ${apt.avgMatchScore}`);
+    });
 
-  // Fetch the favorite apartments for this student
+    // Fetch the favorite apartments for this student
     let favoriteApartmentIds: string[] = [];
     if (studentId) {
       console.log("blabla")
       const favoriteApartments = await this.favoriteApartmentRepository.find({
-        where: { favorite: { student: { id: studentId} } },
+        where: { favorite: { student: { id: studentId } } },
         relations: ['apartment'],
       });
 
@@ -590,34 +595,34 @@ export class ApartmentService {
         isFavorite: favoriteApartmentIds.includes(apartment.id),
       }));
 
-  return {
-    apartments:markFavorite(result)
-  };
+    return {
+      apartments: markFavorite(result)
+    };
 
-}
-async filterApartments(studentId: string,filterDto: FilterApartmentsDto) {
-  const { gender, page = 1, limit = 10 } = filterDto;
-  const skip = (page - 1) * limit;
-
-  const query = this.apartmentRepository
-    .createQueryBuilder('apartment')
-    .leftJoinAndSelect('apartment.rooms', 'room')          // Join rooms
-    .leftJoinAndSelect('room.beds', 'bed');                // Join beds inside rooms
-
-  console.log('gender:', gender);
-  console.log('limit:', limit);
-  console.log('page:', page);
-
-  if (gender) {
-    query.andWhere('apartment.gender = :gender', { gender });
   }
+  async filterApartments(studentId: string, filterDto: FilterApartmentsDto) {
+    const { gender, page = 1, limit = 10 } = filterDto;
+    const skip = (page - 1) * limit;
 
-  const [apartments, total] = await query.skip(skip).take(limit).getManyAndCount();
-// Fetch the favorite apartments for this student
+    const query = this.apartmentRepository
+      .createQueryBuilder('apartment')
+      .leftJoinAndSelect('apartment.rooms', 'room')          // Join rooms
+      .leftJoinAndSelect('room.beds', 'bed');                // Join beds inside rooms
+
+    console.log('gender:', gender);
+    console.log('limit:', limit);
+    console.log('page:', page);
+
+    if (gender) {
+      query.andWhere('apartment.gender = :gender', { gender });
+    }
+
+    const [apartments, total] = await query.skip(skip).take(limit).getManyAndCount();
+    // Fetch the favorite apartments for this student
     let favoriteApartmentIds: string[] = [];
     if (studentId) {
       const favoriteApartments = await this.favoriteApartmentRepository.find({
-        where: { favorite: { student: { id: studentId} } },
+        where: { favorite: { student: { id: studentId } } },
         relations: ['apartment'],
       });
 
@@ -630,12 +635,12 @@ async filterApartments(studentId: string,filterDto: FilterApartmentsDto) {
         ...apartment,
         isFavorite: favoriteApartmentIds.includes(apartment.id),
       }));
-  return {
-    apartments: markFavorite(apartments),
-    total,
-    page,
-    totalPages: Math.ceil(total / limit),
-  };
-}
+    return {
+      apartments: markFavorite(apartments),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 
 }
