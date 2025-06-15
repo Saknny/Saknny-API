@@ -20,6 +20,7 @@ export class ReviewService {
 
     
   async getApartmentReviews(dto :ApartmentReviewsDto){
+    const baseUrl = 'http://45.88.223.182:4000';
     const apartment = await this.apartmentRepo
       .createQueryBuilder('apartment')
       .select(['apartment.id', 'apartment.averageRating'])
@@ -38,7 +39,10 @@ export class ReviewService {
         'review.id',
         'review.comment',
         'review.rating',
-        'review.createdAt'
+        'review.createdAt',
+        'student.firstName',  // Add student first name
+        'student.lastName',   // Add student last name
+          'student.image'      // Add student photo
       ])
       .where('review.apartmentId = :apartmentId', { apartmentId:dto.apartmentId })
       .orderBy('review.createdAt', 'DESC') // Sort by latest reviews first
@@ -55,6 +59,10 @@ export class ReviewService {
         comment: review.comment,
         rating: review.rating,
         createdAt: review.createdAt,
+        student: {
+                fullName: `${review.student.firstName} ${review.student.lastName}`, // Combined name
+                photo: review.student.image ? `${baseUrl}${review.student.image}` : null
+            }
       }))
     };
   

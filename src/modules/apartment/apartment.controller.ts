@@ -25,6 +25,7 @@ import { fileUploadInterceptor } from './interceptors/document.interceptor';
 import { GetApartmentsDto } from './dto/get-apartments.dto';
 import { ApartmentLocation } from './enums/location.enum';
 import { SearchApartmentsDto } from './dto/search-apartments.dto';
+import { FilterApartmentsDto } from './dto/filter-apartments.dto';
 
 @Controller('apartment')
 export class ApartmentController {
@@ -53,6 +54,10 @@ export class ApartmentController {
     return this.apartmentService.getRankedMatchingApartments(user?.student?.id)
   }
 
+  @Get('filter-by-gender')
+async getApartmentsByGender( @currentUser() user: currentUserType,@Query() filterDto: FilterApartmentsDto) {
+  return this.apartmentService.filterApartments(user?.student?.id,filterDto);
+}
 
   @Post(':id/Apartment-document')
   @UseInterceptors(fileUploadInterceptor())

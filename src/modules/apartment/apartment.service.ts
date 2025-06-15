@@ -21,6 +21,7 @@ import { ApartmentLocation } from './enums/location.enum';
 import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.entity';
 import { SearchApartmentsDto } from './dto/search-apartments.dto';
 import { currentUserType } from '@src/libs/types/current-user.type';
+import { FilterApartmentsDto } from './dto/filter-apartments.dto';
 
 @Injectable()
 export class ApartmentService {
@@ -594,4 +595,47 @@ export class ApartmentService {
   };
 
 }
+async filterApartments(studentId: string,filterDto: FilterApartmentsDto) {
+  const { gender, page = 1, limit = 10 } = filterDto;
+  const skip = (page - 1) * limit;
+
+  const query = this.apartmentRepository
+    .createQueryBuilder('apartment')
+    .leftJoinAndSelect('apartment.rooms', 'room')          // Join rooms
+    .leftJoinAndSelect('room.beds', 'bed');                // Join beds inside rooms
+
+  console.log('gender:', gender);
+  console.log('limit:', limit);
+  console.log('page:', page);
+
+  if (gender) {
+    query.andWhere('apartment.gender = :gender', { gender });
+  }
+
+  const [apartments, total] = await query.skip(skip).take(limit).getManyAndCount();
+// Fetch the favorite apartments for this student
+    let favoriteApartmentIds: string[] = [];
+    if (studentId) {
+      const favoriteApartments = await this.favoriteApartmentRepository.find({
+        where: { favorite: { student: { id: studentId} } },
+        relations: ['apartment'],
+      });
+
+      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+    }
+
+    // Add `isFavorite` field to each apartment
+    const markFavorite = (apartments: Apartment[]) =>
+      apartments.map((apartment) => ({
+        ...apartment,
+        isFavorite: favoriteApartmentIds.includes(apartment.id),
+      }));
+  return {
+    apartments: markFavorite(apartments),
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
 }
