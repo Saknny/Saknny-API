@@ -202,13 +202,63 @@ export class RentalRequestService {
     });
   }
 
-  // Get all requests for a specific student
-  async getRequestsForStudent(studentId: string) {
-    return this.rentalRequestRepo.find({
-      where: { student: { id: studentId } },
-      relations: ['bed', 'bed.room', 'bed.room.apartment'],
-    });
-  }
+
+async getRequestsForStudent(studentId: string) {
+  // Fetch all rental requests with apartment data and whether it's favorite
+  const requests = await this.rentalRequestRepo
+    .createQueryBuilder('request')
+    .leftJoinAndSelect('request.bed', 'bed')
+    .leftJoinAndSelect('bed.room', 'room')
+    .leftJoinAndSelect('room.apartment', 'apartment')
+
+    // Join Favorite and FavoriteApartment to detect favorite apartments
+    .leftJoin('Favorite', 'favorite', 'favorite.studentId = :studentId', { studentId })
+    .leftJoin(
+      'FavoriteApartment',
+      'favoriteApartment',
+      'favoriteApartment.favoriteId = favorite.id AND favoriteApartment.apartmentId = apartment.id'
+    )
+    .addSelect('CASE WHEN favoriteApartment.id IS NOT NULL THEN TRUE ELSE FALSE END', 'isFavorite')
+
+    // Filter requests by student
+    .where('request.studentId = :studentId', { studentId })
+
+    .getRawAndEntities();
+
+ const results = requests.entities.map((req, idx) => {
+  const apartment = req.bed.room.apartment;
+
+  // Clean nested apartment from room and bed
+  const cleanedRoom = {
+    ...req.bed.room,
+    apartment: undefined, // remove nested apartment
+    beds: req.bed.room.beds?.map(b => ({
+      ...b,
+      room: undefined, // remove nested room in bed
+    })) ?? [ 
+      {
+        ...req.bed,
+        room: undefined,
+      },
+    ],
+  };
+
+  return {
+    id: req.id,
+    duration: req.duration,
+    status: req.status,
+    // add other request fields if needed
+    apartment: {
+      ...apartment,
+      isFavorite: requests.raw[idx].isFavorite,
+      rooms: [cleanedRoom],
+    },
+  };
+});
+return results;
+
+}
+
 
   // Get all requests for a provider's apartments
   async getRequestsForProvider(providerId: string) {
