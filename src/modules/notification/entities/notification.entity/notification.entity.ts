@@ -13,7 +13,7 @@ export class Notification extends BaseModel {
   @Column()
   userId: string;
 
-  @Column()
+  @Column({type:'text',nullable: true})
   type: string;
 
   @Column('text')
