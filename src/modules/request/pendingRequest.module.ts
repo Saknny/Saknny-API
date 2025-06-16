@@ -15,6 +15,7 @@ import { PendingDocument } from "./entities/pendingDocument.entity";
 import { ImageModule } from "../image/image.module";
 import { RequestItem } from "./entities/requestItem.entity";
 import { UserModule } from "../user/user.module";
+import { NotificationModule } from "../notification/notification.module";
 @Module({
     imports: [DatabaseModule.forFeature([PendingRequest, Provider, ImageApproval, PendingDocument , RequestItem])
         , forwardRef(() => ApartmentModule),
@@ -23,7 +24,8 @@ import { UserModule } from "../user/user.module";
     forwardRef(() => ProviderModule),
     forwardRef(() => StudentModule),
     forwardRef(() => ImageModule),
-    forwardRef(() => UserModule)],
+    forwardRef(() => UserModule),
+forwardRef(() =>NotificationModule)],
 
     providers: [PendingRequestService],
     controllers: [],

@@ -28,6 +28,7 @@ import { CreateBedDto } from '../bed/dto/create-bed.dto/create-bed.dto';
 import { UpdateApartmentDto } from '../apartment/dto/update-apartment.dto/update-apartment.dto';
 import { ProfileCompleteEnum } from '../user/enums/profile-complete.enum';
 import { UserService } from '../user/user.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class PendingRequestService {
@@ -62,7 +63,9 @@ export class PendingRequestService {
     private readonly studentService: StudentService,
     
 @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    @Inject(forwardRef(() => NotificationService))
+        private readonly notificationService: NotificationService,
   ) { }
 
   async updateRequestApproval(body: RequestDto) {
@@ -96,6 +99,11 @@ export class PendingRequestService {
         await this.ApproveCardRequest(body);
         break;
     }
+    await this.notificationService.createNotification({
+      userId: request.userId,
+      type: request.type,
+      message: `Your ${request.type} has been ${request.status} by admin`,
+    });
   }
 
   async ApproveUpdateApartmentRequest(body: RequestDto) {

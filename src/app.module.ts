@@ -35,6 +35,7 @@ import { BookingRequestModule } from './modules/booking-request/booking-request.
 import { ReviewModule } from './modules/review/review.module';
 import { ReportModule } from './modules/report/report.module';
 import { UniversityModule } from './modules/university/university.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -91,7 +92,8 @@ import { UniversityModule } from './modules/university/university.module';
     ProviderSubscriptionModule,
     ScheduleModule.forRoot(),
     BookingRequestModule,
-    UniversityModule
+    UniversityModule,
+    NotificationModule
   ],
   controllers: [],
   providers: [

@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -15,6 +17,7 @@ import { In } from 'typeorm';
 import { RoomRentalRequest } from '../entity/room-rental-request.entity';
 import { PaginatorInput } from '@src/libs/application/paginator/paginator.input';
 import { FavoriteApartment } from '@src/modules/favoriteList/entities/favorite-apartment.entity';
+import { NotificationService } from '@src/modules/notification/notification.service';
 
 @Injectable()
 export class RentalRequestService {
@@ -38,6 +41,10 @@ export class RentalRequestService {
     private readonly roomRepo: BaseRepository<Room>,
     @InjectBaseRepository(FavoriteApartment)
     private readonly favoriteApartmentRepository: BaseRepository<FavoriteApartment>,
+    
+  
+    @Inject(forwardRef(() => NotificationService))
+    private readonly notificationService: NotificationService,
 
   ) { }
 
@@ -62,6 +69,12 @@ export class RentalRequestService {
         'Apartment gender restriction does not match student.',
       );
     }
+    await this.notificationService.createNotification({
+      userId: student.userId,
+      type: 'booking_request',
+      message: `You get  a booking request for bed ${bed.id} from this student ${studentId}`,
+      relatedEntityId: null,
+    });
 
     return await this.rentalRequestRepo.createOne({
       student,
@@ -122,6 +135,12 @@ export class RentalRequestService {
       apartment.bookingStatus = 'BOOKED';
       await this.apartmentRepo.save(apartment);
     }
+    await this.notificationService.createNotification({
+      userId: request.student.userId,
+      type: 'booking_request',
+      message: `Your booking request for bed ${bed.id} was accepted`,
+      relatedEntityId: requestId,
+    });
 
     return request;
   }
@@ -134,6 +153,12 @@ export class RentalRequestService {
     }
 
     request.status = RentalStatusEnum.REJECTED;
+    await this.notificationService.createNotification({
+      userId: request.student.userId,
+      type: 'booking_request',
+      message: `Your booking request for bed ${request.bed.id} was rejected`,
+      relatedEntityId: requestId,
+    });
     return this.rentalRequestRepo.save(request);
   }
 
