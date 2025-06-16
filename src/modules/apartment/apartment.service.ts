@@ -455,9 +455,10 @@ export class ApartmentService {
       qb.andWhere('bed.price <= :maxPrice', { maxPrice: filters.maxPrice });
     }
 
-    if (filters.filterByGender && user?.student?.gender) {
-      qb.andWhere('apartment.gender = :gender', { gender: filters.filterByGender });
+    if (filters.filterByGender) {
+      qb.andWhere('LOWER(apartment.gender) = LOWER(:gender)', { gender: filters.filterByGender });
     }
+
 
     qb.orderBy(`apartment.${sortBy}`, sortOrder);
 
