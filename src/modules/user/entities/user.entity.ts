@@ -14,8 +14,6 @@ import { Chat } from '../../chat/entities/chat.entity';
 import { Message } from '../../chat/entities/message.entity';
 import { FCMToken } from '../../fcm-token/entities/fcm-token.entity';
 import { Student } from '@src/modules/student/entities/student.entity';
-import { Notification } from '../../notification/entities/notification.entity';
-import { NotificationStatus } from '../../notification/entities/notificationStatus.entity';
 import { Provider } from '@src/modules/provider/entities/provider.entity';
 import { Otp } from '../../otp/entities/otp.entity';
 import { Profile } from '../../profile/entities/profile.entity';
@@ -75,10 +73,7 @@ export class User extends BaseModel {
   @ManyToOne(() => SecurityGroup, { onDelete: 'SET NULL' })
   securityGroup?: SecurityGroup;
 
-  @OneToMany(() => Notification, (notification) => notification.receiver)
-  notifications?: Array<
-    Notification & { NotificationStatus: NotificationStatus }
-  >;
+
 
   @OneToMany(() => FCMToken, (token) => token.user, { cascade: true })
   fcmTokens: FCMToken[];

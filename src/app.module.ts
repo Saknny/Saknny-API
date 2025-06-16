@@ -19,7 +19,6 @@ import { BedModule } from './modules/bed/bed.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { FavoriteModule } from './modules/favoriteList/favorite.module';
 import { ImageModule } from './modules/image/image.module';
-import { NotificationModule } from './modules/notification/notification.module';
 import { OtpModule } from './modules/otp/otp.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { ProfileModule } from './modules/profile/profile.module';
@@ -58,7 +57,6 @@ import { UniversityModule } from './modules/university/university.module';
     StudentModule,
     SessionModule,
     SecurityGroupModule,
-    NotificationModule,
     ProfileModule,
     UserModule,
     OtpModule,
