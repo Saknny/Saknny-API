@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -6,6 +7,7 @@ import {
   HttpStatus,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -124,4 +126,37 @@ export class AuthController {
     console.log(user);
     return user;
   }
+
+@Auth({ allow: 'authenticated' })
+@HttpCode(HttpStatus.OK)
+@Post('logout')
+async logout(@currentUser() user: currentUserType, @Req() req: Request) {
+  // Get the JWT from headers
+  const token = req.headers['authorization']?.split(' ')[1];
+  
+  if (!token) {
+    throw new BadRequestException('Authorization token not found');
+  }
+
+  // Decode the JWT to get the sessionId (without verification)
+  const decoded = this.decodeJwt(token);
+  const sessionId = decoded?.sessionId;
+
+  if (!sessionId) {
+    throw new BadRequestException('Session ID not found in token');
+  }
+
+  await this.sessionService.remove(sessionId);
+  return { message: 'Logged out successfully' };
+}
+
+// Add this helper method to your controller
+private decodeJwt(token: string): any {
+  try {
+    return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+  } catch (e) {
+    throw new BadRequestException('Invalid token format');
+  }
+}
+
 }

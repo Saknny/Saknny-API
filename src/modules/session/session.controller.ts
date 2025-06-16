@@ -23,6 +23,8 @@ export class SessionController {
   @Delete()
   @Auth({ allow: 'authenticated' })
   remove(@currentUser() user: currentUserType) {
-    return this.sessionService.remove(user.session);
+    return this.sessionService.remove(user.session.id);
   }
+
+
 }

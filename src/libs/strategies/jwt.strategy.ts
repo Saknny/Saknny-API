@@ -31,6 +31,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const { user, session } =
       await this.authService.getUserAndSessionFromPayload(payload);
     console.log('✅ Fetched User:', user); 
-    return { ...user, session };
+  console.log('✅ Fetched Session:', session);
+     return {
+    ...user,
+    sessionId: session?.id, // <-- add this to make sessionId directly accessible
+  };
   }
 }
