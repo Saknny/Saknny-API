@@ -423,12 +423,36 @@ export class ApartmentService {
   async searchApartments(query: SearchApartmentsDto, user: currentUserType) {
     const { page, limit, sortBy, sortOrder, ...filters } = query;
     const offset = (page - 1) * limit;
+    // 🧠 Get matching IDs FIRST if needed
+    let matchingIds: string[] = [];
+    if (filters.matching === true && user?.student?.id) {
+        const matchingResult = await this.getRankedMatchingApartments(user.student.id);
+        matchingIds = matchingResult.apartments.map((apt) => apt.id);
+        
+        if (matchingIds.length === 0) {
+            return {
+                data: [],
+                total: 0,
+                page,
+                totalPages: 0,
+            };
+        }
+    }
+
 
     const qb = this.apartmentRepository
       .createQueryBuilder('apartment')
       .leftJoinAndSelect('apartment.rooms', 'room')
       .leftJoinAndSelect('room.beds', 'bed');
 
+    // Apply matching filter FIRST if needed
+    if (filters.matching === true && matchingIds.length > 0) {
+      console.log("yess")
+        qb.andWhere('apartment.id IN (:...matchingIds)', { matchingIds });
+         const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+
+        console.log( apartments)
+    }
     // Apply filters (existing logic)
     if (filters.locationEnum) {
       qb.andWhere('apartment.locationEnum = :location', {
@@ -437,6 +461,9 @@ export class ApartmentService {
     }
 
     if (filters.text) {
+       console.log("text")
+       const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+        console.log( apartments)
       const likeText = `%${filters.text}%`;
       const trimmedText = filters.text.trim();
       qb.andWhere(
@@ -456,29 +483,52 @@ export class ApartmentService {
     }
 
     if (filters.minPrice !== undefined) {
+       console.log("min")
+       const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+        console.log( apartments)
       qb.andWhere('bed.price >= :minPrice', { minPrice: filters.minPrice });
     }
 
     if (filters.maxPrice !== undefined) {
+       console.log("max")
+       const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+        console.log( apartments)
       qb.andWhere('bed.price <= :maxPrice', { maxPrice: filters.maxPrice });
     }
 
     if (filters.filterByGender) {
+       console.log("gender")
+       const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+        console.log( apartments)
       qb.andWhere('LOWER(apartment.gender) = LOWER(:gender)', { gender: filters.filterByGender });
     }
 
+     const [apartments2, totalItems2] = await qb.distinct(true).getManyAndCount();
 
-    qb.orderBy(`apartment.${sortBy}`, sortOrder);
+    console.log("apartemst normal after order ")
+    console.log(apartments2)
 
-    qb.skip(offset).take(limit);
+   // 5. DEBUG: Get SQL query before pagination
+    console.log('SQL before pagination:', qb.getQueryAndParameters());
 
-    const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+    // 6. Apply sorting and pagination
+    qb.orderBy(`apartment.${sortBy}`, sortOrder)
+      .skip(offset)
+      .take(limit);
 
+    // 7. Execute query
+    const [apartments, totalItems] = await qb.getManyAndCount();
+    
+    // 8. DEBUG: Log results
+    console.log('Final apartments:', apartments);
+    console.log('Total items:', totalItems);
+
+    console.log("apartemst normal ")
+    console.log(apartments)
 
     // Fetch the favorite apartments for this student
     let favoriteApartmentIds: string[] = [];
     if (user.id) {
-      console.log("blabla")
       const favoriteApartments = await this.favoriteApartmentRepository.find({
         where: { favorite: { student: { userId: user.id } } },
         relations: ['apartment'],
@@ -555,21 +605,22 @@ export class ApartmentService {
 
     // Step 2: Main query - join subquery, load apartment -> rooms -> beds
     const apartmentsWithScore = await this.apartmentRepository
-      .createQueryBuilder('apartment')
-      .leftJoinAndSelect('apartment.rooms', 'room')
-      .leftJoinAndSelect('room.beds', 'bed')
-      .innerJoin(
-        '(' + subQuery.getQuery() + ')',
-        'scored',
-        'scored.apartment_id = apartment.id'
-      )
-      .addSelect('CEIL(AVG(scored.match_score))', 'avg_match_score')
-      .groupBy('apartment.id')
-      .addGroupBy('room.id')
-      .addGroupBy('bed.id')
-      .orderBy('avg_match_score', 'DESC')
-      .setParameters(subQuery.getParameters())
-      .getRawAndEntities();
+  .createQueryBuilder('apartment')
+  .leftJoinAndSelect('apartment.rooms', 'room')
+  .leftJoinAndSelect('room.beds', 'bed')
+  .leftJoin(
+    '(' + subQuery.getQuery() + ')',
+    'scored',
+    'scored.apartment_id = apartment.id'
+  )
+  .addSelect('COALESCE(CEIL(AVG(scored.match_score)), 0)', 'avg_match_score')
+  .groupBy('apartment.id')
+  .addGroupBy('room.id')
+  .addGroupBy('bed.id')
+  .orderBy('avg_match_score', 'DESC')
+  .setParameters(subQuery.getParameters())
+  .getRawAndEntities();
+
 
     const { entities: apartments, raw } = apartmentsWithScore;
 

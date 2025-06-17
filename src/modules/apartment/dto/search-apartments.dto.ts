@@ -49,4 +49,9 @@ export class SearchApartmentsDto {
   @IsOptional()
   @IsString()
   filterByGender?: string;
+@IsOptional()
+@Transform(({ value }) => value === 'true' || value === true)
+@IsBoolean({ message: 'matching must be a boolean value (true or false)' })
+matching?: boolean;
+
 }
