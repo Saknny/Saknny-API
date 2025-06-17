@@ -121,14 +121,16 @@ export class FavoriteService {
     return {favorites: []}; // Return empty array if no list exists
   }
 
-  // 2. Get apartments using QueryBuilder
   const favoriteApartments = await this.favoriteApartmentRepo
     .createQueryBuilder('fa')
     .leftJoinAndSelect('fa.apartment', 'apartment')
+    .leftJoinAndSelect('apartment.rooms', 'room')
+    .leftJoinAndSelect('room.beds', 'bed')
     .where('fa.favoriteId = :favoriteId', { favoriteId: favorite.id })
     .take(pagination.limit)
     .skip((pagination.page - 1) * pagination.limit)
     .getMany();
+
 
     
   const favoriteApartmentIds = favoriteApartments.map(fa => fa.apartment.id);
