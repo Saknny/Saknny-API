@@ -123,8 +123,11 @@ async searchApartments(
 
   // Update lastViewedAt for an apartment
   @Patch(':id/view')
-  async updateLastViewed(@Param('id') id: string) {
-    return this.apartmentService.updateLastViewed(id);
+  async updateLastViewed(
+    @Param('id') id: string,
+    @currentUser() user: currentUserType, // Assuming this decorator gives you the user
+  ) {
+    return this.apartmentService.updateLastViewed(id, user.id);
   }
 
   @Get('locations')

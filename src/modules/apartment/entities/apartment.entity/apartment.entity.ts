@@ -141,4 +141,8 @@ export class Apartment extends BaseModel {
 
   @Column({ nullable: true })
   title:string;
+
+ 
+  @Column({ nullable: true })
+  lastViewedBy: string; // Stores the userId of the last viewer
 }

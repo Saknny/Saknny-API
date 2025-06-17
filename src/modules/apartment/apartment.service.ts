@@ -173,12 +173,17 @@ export class ApartmentService {
   }
 
   async getRecentlyViewed(userId: string, limit = 6) {
-    const apartments = await this.apartmentRepository.find({
-      where: { lastViewedAt: Not(IsNull()) },
-      order: { lastViewedAt: 'DESC' },
-      take: limit,
-      relations: ['rooms', 'rooms.beds'],
-    });
+     if (!userId) {
+    return { apartments: [] }; // Return empty if no user
+  }
+
+  // Find apartments last viewed by this user, ordered by most recent
+  const apartments = await this.apartmentRepository.find({
+    where: { lastViewedBy: userId },
+    order: { lastViewedAt: 'DESC' },
+    take: limit,
+    relations: ['rooms', 'rooms.beds'],
+  });
     // Fetch the favorite apartments for this student
     let favoriteApartmentIds: string[] = [];
     if (userId) {
@@ -203,14 +208,17 @@ export class ApartmentService {
     }
   }
 
-  async updateLastViewed(id: string): Promise<Apartment> {
-    const apartment = await this.apartmentRepository.findOne({ id });
+  async updateLastViewed(id: string, userId: string): Promise<Apartment> {
+    const apartment = await this.apartmentRepository.findOne( { id } );
 
     if (!apartment) {
-      throw new Error('Apartment not found');
+      throw new NotFoundException('Apartment not found');
     }
 
+    // Update both the timestamp and the user who viewed it
     apartment.lastViewedAt = new Date();
+    apartment.lastViewedBy = userId; // Store the userId
+    
     return this.apartmentRepository.save(apartment);
   }
   //filter by price
