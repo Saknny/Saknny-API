@@ -15,6 +15,8 @@ import { ProviderSubscriptionModule } from '../provider-subscription/provider-su
 import { Student } from '../student/entities/student.entity';
 import { Image } from '../image/image.entity';
 import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.entity';
+import { SubscriptionPlanService } from '../subscription-plan/subscription-plan.service';
+import { SubscriptionPlanModule } from '../subscription-plan/subscription-plan.module';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.e
       ApartmentDocument,
       Student,
       FavoriteApartment,
+      
     ]),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // Ensure this path exists
@@ -33,6 +36,7 @@ import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.e
       exclude: ['/api*'], // Exclude API routes from static serving
     }),
     forwardRef(() => PendingRequestModule),
+    SubscriptionPlanModule,
     ProviderSubscriptionModule,
   ],
 
