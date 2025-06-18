@@ -419,6 +419,7 @@ export class ApartmentService {
     return blockedApartments;
   }
 
+  
 
   async searchApartments(query: SearchApartmentsDto, user: currentUserType) {
     const { page, limit, sortBy, sortOrder, ...filters } = query;
@@ -702,5 +703,8 @@ export class ApartmentService {
       totalPages: Math.ceil(total / limit),
     };
   }
+
+
+
 
 }

@@ -40,5 +40,15 @@ export class ReportController {
     return this.reportService.getApartmentReports(dto);
   }
 
+  @Get('')
+  async getReport(@Body() body){
+    return this.reportService.getReport(body.id);
+  }
+
+  @Patch('unblock')
+  async unblockApartment(@Body() body){
+    return this.reportService.unblockApartment(body.apartmentId)
+  }
+
 
 }
