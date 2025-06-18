@@ -22,6 +22,8 @@ import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.e
 import { SearchApartmentsDto } from './dto/search-apartments.dto';
 import { currentUserType } from '@src/libs/types/current-user.type';
 import { FilterApartmentsDto } from './dto/filter-apartments.dto';
+import { SubscriptionPlan } from '../subscription-plan/subscription-plan.entity/subscription-plan.entity';
+import { SubscriptionPlanService } from '../subscription-plan/subscription-plan.service';
 
 @Injectable()
 export class ApartmentService {
@@ -47,6 +49,9 @@ export class ApartmentService {
     private readonly apartmentDocumentRepo: BaseRepository<ApartmentDocument>,
     @Inject(ProviderSubscriptionService)
     private readonly providerSubscriptionService: ProviderSubscriptionService,
+
+     @Inject(SubscriptionPlanService)
+    private readonly subscriptionPlanService: SubscriptionPlanService,
   ) { }
 
   async createApartment(
@@ -342,61 +347,139 @@ export class ApartmentService {
     };
   }
 
-  async getHomeData(studentId?: string, user?: currentUserType) {
-    const numberOfApartments = await this.apartmentRepository.count();
+  // async getHomeData(studentId?: string, user?: currentUserType) {
+  //   const numberOfApartments = await this.apartmentRepository.count();
 
-    const numberOfBeds = await this.apartmentRepository
-      .createQueryBuilder('apartment')
-      .leftJoin('apartment.rooms', 'room')
-      .leftJoin('room.beds', 'bed')
-      .select('COUNT(bed.id)::int', 'totalBeds')
-      .getRawOne();
+  //   const numberOfBeds = await this.apartmentRepository
+  //     .createQueryBuilder('apartment')
+  //     .leftJoin('apartment.rooms', 'room')
+  //     .leftJoin('room.beds', 'bed')
+  //     .select('COUNT(bed.id)::int', 'totalBeds')
+  //     .getRawOne();
 
-    const numberOfProviders = await this.providerRepository.count();
-    const numberOfStudents = await this.studentRepository.count();
-    const recentlyAdded = await this.getRecentApartments(user.id, 6);
-    const recentlyViewed = await this.getRecentlyViewed(user.id, 6);
+  //   const numberOfProviders = await this.providerRepository.count();
+  //   const numberOfStudents = await this.studentRepository.count();
+  //   const recentlyAdded = await this.getRecentApartments(user.id, 6);
+  //   const recentlyViewed = await this.getRecentlyViewed(user.id, 6);
+  //   const apartmentsByLocation = await this.getApartmentsByLocation(
+  //     ApartmentLocation.ELSAIDY,
+  //     6,
+  //     1,
+  //   );
+
+  //   // Fetch the favorite apartments for this student
+  //   let favoriteApartmentIds: string[] = [];
+  //   if (studentId) {
+  //     const favoriteApartments = await this.favoriteApartmentRepository.find({
+  //       where: { favorite: { student: { id: studentId } } },
+  //       relations: ['apartment'],
+  //     });
+
+  //     favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+  //   }
+
+  //   // Add `isFavorite` field to each apartment
+  //   const markFavorite = (apartments: Apartment[]) =>
+  //     apartments.map((apartment) => ({
+  //       ...apartment,
+  //       isFavorite: favoriteApartmentIds.includes(apartment.id),
+  //     }));
+
+  //   return {
+  //     user: {
+  //       id: user?.id,
+  //       email: user?.verifiedEmail,
+  //       role: user?.role,
+  //       profileComplete: user?.profileComplete
+  //       // Add any other user fields you need
+  //     },
+  //     numberOfApartments,
+  //     numberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0,
+  //     numberOfProviders,
+  //     numberOfStudents,
+  //     recentlyAdded: markFavorite(recentlyAdded),
+  //     recentlyViewed: recentlyViewed,
+  //     apartmentsByLocation: markFavorite(apartmentsByLocation),
+  //   };
+  // }
+
+
+
+async getHomeData(studentId?: string, user?: currentUserType) {
+  const numberOfApartments = await this.apartmentRepository.count();
+
+  const numberOfBeds = await this.apartmentRepository
+    .createQueryBuilder('apartment')
+    .leftJoin('apartment.rooms', 'room')
+    .leftJoin('room.beds', 'bed')
+    .select('COUNT(bed.id)::int', 'totalBeds')
+    .getRawOne();
+
+  const numberOfProviders = await this.providerRepository.count();
+  const numberOfStudents = await this.studentRepository.count();
+  const recentlyAdded = await this.getRecentApartments(user.id, 6);
+  const recentlyViewed = await this.getRecentlyViewed(user.id, 6);
+
+  // Fetch the favorite apartments for this student
+  let favoriteApartmentIds: string[] = [];
+  if (studentId) {
+    const favoriteApartments = await this.favoriteApartmentRepository.find({
+      where: { favorite: { student: { id: studentId } } },
+      relations: ['apartment'],
+    });
+
+    favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+  }
+
+  // Add `isFavorite` field to each apartment
+  const markFavorite = (apartments: Apartment[]) =>
+    apartments.map((apartment) => ({
+      ...apartment,
+      isFavorite: favoriteApartmentIds.includes(apartment.id),
+    }));
+
+  const response: any = {
+    user: {
+      id: user?.id,
+      email: user?.verifiedEmail,
+      role: user?.role,
+      profileComplete: user?.profileComplete,
+    },
+    numberOfApartments,
+    numberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0,
+    numberOfProviders,
+    numberOfStudents,
+    recentlyAdded: markFavorite(recentlyAdded),
+    recentlyViewed: recentlyViewed,
+  };
+
+  // Conditionally include apartmentsByLocation or subscriptionPlans
+  if (user?.role === 'STUDENT') {
     const apartmentsByLocation = await this.getApartmentsByLocation(
       ApartmentLocation.ELSAIDY,
       6,
       1,
     );
-
-    // Fetch the favorite apartments for this student
-    let favoriteApartmentIds: string[] = [];
-    if (studentId) {
-      const favoriteApartments = await this.favoriteApartmentRepository.find({
-        where: { favorite: { student: { id: studentId } } },
-        relations: ['apartment'],
-      });
-
-      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
-    }
-
-    // Add `isFavorite` field to each apartment
-    const markFavorite = (apartments: Apartment[]) =>
-      apartments.map((apartment) => ({
-        ...apartment,
-        isFavorite: favoriteApartmentIds.includes(apartment.id),
-      }));
-
-    return {
-      user: {
-        id: user?.id,
-        email: user?.verifiedEmail,
-        role: user?.role,
-        profileComplete: user?.profileComplete
-        // Add any other user fields you need
-      },
-      numberOfApartments,
-      numberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0,
-      numberOfProviders,
-      numberOfStudents,
-      recentlyAdded: markFavorite(recentlyAdded),
-      recentlyViewed: recentlyViewed,
-      apartmentsByLocation: markFavorite(apartmentsByLocation),
-    };
+    response.apartmentsByLocation = markFavorite(apartmentsByLocation);
+  } else {
+    response.subscriptionPlans = await this.subscriptionPlanService.getAllPlans();
   }
+
+  return response;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   async getApartmentsByLocation(
     location: ApartmentLocation,
@@ -419,6 +502,7 @@ export class ApartmentService {
     return blockedApartments;
   }
 
+  
 
   async searchApartments(query: SearchApartmentsDto, user: currentUserType) {
     const { page, limit, sortBy, sortOrder, ...filters } = query;
@@ -702,5 +786,8 @@ export class ApartmentService {
       totalPages: Math.ceil(total / limit),
     };
   }
+
+
+
 
 }

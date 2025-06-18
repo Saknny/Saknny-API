@@ -74,20 +74,43 @@ export class ReportService {
       });
   
       await this.reportRepo.save(report);
+
       const [reports, count] = await this.reportRepo
         .createQueryBuilder('report')
         .where('report.apartmentId = :apartmentId', { apartmentId: dto.apartmentId })
         .getManyAndCount();
 
-    if (count ==100){
+        console.log(count)
+    if (count == 1){
         await this.apartmentRepo.update(dto.apartmentId, {
             status:"BLOCKED"
         });
     }
+
     return report;
     
   }
  
+  async getReport(id:string){
+    return this.reportRepo.findOneBy({id});
+  }
+
+  async unblockApartment(apartmentId:string){
+            await this.apartmentRepo.update(apartmentId, {
+            status:"APPROVED" // APPROVED / PUBLISHED 
+        });
+        await this.removeReportsOnApartment(apartmentId);
+  }
+
+async removeReportsOnApartment(apartmentId: string) {
+  await this.reportRepo
+    .createQueryBuilder()
+    .delete()
+    .from(Report) // use the correct entity class name
+    .where("apartmentId = :apartmentId", { apartmentId })
+    .execute();
+}
+
 
   
   
