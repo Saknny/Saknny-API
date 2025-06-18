@@ -255,7 +255,7 @@ export class ApartmentService {
 
   async getApartment(id: string, studentId?: string) {
     const apartment = await this.apartmentRepository.findOne(
-      { id, status: 'APPROVED' },//SHOULD BE PUBLISHED
+      { id },//SHOULD BE PUBLISHED
       ['provider', 'rooms', 'rooms.beds'],
     );
 
