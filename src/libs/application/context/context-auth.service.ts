@@ -11,6 +11,7 @@ import { User } from '../../../modules/user/entities/user.entity';
 import { Request } from 'express';
 import { get } from 'env-var';
 import * as jwt from 'jsonwebtoken';
+import { UserRoleEnum } from '@src/modules/user/enums/user.enum';
 
 @Injectable()
 export class ContextAuthService implements IContextAuthService {
@@ -77,8 +78,9 @@ export class ContextAuthService implements IContextAuthService {
       throw new BaseHttpException(ErrorCodeEnum.BLOCKED_USER);
     else if (!user.verifiedEmail)
       throw new BaseHttpException(ErrorCodeEnum.USER_IS_NOT_VERIFIED);
-    else if (!user[`${user.role.toLowerCase()}`])
-      throw new BaseHttpException(ErrorCodeEnum.USER_PROFILE_MiSSING);
+   else if (user.role!==UserRoleEnum.ADMIN && !user[`${user.role.toLowerCase()}`])
+     throw new BaseHttpException(ErrorCodeEnum.USER_PROFILE_MiSSING);
+
 
     return user;
   }

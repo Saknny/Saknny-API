@@ -258,7 +258,7 @@ export class ApartmentService {
     };
   }
 
-  async getApartment(id: string, studentId?: string) {
+  async getApartment(id: string, user:currentUserType) {
     const apartment = await this.apartmentRepository.findOne(
       { id },//SHOULD BE PUBLISHED
       ['provider', 'rooms', 'rooms.beds'],
@@ -268,9 +268,9 @@ export class ApartmentService {
       throw new NotFoundException('Apartment not found');
     }
     let favoriteApartmentIds: string[] = [];
-    if (studentId) {
+    if (user?.student?.id) {
       const favoriteApartments = await this.favoriteApartmentRepository.find({
-        where: { favorite: { student: { id: studentId } } },
+        where: { favorite: { student: { id: user?.student?.id } } },
         relations: ['apartment'],
       });
 

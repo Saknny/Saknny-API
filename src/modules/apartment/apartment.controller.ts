@@ -167,7 +167,7 @@ async searchApartments(
   @Get(':apartmentId')
   async getApartment(@Param('apartmentId') apartmentId: string
     , @currentUser() user: currentUserType) {
-    return this.apartmentService.getApartment(apartmentId, user?.student?.id);
+    return this.apartmentService.getApartment(apartmentId, user);
   }
 
   @Get(':apartmentId/board')
