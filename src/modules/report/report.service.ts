@@ -20,10 +20,10 @@ export class ReportService {
   ) { }
 
     
-  async getApartmentReports(dto :ApartmentReviewsDto){
+  async getApartmentReports(apartmentId:string){
     const apartment = await this.apartmentRepo
       .createQueryBuilder('apartment')
-      .where('apartment.id = :apartmentId', { apartmentId:dto.apartmentId })
+      .where('apartment.id = :apartmentId', { apartmentId:apartmentId })
       .getOne();
 
     if (!apartment) {
@@ -39,7 +39,7 @@ export class ReportService {
         'report.comment',
         'report.createdAt'
       ])
-      .where('report.apartmentId = :apartmentId', { apartmentId:dto.apartmentId })
+      .where('report.apartmentId = :apartmentId', { apartmentId:apartmentId })
       .orderBy('report.createdAt', 'DESC') // Sort by latest reviews first
       .getMany();
 

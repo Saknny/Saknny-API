@@ -33,11 +33,10 @@ export class ReportController {
         return this.reportService.createReport(id, dto);
     }
 
-  @Get('apartmentReports')
-  async getApartmentReview(
-    @Body() dto :ApartmentReviewsDto
+  @Get('apartmentReports/:id')
+  async getApartmentReview(@Param('id') id
   ){
-    return this.reportService.getApartmentReports(dto);
+    return this.reportService.getApartmentReports(id);
   }
 
   @Get('')
