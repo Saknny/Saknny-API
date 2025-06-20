@@ -219,8 +219,8 @@ export class PendingRequestService {
     return await this.imagesRepo.save(imageApproval);
   }
 
- async getPendingRequests() {
-  const requests = await this.pendingRequestRepo
+  async getPendingRequests() {
+    const requests = await this.pendingRequestRepo
     .createQueryBuilder('request')
     .leftJoinAndSelect('request.items', 'items')
     .leftJoinAndSelect('items.request', 'requestItemRequest')
@@ -232,32 +232,40 @@ export class PendingRequestService {
     .where('request.status = :status', { status: Status.PENDING })
     .getMany();
 
+    const baseUrl = 'http://45.88.223.182:4000';
+    const uploadPath = '/uploads';
+    for (const request of requests) {
+      for (const item of request.items) {
+        if (item.images) {
+          item.images = item.images.map(img => ({
+            ...img,
+            url: `${baseUrl}${uploadPath}/${item.entityType}/${img.url}`
+          }));
+        }
+      }
+    }
+    console.log(requests);
+    return requests;
+  }
+
+  async getRequest(id: string) {
+  const request = await this.pendingRequestRepo
+    .createQueryBuilder('request')
+    .leftJoinAndSelect('request.items', 'items')
+    .leftJoinAndSelect('items.request', 'requestItemRequest')
+    .leftJoinAndSelect('items.images', 'images')
+    .where('request.id = :id', { id })
+    .getOne();
+
   const baseUrl = 'http://45.88.223.182:4000';
   const uploadPath = '/uploads';
 
-  for (const request of requests) {
-    // ✅ Add full profile if request is for profile update
-    if (request.type === Type.PROFILE_UPDATE) {
-      if (request.referenceType === EntityType.STUDENT) {
-        const fullStudent = await this.studentRepo
-          .createQueryBuilder('student')
-          .leftJoinAndSelect('student.user', 'user')
-          .where('user.id = :id', { id: request.userId })
-          .getOne();
+  if (!request) {
+    throw new NotFoundException('Request not found');
+  }
 
-        request['fullProfile'] = fullStudent;
-      } else if (request.referenceType === EntityType.PROVIDER) {
-        const fullProvider = await this.providerRepo
-          .createQueryBuilder('provider')
-          .leftJoinAndSelect('provider.user', 'user')
-          .where('user.id = :id', { id: request.userId })
-          .getOne();
-
-        request['fullProfile'] = fullProvider;
-      }
-    }
-
-    // ✅ Fix image URLs
+  // ✅ Fix image URLs
+  if (request?.items) {
     for (const item of request.items) {
       if (item.images) {
         item.images = item.images.map(img => ({
@@ -268,33 +276,45 @@ export class PendingRequestService {
     }
   }
 
-  return requests;
-}
+  // ✅ Include full profile and user if request is PROFILE_UPDATE or COMPLETE_PROFILE
+  if (
+    request.type === Type.PROFILE_UPDATE ||
+    request.type === Type.PROFILE_COMPLETE
+  ) {
+    if (request.referenceType === EntityType.STUDENT) {
+      const fullStudent = await this.studentRepo
+        .createQueryBuilder('student')
+        .leftJoinAndSelect('student.user', 'user')
+        .where('user.id = :id', { id: request.userId })
+        .getOne();
 
+      request['fullProfile'] = fullStudent;
 
-  async getRequest(id: string) {
-    const request = await this.pendingRequestRepo
-      .createQueryBuilder('request')
-      .leftJoinAndSelect('request.items', 'items')
-      .leftJoinAndSelect('items.request', 'requestItemRequest')
-      .leftJoinAndSelect('items.images', 'images')
-      .where('request.id = :id', { id })
-      .getOne();
-    const baseUrl = 'http://45.88.223.182:4000';
-    const uploadPath = '/uploads';
-    if (request?.items) {
-      for (const item of request.items) {
-        if (item.images) {
-          item.images = item.images.map(img => ({
-            ...img,
-            url: `${baseUrl}${uploadPath}/${item.entityType}/${img.url}`
-          }));
-        }
+      if (fullStudent?.user) {
+        request['user'] = {
+          email: fullStudent.user.verifiedEmail || fullStudent.user.unVerifiedEmail,
+        };
+      }
+    } else if (request.referenceType === EntityType.PROVIDER) {
+      const fullProvider = await this.providerRepo
+        .createQueryBuilder('provider')
+        .leftJoinAndSelect('provider.user', 'user')
+        .where('user.id = :id', { id: request.userId })
+        .getOne();
+
+      request['fullProfile'] = fullProvider;
+
+      if (fullProvider?.user) {
+        request['user'] = {
+          email: fullProvider.user.verifiedEmail || fullProvider.user.unVerifiedEmail,
+        };
       }
     }
-
-    return request;
   }
+
+  return request;
+}
+
 
 
   async getItem(id: string) {
