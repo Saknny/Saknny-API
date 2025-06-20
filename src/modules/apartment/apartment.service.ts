@@ -643,107 +643,92 @@ async getHomeData(studentId?: string, user?: currentUserType) {
 
 
   async getRankedMatchingApartments(studentId: string) {
-    const currentStudent = await this.studentRepository
-      .createQueryBuilder('student')
-      .select(['student.id', 'student.major', 'student.university', 'student.hobbies'])
-      .where('student.id = :studentId', { studentId })
-      .getOne();
+  const currentStudent = await this.studentRepository
+    .createQueryBuilder('student')
+    .select(['student.id', 'student.major', 'student.university', 'student.level'])
+    .where('student.id = :studentId', { studentId })
+    .getOne();
 
-    if (!currentStudent) throw new Error('Student not found');
+  if (!currentStudent) throw new Error('Student not found');
 
-    const studentMajor = currentStudent.major;
-    const studentUniversity = currentStudent.university;
-    const studentHobbies = currentStudent.hobbies ?? [];
+  const studentMajor = currentStudent.major;
+  const studentUniversity = currentStudent.university;
+  const studentLevel = currentStudent.level;
 
-    console.log('\n🧍‍♂️ Current Student:');
-    console.log(`Major: ${studentMajor}`);
-    console.log(`University: ${studentUniversity}`);
-    console.log(`Hobbies: ${studentHobbies.join(', ') || 'None'}`);
+  console.log('\n🧍‍♂️ Current Student:');
+  console.log(`Major: ${studentMajor}`);
+  console.log(`University: ${studentUniversity}`);
+  console.log(`Level: ${studentLevel}`);
 
-    // Step 1: Subquery for per-roommate match score
-    const subQuery = this.studentRepository
-      .createQueryBuilder('roommate')
-      .select([
-        'apartment.id AS apartment_id',
-        `
+  // Step 1: Subquery for per-roommate match score (without hobbies, add level)
+  const subQuery = this.studentRepository
+    .createQueryBuilder('roommate')
+    .select([
+      'apartment.id AS apartment_id',
+      `
       (
         CASE WHEN roommate.major = :major THEN 1 ELSE 0 END +
         CASE WHEN roommate.university = :university THEN 1 ELSE 0 END +
-        ${studentHobbies.length > 0
-          ? studentHobbies
-            .map((hobby, i) => `CASE WHEN roommate.hobbies LIKE :hobby${i} THEN 1 ELSE 0 END`)
-            .join(' + ')
-          : '0'}
+        CASE WHEN roommate.level = :level THEN 1 ELSE 0 END
       ) AS match_score`
-      ])
-      .innerJoin('roommate.bed', 'bed')
-      .innerJoin('bed.room', 'room')
-      .innerJoin('room.apartment', 'apartment')
-      .where('roommate.id != :studentId', { studentId });
+    ])
+    .innerJoin('roommate.bed', 'bed')
+    .innerJoin('bed.room', 'room')
+    .innerJoin('room.apartment', 'apartment')
+    .where('roommate.id != :studentId', { studentId });
 
-    subQuery.setParameter('major', studentMajor);
-    subQuery.setParameter('university', studentUniversity);
-    studentHobbies.forEach((hobby, i) => {
-      subQuery.setParameter(`hobby${i}`, `%${hobby}%`);
+  subQuery.setParameter('major', studentMajor);
+  subQuery.setParameter('university', studentUniversity);
+  subQuery.setParameter('level', studentLevel);
+
+  // Step 2: Main query - join subquery and load apartment -> rooms -> beds
+  const apartmentsWithScore = await this.apartmentRepository
+    .createQueryBuilder('apartment')
+    .leftJoinAndSelect('apartment.rooms', 'room')
+    .leftJoinAndSelect('room.beds', 'bed')
+    .leftJoin(
+      '(' + subQuery.getQuery() + ')',
+      'scored',
+      'scored.apartment_id = apartment.id'
+    )
+    .addSelect('COALESCE(CEIL(AVG(scored.match_score)), 0)', 'avg_match_score')
+    .groupBy('apartment.id')
+    .addGroupBy('room.id')
+    .addGroupBy('bed.id')
+    .orderBy('avg_match_score', 'DESC')
+    .setParameters(subQuery.getParameters())
+    .getRawAndEntities();
+
+  const { entities: apartments, raw } = apartmentsWithScore;
+
+  const result = apartments.map((apt, i) => ({
+    ...apt,
+    avgMatchScore: Number(raw[i].avg_match_score),
+  }));
+
+  // Fetch the favorite apartments for this student
+  let favoriteApartmentIds: string[] = [];
+  if (studentId) {
+    const favoriteApartments = await this.favoriteApartmentRepository.find({
+      where: { favorite: { student: { id: studentId } } },
+      relations: ['apartment'],
     });
 
-    // Step 2: Main query - join subquery, load apartment -> rooms -> beds
-    const apartmentsWithScore = await this.apartmentRepository
-  .createQueryBuilder('apartment')
-  .leftJoinAndSelect('apartment.rooms', 'room')
-  .leftJoinAndSelect('room.beds', 'bed')
-  .leftJoin(
-    '(' + subQuery.getQuery() + ')',
-    'scored',
-    'scored.apartment_id = apartment.id'
-  )
-  .addSelect('COALESCE(CEIL(AVG(scored.match_score)), 0)', 'avg_match_score')
-  .groupBy('apartment.id')
-  .addGroupBy('room.id')
-  .addGroupBy('bed.id')
-  .orderBy('avg_match_score', 'DESC')
-  .setParameters(subQuery.getParameters())
-  .getRawAndEntities();
+    favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+  }
 
-
-    const { entities: apartments, raw } = apartmentsWithScore;
-
-    // Attach match score to apartment entities
-    const result = apartments.map((apt, i) => ({
-      ...apt,
-      avgMatchScore: Number(raw[i].avg_match_score),
+  // Add `isFavorite` field
+  const markFavorite = (apartments: Apartment[]) =>
+    apartments.map((apartment) => ({
+      ...apartment,
+      isFavorite: favoriteApartmentIds.includes(apartment.id),
     }));
 
-    // Log
-    console.log('\n🏡 Apartments with Rooms and Beds Ranked by Average Match Score:\n');
-    result.forEach((apt) => {
-      console.log(`Apartment ID: ${apt.id} | Match Score: ${apt.avgMatchScore}`);
-    });
+  return {
+    apartments: markFavorite(result),
+  };
+}
 
-    // Fetch the favorite apartments for this student
-    let favoriteApartmentIds: string[] = [];
-    if (studentId) {
-      console.log("blabla")
-      const favoriteApartments = await this.favoriteApartmentRepository.find({
-        where: { favorite: { student: { id: studentId } } },
-        relations: ['apartment'],
-      });
-
-      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
-    }
-
-    // Add `isFavorite` field to each apartment
-    const markFavorite = (apartments: Apartment[]) =>
-      apartments.map((apartment) => ({
-        ...apartment,
-        isFavorite: favoriteApartmentIds.includes(apartment.id),
-      }));
-
-    return {
-      apartments: markFavorite(result)
-    };
-
-  }
   async filterApartments(studentId: string, filterDto: FilterApartmentsDto) {
     const { gender, page = 1, limit = 10 } = filterDto;
     const skip = (page - 1) * limit;
