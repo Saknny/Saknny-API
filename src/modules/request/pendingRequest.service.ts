@@ -235,18 +235,50 @@ export class PendingRequestService {
     const baseUrl = 'http://45.88.223.182:4000';
     const uploadPath = '/uploads';
     for (const request of requests) {
-      for (const item of request.items) {
-        if (item.images) {
-          item.images = item.images.map(img => ({
-            ...img,
-            url: `${baseUrl}${uploadPath}/${item.entityType}/${img.url}`
-          }));
-        }
+    // ✅ Fix image URLs
+    for (const item of request.items) {
+      if (item.images) {
+        item.images = item.images.map(img => ({
+          ...img,
+          url: `${baseUrl}${uploadPath}/${item.entityType}/${img.url}`,
+        }));
       }
     }
-    console.log(requests);
-    return requests;
+
+    // ✅ Get user profile manually (like in getRequest)
+    if (request.referenceType === EntityType.STUDENT) {
+      const fullStudent = await this.studentRepo
+        .createQueryBuilder('student')
+        .leftJoinAndSelect('student.user', 'user')
+        .where('user.id = :id', { id: request.userId })
+        .getOne();
+
+      request['fullProfile'] = fullStudent;
+
+      if (fullStudent?.user) {
+        request['user'] = {
+          email: fullStudent.user.verifiedEmail || fullStudent.user.unVerifiedEmail,
+        };
+      }
+    } else if (request.referenceType === EntityType.PROVIDER) {
+      const fullProvider = await this.providerRepo
+        .createQueryBuilder('provider')
+        .leftJoinAndSelect('provider.user', 'user')
+        .where('user.id = :id', { id: request.userId })
+        .getOne();
+
+      request['fullProfile'] = fullProvider;
+
+      if (fullProvider?.user) {
+        request['user'] = {
+          email: fullProvider.user.verifiedEmail || fullProvider.user.unVerifiedEmail,
+        };
+      }
+    }
   }
+
+  return requests;
+}
 
   async getRequest(id: string) {
   const request = await this.pendingRequestRepo
