@@ -61,4 +61,10 @@ export class AdminController {
   async imageApproval(@Param('id') id: string, @Body() body: ImageApprovalDto) {
     return await this.pendingRequestService.updateImageApproval(id, body);
   }
+
+  @Get('dashboard')
+  async getDashboardData() {
+    return await this.adminService.getDashboardData();
+  }
+
 }

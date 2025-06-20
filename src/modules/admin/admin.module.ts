@@ -9,10 +9,14 @@ import { StudentModule } from "../student/student.module";
 import { Student } from "../student/entities/student.entity";
 import { ApartmentModule } from "../apartment/apartment.module";
 import { PendingRequestModule } from "../request/pendingRequest.module";
+import { Apartment } from "../apartment/entities/apartment.entity/apartment.entity";
+import { RentalRequest } from "../booking-request/entity/rental-request.entity";
+import { PendingRequest } from "../request/entities/pendingRequest.entity";
+import { Review } from "../review/entities/review.entity";
 
 
 @Module({
-  imports: [DatabaseModule.forFeature([Admin])
+  imports: [DatabaseModule.forFeature([Admin,Apartment,Student,RentalRequest,Provider,PendingRequest,Review])
   , PendingRequestModule],
   controllers: [AdminController],
   providers: [AdminService],

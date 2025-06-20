@@ -118,6 +118,12 @@ export class ProviderController {
   ): Promise<Apartment[]> {
     return this.providerService.getProviderApartments(user.id);
   }
+    // provider dashboard 
+  @Get('dashboard')
+  async getProviderDashboard(@currentUser() user: currentUserType) {
+    return this.providerService.getProviderDashboardData(user?.provider?.id);
+  }
+
 
   @Get(':providerId')
   getProvider(@Param('providerId') providerId: string) {
@@ -128,4 +134,6 @@ export class ProviderController {
   getProviderBoard(@Param('providerId') providerId: string) {
     return this.providerService.providerBoard(providerId);
   }
+
+
 }

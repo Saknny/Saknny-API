@@ -6,9 +6,12 @@ import { Provider } from './entities/provider.entity';
 import { Student } from '../student/entities/student.entity';
 import { Apartment } from '../apartment/entities/apartment.entity/apartment.entity';
 import { PendingRequestModule } from '../request/pendingRequest.module';
+import { Room } from '../room/entities/room.entity/room.entity';
+import { RentalRequest } from '../booking-request/entity/rental-request.entity';
+import { Bed } from '../bed/entities/bed.entity/bed.entity';
 
 @Module({
-  imports: [DatabaseModule.forFeature([Provider, Student,Apartment]),
+  imports: [DatabaseModule.forFeature([Provider, Student,Apartment,Room,Bed,RentalRequest]),
  forwardRef(() => PendingRequestModule)],
   exports: [ProviderService,DatabaseModule],
   controllers: [ProviderController],
