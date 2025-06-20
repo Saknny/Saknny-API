@@ -13,6 +13,7 @@ import {
   Inject,
   Get,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 
 import { PendingRequestService } from '../request/pendingRequest.service';
@@ -38,9 +39,9 @@ export class ReviewController {
 
   @Get('apartmentReviews')
   async getApartmentReview(
-    @Body() dto :ApartmentReviewsDto
-  ){
-    return this.reviewService.getApartmentReviews(dto);
+    @Query('apartmentId') apartmentId: string,
+  ) {
+    return this.reviewService.getApartmentReviews(apartmentId);
   }
 
 
