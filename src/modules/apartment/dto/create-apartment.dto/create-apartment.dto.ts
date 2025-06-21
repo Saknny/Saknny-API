@@ -1,6 +1,7 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateRoomDto } from '@src/modules/room/dto/create-room.dto/create-room.dto';
+import { ApartmentLocation } from '../../enums/location.enum';
 export class CreateApartmentDto {
   @IsNotEmpty()
   @IsString()
@@ -65,7 +66,11 @@ export class CreateApartmentDto {
   @IsNumber()
   bathrooms: number;
 
-    @IsString()
-    title:string
+  @IsString()
+  title:string
+
+  
+  @IsEnum(ApartmentLocation)
+  locationEnum: ApartmentLocation;
 
 }
