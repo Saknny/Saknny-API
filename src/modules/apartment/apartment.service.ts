@@ -772,6 +772,21 @@ async getHomeData(studentId?: string, user?: currentUserType) {
     };
   }
 
+  async getApartmentDocumentById(apartmentId: string) {
+  const apartment = await this.apartmentRepository.findOne(
+    { id: apartmentId },
+    ['document', 'provider']
+  );
+  if (!apartment) {
+    throw new NotFoundException('Apartment not found');
+  }
+  if (!apartment.document) {
+    throw new NotFoundException('No document found for this apartment');
+  }
+  return apartment.document;
+}
+
+
 
 
 
