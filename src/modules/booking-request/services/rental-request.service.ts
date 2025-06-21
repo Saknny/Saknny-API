@@ -69,6 +69,23 @@ export class RentalRequestService {
         'Apartment gender restriction does not match student.',
       );
     }
+
+    // ✅ Check if the student already requested this bed
+  const existingRequest = await this.rentalRequestRepo
+    .createQueryBuilder('request')
+    .innerJoin('request.student', 'student')
+    .innerJoin('request.bed', 'bed')
+    .where('student.id = :studentId', { studentId })
+    .andWhere('bed.id = :bedId', { bedId })
+    .getOne();
+
+
+    if (existingRequest) {
+      throw new BadRequestException(
+        'You have already submitted a request for this bed.',
+      );
+    }
+
     await this.notificationService.createNotification({
       userId: student.userId,
       type: 'booking_request',
@@ -396,6 +413,20 @@ return results;
       (sum, bed) => sum + Number(bed.price),
       0,
     );
+    // Add this before creating the room rental request
+    const existingRequest = await this.roomRentalRequestRepo
+      .createQueryBuilder('request')
+      .innerJoin('request.student', 'student')
+      .innerJoin('request.room', 'room')
+      .where('student.id = :studentId', { studentId })
+      .andWhere('room.id = :roomId', { roomId })
+      .getOne();
+
+    if (existingRequest) {
+      throw new BadRequestException(
+        'You have already submitted a request for this room.',
+      );
+    }
 
     return this.roomRentalRequestRepo.createOne({
       student,
