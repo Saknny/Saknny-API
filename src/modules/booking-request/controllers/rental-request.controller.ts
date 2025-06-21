@@ -15,7 +15,13 @@ import { User } from '@src/modules/user/entities/user.entity';
 
 @Controller('rental-requests')
 export class RentalRequestController {
-  constructor(private readonly rentalRequestService: RentalRequestService) {}
+  constructor(private readonly rentalRequestService: RentalRequestService) { }
+
+  @Get()
+  async getAllRequests() {
+    return this.rentalRequestService.getAllRequests();
+  }
+
 
   @Post()
   async createRequest(
@@ -31,10 +37,7 @@ export class RentalRequestController {
     );
   }
 
-  @Get()
-  async getAllRequests() {
-    return this.rentalRequestService.getAllRequests();
-  }
+
 
   @Patch(':id/approve')
   async approveRequest(@Param('id') id: string) {
@@ -69,7 +72,7 @@ export class RentalRequestController {
 
     return this.rentalRequestService.getRequestsForProvider(user.provider.id);
   }
-    @Get('provider/:id')
+  @Get('provider/:id')
   async getRequestForProviderById(
     @currentUser() user: User,
     @Param('id') requestId: string,
@@ -81,4 +84,8 @@ export class RentalRequestController {
     return this.rentalRequestService.getRequestForProviderById(user.provider.id, requestId);
   }
 
+  @Get(':id')
+  async getRequest(@Param('id') id) {
+    return this.rentalRequestService.getRequestById(id);
+  }
 }

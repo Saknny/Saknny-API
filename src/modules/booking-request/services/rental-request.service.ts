@@ -146,7 +146,13 @@ export class RentalRequestService {
   }
 
   async rejectRequest(requestId: string) {
-    const request = await this.rentalRequestRepo.findOne({ id: requestId });
+     const request = await this.rentalRequestRepo
+    .createQueryBuilder('rentalRequest')
+    .leftJoinAndSelect('rentalRequest.student', 'student')
+    .leftJoinAndSelect('student.user', 'user')
+    .leftJoinAndSelect('rentalRequest.bed', 'bed')
+    .where('rentalRequest.id = :id', { id: requestId })
+    .getOne();
 
     if (!request || request.status !== RentalStatusEnum.PENDING) {
       throw new BadRequestException('Invalid request.');
@@ -154,7 +160,7 @@ export class RentalRequestService {
 
     request.status = RentalStatusEnum.REJECTED;
     await this.notificationService.createNotification({
-      userId: request.student.userId,
+      userId: request.student.user.id,
       type: 'booking_request',
       message: `Your booking request for bed ${request.bed.id} was rejected`,
       relatedEntityId: requestId,
@@ -331,6 +337,38 @@ return results;
     return request;
   }
 
+
+
+
+  // Get one request for a provider's apartments
+  async getRequestById(requestId: string) {
+    const apartments = await this.apartmentRepo.find({
+      relations: ['rooms', 'rooms.beds'],
+    });
+
+    const bedIds = apartments.flatMap((apartment) =>
+      apartment.rooms.flatMap((room) => room.beds.map((bed) => bed.id)),
+    );
+
+    const request = await this.rentalRequestRepo
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.student', 'student')
+      .leftJoinAndSelect('request.bed', 'bed')
+      .leftJoinAndSelect('bed.room', 'room')
+      .leftJoinAndSelect('room.apartment', 'apartment')
+      .where('request.id = :requestId', { requestId })
+      .andWhere('bed.id IN (:...bedIds)', { bedIds })
+      .getOne();
+
+    if (!request) {
+      throw new NotFoundException(
+        'Request not found or does not belong to this provider',
+      );
+    }
+
+    return request;
+  }
+
   // ******************* Rooms ******************* //
 
   async createRoomRequest(studentId: string, roomId: string, duration: number) {
@@ -379,60 +417,71 @@ return results;
   }
 
   async approveRoomRequest(requestId: string) {
-    const request = await this.roomRentalRequestRepo.findOne(
-      { id: requestId },
-      ['room', 'room.beds', 'room.apartment'],
-    );
+  // Use QueryBuilder to fetch request + room + room.beds + room.apartment
+  const request = await this.roomRentalRequestRepo
+    .createQueryBuilder('request')
+    .leftJoinAndSelect('request.room', 'room')
+    .leftJoinAndSelect('room.beds', 'bed')
+    .leftJoinAndSelect('room.apartment', 'apartment')
+    .where('request.id = :id', { id: requestId })
+    .getOne();
 
-    const anyBedReserved = request.room.beds.some(
-      (bed) => bed.status !== 'AVAILABLE',
-    );
+  if (!request) {
+    throw new NotFoundException('Request not found');
+  }
 
-    if (anyBedReserved) {
-      request.status = RentalStatusEnum.REJECTED;
-      return this.roomRentalRequestRepo.save(request);
-    }
+  const anyBedReserved = request.room.beds.some(
+    (bed) => bed.status !== 'AVAILABLE',
+  );
 
-    request.status = RentalStatusEnum.ACCEPTED;
+  if (anyBedReserved) {
+    request.status = RentalStatusEnum.REJECTED;
+    return this.roomRentalRequestRepo.save(request);
+  }
 
-    // Reject all bed requests for this room
-    await this.rentalRequestRepo
-      .createQueryBuilder()
-      .update()
-      .set({ status: RentalStatusEnum.REJECTED })
-      .where('bedId IN ' +
-        this.roomRentalRequestRepo
-          .createQueryBuilder()
-          .subQuery()
-          .select('bed.id')
-          .from('bed', 'bed')
-          .where('bed.roomId = :roomId', { roomId: request.room.id })
-          .getQuery())
-      .setParameters({ roomId: request.room.id })
-      .execute();
+  request.status = RentalStatusEnum.ACCEPTED;
 
+  // Reject all other bed requests for this room
+  const subQuery = this.bedRepo
+    .createQueryBuilder('bed')
+    .select('bed.id')
+    .where('bed.roomId = :roomId')
+    .getQuery();
 
-    // update room status 
-    request.room.status = 'BOOKED';
-    await this.roomRepo.save(request.room);
-    // update bed status 
-    const beds = await this.bedRepo.find({
-      where: { room: { id: request.room.id } },
-    });
+  await this.rentalRequestRepo
+    .createQueryBuilder()
+    .update()
+    .set({ status: RentalStatusEnum.REJECTED })
+    .where(`bedId IN (${subQuery})`)
+    .setParameters({ roomId: request.room.id })
+    .execute();
 
-    for (const bed of beds) {
-      bed.status = 'RESERVED'; // or BedStatusEnum.RESERVED
-      await this.bedRepo.save(bed);
-    }
+  // Update room status
+  request.room.status = 'BOOKED';
+  await this.roomRepo.save(request.room);
 
-    //  update apartment status
+  // Update bed statuses
+  const beds = await this.bedRepo
+    .createQueryBuilder('bed')
+    .leftJoin('bed.room', 'room')
+    .where('room.id = :roomId', { roomId: request.room.id })
+    .getMany();
 
-    const apartment = await this.apartmentRepo
-      .createQueryBuilder('apartment')
-      .leftJoinAndSelect('apartment.rooms', 'room')
-      .leftJoinAndSelect('room.beds', 'bed')
-      .where('apartment.id = :apartmentId', { apartmentId: request.room.apartment.id })
-      .getOne();
+  for (const bed of beds) {
+    bed.status = 'RESERVED';
+  }
+
+  await this.bedRepo.save(beds);
+
+  // Update apartment status if all its beds are reserved
+  const apartment = await this.apartmentRepo
+    .createQueryBuilder('apartment')
+    .leftJoinAndSelect('apartment.rooms', 'room')
+    .leftJoinAndSelect('room.beds', 'bed')
+    .where('apartment.id = :apartmentId', { apartmentId: request.room.apartment.id })
+    .getOne();
+
+  if (apartment) {
     const allBedsReserved = apartment.rooms.every(room =>
       room.beds.every(bed => bed.status === 'RESERVED')
     );
@@ -441,24 +490,230 @@ return results;
       apartment.status = 'BOOKED';
       await this.apartmentRepo.save(apartment);
     }
-
-
-    return await this.roomRentalRequestRepo.save(request);
   }
 
-  async getAllRoomRequests(studentId: string, paginate: PaginatorInput) {
-    const [requests, count] = await this.roomRentalRequestRepo.findAndCount({
-      where: { student: { id: studentId } },
-      relations: ['room', 'room.apartment'],
-      skip: (paginate.page - 1) * paginate.limit,
-      take: paginate.limit,
-    });
+  return await this.roomRentalRequestRepo.save(request);
+}
 
+
+
+
+
+
+
+
+
+
+
+async getRoomRequestsForStudent(studentId: string) {
+  // Fetch all rental requests with apartment data and whether it's favorite
+  const requests = await this.roomRentalRequestRepo
+    .createQueryBuilder('request')
+    .leftJoinAndSelect('request.room', 'room')
+    .leftJoinAndSelect('room.beds', 'beds')
+    .leftJoinAndSelect('room.apartment', 'apartment')
+
+    // Join Favorite and FavoriteApartment to detect favorite apartments
+    .leftJoin('Favorite', 'favorite', 'favorite.studentId = :studentId', { studentId })
+    .leftJoin(
+      'FavoriteApartment',
+      'favoriteApartment',
+      'favoriteApartment.favoriteId = favorite.id AND favoriteApartment.apartmentId = apartment.id'
+    )
+    .addSelect('CASE WHEN favoriteApartment.id IS NOT NULL THEN TRUE ELSE FALSE END', 'isFavorite')
+
+    // Filter requests by student
+    .where('request.studentId = :studentId', { studentId })
+
+    .getRawAndEntities();
+
+ const results = requests.entities.map((req, idx) => {
+  const apartment = req.room.apartment;
+
+  // Clean nested apartment from room and bed
+  const cleanedRoom = {
+    ...req.room,
+    apartment: undefined, // remove nested apartment
+    beds: req.room.beds?.map(b => ({
+      ...b,
+      room: undefined, // remove nested room in bed
+    })) ?? [ 
+      {
+        ...req.room,
+        room: undefined,
+      },
+    ],
+  };
+
+  return {
+    id: req.id,
+    duration: req.duration,
+    status: req.status,
+    // add other request fields if needed
+    apartment: {
+      ...apartment,
+      isFavorite: requests.raw[idx].isFavorite,
+      rooms: [cleanedRoom],
+    },
+  };
+});
+return results;
+
+}
+
+async getRoomRequestsForProvider(providerId: string) {
+  // Step 1: Get all apartments (with rooms and beds) owned by the provider
+  const apartments = await this.apartmentRepo.find({
+    where: { provider: { id: providerId } },
+    relations: ['rooms', 'rooms.beds'],
+  });
+
+  // Step 2: Map room.id (as string) to room + its apartment
+  const roomMap = new Map<string, { room: any; apartment: any }>();
+
+  for (const apartment of apartments) {
+    for (const room of apartment.rooms) {
+      roomMap.set(room.id.toString(), {
+        room: { ...room, beds: room.beds },
+        apartment: { ...apartment, rooms: undefined }, // remove circular nesting
+      });
+    }
+  }
+
+  // Step 3: Fetch all room rental requests for rooms owned by the provider
+  const requests = await this.roomRentalRequestRepo.find({
+    where: {
+      room: {
+        id: In(Array.from(roomMap.keys())),
+      },
+    },
+    relations: ['room' , 'student'],
+  });
+
+  // Step 4: Shape the result structure per request
+  const result = requests.map((request) => {
+    const { room, apartment } = roomMap.get(request.room.id.toString());
     return {
-      data: requests,
-      total: count,
-      page: paginate.page,
-      totalPages: Math.ceil(count / paginate.limit),
+      id: request.id,
+      status: request.status,
+      duration: request.duration,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      student: request.student,
+      apartment: {
+        ...apartment,
+        room: {
+          ...room,
+        },
+      },
     };
+  });
+
+  return result;
+}
+
+
+
+
+async getAllRoomRequests(){
+  const apartments = await this.apartmentRepo.find({
+    relations: ['rooms', 'rooms.beds'],
+  });
+
+  // Step 2: Map room.id (as string) to room + its apartment
+  const roomMap = new Map<string, { room: any; apartment: any }>();
+
+  for (const apartment of apartments) {
+    for (const room of apartment.rooms) {
+      roomMap.set(room.id.toString(), {
+        room: { ...room, beds: room.beds },
+        apartment: { ...apartment, rooms: undefined }, // remove circular nesting
+      });
+    }
   }
+
+  // Step 3: Fetch all room rental requests for rooms owned by the provider
+  const requests = await this.roomRentalRequestRepo.find({
+    where: {
+      room: {
+        id: In(Array.from(roomMap.keys())),
+      },
+    },
+    relations: ['room' , 'student'],
+  });
+
+  // Step 4: Shape the result structure per request
+  const result = requests.map((request) => {
+    const { room, apartment } = roomMap.get(request.room.id.toString());
+    return {
+      id: request.id,
+      status: request.status,
+      duration: request.duration,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      student: request.student,
+      apartment: {
+        ...apartment,
+        room: {
+          ...room,
+        },
+      },
+    };
+  });
+
+  return result;
+
+}
+
+
+async getRoomRequest(id:string){
+  const apartments = await this.apartmentRepo.find({
+    relations: ['rooms', 'rooms.beds'],
+  });
+
+  // Step 2: Map room.id (as string) to room + its apartment
+  const roomMap = new Map<string, { room: any; apartment: any }>();
+
+  for (const apartment of apartments) {
+    for (const room of apartment.rooms) {
+      roomMap.set(room.id.toString(), {
+        room: { ...room, beds: room.beds },
+        apartment: { ...apartment, rooms: undefined }, // remove circular nesting
+      });
+    }
+  }
+
+  // Step 3: Fetch all room rental requests for rooms owned by the provider
+  const requests = await this.roomRentalRequestRepo.find({
+    where: {
+      id:id, 
+      room: {
+        id: In(Array.from(roomMap.keys())),
+      },
+    },
+    relations: ['room' , 'student'],
+  });
+
+  // Step 4: Shape the result structure per request
+  const result = requests.map((request) => {
+    const { room, apartment } = roomMap.get(request.room.id.toString());
+    return {
+      id: request.id,
+      status: request.status,
+      duration: request.duration,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      student: request.student,
+      apartment: {
+        ...apartment,
+        room: {
+          ...room,
+        },
+      },
+    };
+  });
+
+  return result;
+
+}
 }

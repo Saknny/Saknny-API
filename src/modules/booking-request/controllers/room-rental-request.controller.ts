@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -37,15 +38,30 @@ export class RoomRentalController {
     return this.rentalRequestService.rejectRoomRequest(id);
   }
 
+    @Get('student')
+    async getRequestsForStudent(@currentUser() user: User) {
+      if (!user?.student) throw new NotFoundException('Student not found');
+  
+      return this.rentalRequestService.getRoomRequestsForStudent(user.student.id);
+    }
+  
+    @Get('provider')
+    async getRequestsForProvider(@currentUser() user: User) {
+      if (!user?.provider) throw new NotFoundException('Provider not found');
+  
+      return this.rentalRequestService.getRoomRequestsForProvider(user.provider.id);
+    }
+
   @Get()
-  async getRequests(
-    @currentUser() user: User,
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
-  ) {
-    return this.rentalRequestService.getAllRoomRequests(user.student.id, {
-      page,
-      limit,
-    });
+  async getRequests(  ) {
+    return this.rentalRequestService.getAllRoomRequests();
   }
+
+    @Get(":id")
+  async getRequest( @Param('id') id:string ) {
+    return this.rentalRequestService.getRoomRequest(id);
+  }
+
+
+
 }
