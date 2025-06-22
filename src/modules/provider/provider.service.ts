@@ -241,4 +241,24 @@ async getProviderApartments(userId: string): Promise<Apartment[]> {
   };
 }
 
+
+async getProviderProfile(userId: string) {
+  const provider = await this.providerRepository
+    .createQueryBuilder('provider')
+    .where('provider.userId = :userId', { userId })
+    .getOne();
+
+
+  if (!provider) {
+    throw new NotFoundException('Provider not found');
+  }
+     const baseUrl ='http://45.88.223.182:4000';
+
+
+  return {
+    ...provider , 
+        image: provider.image ? baseUrl + provider.image : null, 
+  };
+}
+
 }

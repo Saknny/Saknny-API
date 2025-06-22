@@ -1,4 +1,4 @@
-import { Body, Controller, Headers, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Query, Req, Res } from '@nestjs/common';
 import { StripeWebhookService } from './stripe-webhook.service';
 
 @Controller('payment')
@@ -15,5 +15,23 @@ export class PaymentController {
     
         await this.stripeWebhookService.handleWebhook(req.body, sig);
     }
-    
+
+
+  @Get('success')
+  async paymentSuccess() {
+
+    return {
+      status: 'success',
+      message: 'Payment completed successfully',
+    };
+  }
+
+  @Get('fail')
+  async paymentFail() {
+    return {
+      status: 'failed',
+      message: 'Payment was cancelled or failed',
+    };
+  }
 }
+    

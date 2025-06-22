@@ -98,10 +98,10 @@ export class ProviderController {
   @UseInterceptors(cardUploadInterceptor())
   async updateIdCard(
     @currentUser() { id }: currentUserType,
-    @UploadedFile()      idCard?: Express.Multer.File) {
+    @UploadedFile() idCard?: Express.Multer.File) {
 
 
-    if (!idCard ) {
+    if (!idCard) {
       throw new BadRequestException('ID Card is required');
     }
     if (Buffer.isBuffer(idCard.buffer)) {
@@ -118,7 +118,13 @@ export class ProviderController {
   ): Promise<Apartment[]> {
     return this.providerService.getProviderApartments(user.id);
   }
-    // provider dashboard 
+
+  @Get('profile')
+  providerProfile(@currentUser() user: currentUserType) {
+    return this.providerService.getProviderProfile(user?.id)
+  }
+
+  // provider dashboard 
   @Get('dashboard')
   async getProviderDashboard(@currentUser() user: currentUserType) {
     return this.providerService.getProviderDashboardData(user?.provider?.id);
@@ -134,6 +140,7 @@ export class ProviderController {
   getProviderBoard(@Param('providerId') providerId: string) {
     return this.providerService.providerBoard(providerId);
   }
+
 
 
 }
