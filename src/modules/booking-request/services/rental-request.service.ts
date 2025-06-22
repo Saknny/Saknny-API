@@ -41,8 +41,8 @@ export class RentalRequestService {
     private readonly roomRepo: BaseRepository<Room>,
     @InjectBaseRepository(FavoriteApartment)
     private readonly favoriteApartmentRepository: BaseRepository<FavoriteApartment>,
-    
-  
+
+
     @Inject(forwardRef(() => NotificationService))
     private readonly notificationService: NotificationService,
 
@@ -146,13 +146,13 @@ export class RentalRequestService {
   }
 
   async rejectRequest(requestId: string) {
-     const request = await this.rentalRequestRepo
-    .createQueryBuilder('rentalRequest')
-    .leftJoinAndSelect('rentalRequest.student', 'student')
-    .leftJoinAndSelect('student.user', 'user')
-    .leftJoinAndSelect('rentalRequest.bed', 'bed')
-    .where('rentalRequest.id = :id', { id: requestId })
-    .getOne();
+    const request = await this.rentalRequestRepo
+      .createQueryBuilder('rentalRequest')
+      .leftJoinAndSelect('rentalRequest.student', 'student')
+      .leftJoinAndSelect('student.user', 'user')
+      .leftJoinAndSelect('rentalRequest.bed', 'bed')
+      .where('rentalRequest.id = :id', { id: requestId })
+      .getOne();
 
     if (!request || request.status !== RentalStatusEnum.PENDING) {
       throw new BadRequestException('Invalid request.');
@@ -234,61 +234,61 @@ export class RentalRequestService {
   }
 
 
-async getRequestsForStudent(studentId: string) {
-  // Fetch all rental requests with apartment data and whether it's favorite
-  const requests = await this.rentalRequestRepo
-    .createQueryBuilder('request')
-    .leftJoinAndSelect('request.bed', 'bed')
-    .leftJoinAndSelect('bed.room', 'room')
-    .leftJoinAndSelect('room.apartment', 'apartment')
+  async getRequestsForStudent(studentId: string) {
+    // Fetch all rental requests with apartment data and whether it's favorite
+    const requests = await this.rentalRequestRepo
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.bed', 'bed')
+      .leftJoinAndSelect('bed.room', 'room')
+      .leftJoinAndSelect('room.apartment', 'apartment')
 
-    // Join Favorite and FavoriteApartment to detect favorite apartments
-    .leftJoin('Favorite', 'favorite', 'favorite.studentId = :studentId', { studentId })
-    .leftJoin(
-      'FavoriteApartment',
-      'favoriteApartment',
-      'favoriteApartment.favoriteId = favorite.id AND favoriteApartment.apartmentId = apartment.id'
-    )
-    .addSelect('CASE WHEN favoriteApartment.id IS NOT NULL THEN TRUE ELSE FALSE END', 'isFavorite')
+      // Join Favorite and FavoriteApartment to detect favorite apartments
+      .leftJoin('Favorite', 'favorite', 'favorite.studentId = :studentId', { studentId })
+      .leftJoin(
+        'FavoriteApartment',
+        'favoriteApartment',
+        'favoriteApartment.favoriteId = favorite.id AND favoriteApartment.apartmentId = apartment.id'
+      )
+      .addSelect('CASE WHEN favoriteApartment.id IS NOT NULL THEN TRUE ELSE FALSE END', 'isFavorite')
 
-    // Filter requests by student
-    .where('request.studentId = :studentId', { studentId })
+      // Filter requests by student
+      .where('request.studentId = :studentId', { studentId })
 
-    .getRawAndEntities();
+      .getRawAndEntities();
 
- const results = requests.entities.map((req, idx) => {
-  const apartment = req.bed.room.apartment;
+    const results = requests.entities.map((req, idx) => {
+      const apartment = req.bed.room.apartment;
 
-  // Clean nested apartment from room and bed
-  const cleanedRoom = {
-    ...req.bed.room,
-    apartment: undefined, // remove nested apartment
-    beds: req.bed.room.beds?.map(b => ({
-      ...b,
-      room: undefined, // remove nested room in bed
-    })) ?? [ 
-      {
-        ...req.bed,
-        room: undefined,
-      },
-    ],
-  };
+      // Clean nested apartment from room and bed
+      const cleanedRoom = {
+        ...req.bed.room,
+        apartment: undefined, // remove nested apartment
+        beds: req.bed.room.beds?.map(b => ({
+          ...b,
+          room: undefined, // remove nested room in bed
+        })) ?? [
+            {
+              ...req.bed,
+              room: undefined,
+            },
+          ],
+      };
 
-  return {
-    id: req.id,
-    duration: req.duration,
-    status: req.status,
-    // add other request fields if needed
-    apartment: {
-      ...apartment,
-      isFavorite: requests.raw[idx].isFavorite,
-      rooms: [cleanedRoom],
-    },
-  };
-});
-return results;
+      return {
+        id: req.id,
+        duration: req.duration,
+        status: req.status,
+        // add other request fields if needed
+        apartment: {
+          ...apartment,
+          isFavorite: requests.raw[idx].isFavorite,
+          rooms: [cleanedRoom],
+        },
+      };
+    });
+    return results;
 
-}
+  }
 
 
   // Get all requests for a provider's apartments
@@ -417,83 +417,84 @@ return results;
   }
 
   async approveRoomRequest(requestId: string) {
-  // Use QueryBuilder to fetch request + room + room.beds + room.apartment
-  const request = await this.roomRentalRequestRepo
-    .createQueryBuilder('request')
-    .leftJoinAndSelect('request.room', 'room')
-    .leftJoinAndSelect('room.beds', 'bed')
-    .leftJoinAndSelect('room.apartment', 'apartment')
-    .where('request.id = :id', { id: requestId })
-    .getOne();
+    // Use QueryBuilder to fetch request + room + room.beds + room.apartment
+    const request = await this.roomRentalRequestRepo
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.room', 'room')
+      .leftJoinAndSelect('room.beds', 'bed')
+      .leftJoinAndSelect('room.apartment', 'apartment')
+      .where('request.id = :id', { id: requestId })
+      .getOne();
 
-  if (!request) {
-    throw new NotFoundException('Request not found');
-  }
+    if (!request) {
+      throw new NotFoundException('Request not found');
+    }
 
-  const anyBedReserved = request.room.beds.some(
-    (bed) => bed.status !== 'AVAILABLE',
-  );
-
-  if (anyBedReserved) {
-    request.status = RentalStatusEnum.REJECTED;
-    return this.roomRentalRequestRepo.save(request);
-  }
-
-  request.status = RentalStatusEnum.ACCEPTED;
-
-  // Reject all other bed requests for this room
-  const subQuery = this.bedRepo
-    .createQueryBuilder('bed')
-    .select('bed.id')
-    .where('bed.roomId = :roomId')
-    .getQuery();
-
-  await this.rentalRequestRepo
-    .createQueryBuilder()
-    .update()
-    .set({ status: RentalStatusEnum.REJECTED })
-    .where(`bedId IN (${subQuery})`)
-    .setParameters({ roomId: request.room.id })
-    .execute();
-
-  // Update room status
-  request.room.status = 'BOOKED';
-  await this.roomRepo.save(request.room);
-
-  // Update bed statuses
-  const beds = await this.bedRepo
-    .createQueryBuilder('bed')
-    .leftJoin('bed.room', 'room')
-    .where('room.id = :roomId', { roomId: request.room.id })
-    .getMany();
-
-  for (const bed of beds) {
-    bed.status = 'RESERVED';
-  }
-
-  await this.bedRepo.save(beds);
-
-  // Update apartment status if all its beds are reserved
-  const apartment = await this.apartmentRepo
-    .createQueryBuilder('apartment')
-    .leftJoinAndSelect('apartment.rooms', 'room')
-    .leftJoinAndSelect('room.beds', 'bed')
-    .where('apartment.id = :apartmentId', { apartmentId: request.room.apartment.id })
-    .getOne();
-
-  if (apartment) {
-    const allBedsReserved = apartment.rooms.every(room =>
-      room.beds.every(bed => bed.status === 'RESERVED')
+    const anyBedReserved = request.room.beds.some(
+      (bed) => bed.status !== 'AVAILABLE',
     );
 
-    if (allBedsReserved) {
-      apartment.status = 'BOOKED';
-      await this.apartmentRepo.save(apartment);
+    if (anyBedReserved) {
+      request.status = RentalStatusEnum.REJECTED;
+      return this.roomRentalRequestRepo.save(request);
     }
+
+    request.status = RentalStatusEnum.ACCEPTED;
+
+    // Reject all other bed requests for this room
+    const subQuery = this.bedRepo
+      .createQueryBuilder('bed')
+      .select('bed.id')
+      .where('bed.roomId = :roomId')
+      .getQuery();
+
+    await this.rentalRequestRepo
+      .createQueryBuilder()
+      .update()
+      .set({ status: RentalStatusEnum.REJECTED })
+      .where(`bedId IN (${subQuery})`)
+      .setParameters({ roomId: request.room.id })
+      .execute();
+
+    // Update room status
+    request.room.status = 'BOOKED';
+    await this.roomRepo.save(request.room);
+
+    // Update bed statuses
+    const beds = await this.bedRepo
+      .createQueryBuilder('bed')
+      .leftJoin('bed.room', 'room')
+      .where('room.id = :roomId', { roomId: request.room.id })
+      .getMany();
+
+    for (const bed of beds) {
+      bed.status = 'RESERVED';
+    }
+
+    await this.bedRepo.save(beds);
+
+    // Update apartment status if all its beds are reserved
+    const apartment = await this.apartmentRepo
+      .createQueryBuilder('apartment')
+      .leftJoinAndSelect('apartment.rooms', 'room')
+      .leftJoinAndSelect('room.beds', 'bed')
+      .where('apartment.id = :apartmentId', { apartmentId: request.room.apartment.id })
+      .getOne();
+
+    if (apartment) {
+      const allBedsReserved = apartment.rooms.every(room =>
+        room.beds.every(bed => bed.status === 'RESERVED')
+      );
+
+      if (allBedsReserved) {
+        apartment.status = 'BOOKED';
+        await this.apartmentRepo.save(apartment);
+      }
+    }
+
+    return await this.roomRentalRequestRepo.save(request);
   }
 
-  return await this.roomRentalRequestRepo.save(request);
-}
 
 
 
@@ -504,216 +505,215 @@ return results;
 
 
 
+  async getRoomRequestsForStudent(studentId: string) {
+    // Fetch all rental requests with apartment data and whether it's favorite
+    const requests = await this.roomRentalRequestRepo
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.room', 'room')
+      .leftJoinAndSelect('room.beds', 'beds')
+      .leftJoinAndSelect('room.apartment', 'apartment')
 
-async getRoomRequestsForStudent(studentId: string) {
-  // Fetch all rental requests with apartment data and whether it's favorite
-  const requests = await this.roomRentalRequestRepo
-    .createQueryBuilder('request')
-    .leftJoinAndSelect('request.room', 'room')
-    .leftJoinAndSelect('room.beds', 'beds')
-    .leftJoinAndSelect('room.apartment', 'apartment')
+      // Join Favorite and FavoriteApartment to detect favorite apartments
+      .leftJoin('Favorite', 'favorite', 'favorite.studentId = :studentId', { studentId })
+      .leftJoin(
+        'FavoriteApartment',
+        'favoriteApartment',
+        'favoriteApartment.favoriteId = favorite.id AND favoriteApartment.apartmentId = apartment.id'
+      )
+      .addSelect('CASE WHEN favoriteApartment.id IS NOT NULL THEN TRUE ELSE FALSE END', 'isFavorite')
 
-    // Join Favorite and FavoriteApartment to detect favorite apartments
-    .leftJoin('Favorite', 'favorite', 'favorite.studentId = :studentId', { studentId })
-    .leftJoin(
-      'FavoriteApartment',
-      'favoriteApartment',
-      'favoriteApartment.favoriteId = favorite.id AND favoriteApartment.apartmentId = apartment.id'
-    )
-    .addSelect('CASE WHEN favoriteApartment.id IS NOT NULL THEN TRUE ELSE FALSE END', 'isFavorite')
+      // Filter requests by student
+      .where('request.studentId = :studentId', { studentId })
 
-    // Filter requests by student
-    .where('request.studentId = :studentId', { studentId })
+      .getRawAndEntities();
 
-    .getRawAndEntities();
+    const results = requests.entities.map((req, idx) => {
+      const apartment = req.room.apartment;
 
- const results = requests.entities.map((req, idx) => {
-  const apartment = req.room.apartment;
-
-  // Clean nested apartment from room and bed
-  const cleanedRoom = {
-    ...req.room,
-    apartment: undefined, // remove nested apartment
-    beds: req.room.beds?.map(b => ({
-      ...b,
-      room: undefined, // remove nested room in bed
-    })) ?? [ 
-      {
+      // Clean nested apartment from room and bed
+      const cleanedRoom = {
         ...req.room,
-        room: undefined,
-      },
-    ],
-  };
+        apartment: undefined, // remove nested apartment
+        beds: req.room.beds?.map(b => ({
+          ...b,
+          room: undefined, // remove nested room in bed
+        })) ?? [
+            {
+              ...req.room,
+              room: undefined,
+            },
+          ],
+      };
 
-  return {
-    id: req.id,
-    duration: req.duration,
-    status: req.status,
-    // add other request fields if needed
-    apartment: {
-      ...apartment,
-      isFavorite: requests.raw[idx].isFavorite,
-      rooms: [cleanedRoom],
-    },
-  };
-});
-return results;
+      return {
+        id: req.id,
+        duration: req.duration,
+        status: req.status,
+        // add other request fields if needed
+        apartment: {
+          ...apartment,
+          isFavorite: requests.raw[idx].isFavorite,
+          rooms: [cleanedRoom],
+        },
+      };
+    });
+    return results;
 
-}
-
-async getRoomRequestsForProvider(providerId: string) {
-  // Step 1: Get all apartments (with rooms and beds) owned by the provider
-  const apartments = await this.apartmentRepo.find({
-    where: { provider: { id: providerId } },
-    relations: ['rooms', 'rooms.beds'],
-  });
-
-  // Step 2: Map room.id (as string) to room + its apartment
-  const roomMap = new Map<string, { room: any; apartment: any }>();
-
-  for (const apartment of apartments) {
-    for (const room of apartment.rooms) {
-      roomMap.set(room.id.toString(), {
-        room: { ...room, beds: room.beds },
-        apartment: { ...apartment, rooms: undefined }, // remove circular nesting
-      });
-    }
   }
 
-  // Step 3: Fetch all room rental requests for rooms owned by the provider
-  const requests = await this.roomRentalRequestRepo.find({
-    where: {
-      room: {
-        id: In(Array.from(roomMap.keys())),
-      },
-    },
-    relations: ['room' , 'student'],
-  });
+  async getRoomRequestsForProvider(providerId: string) {
+    // Step 1: Get all apartments (with rooms and beds) owned by the provider
+    const apartments = await this.apartmentRepo.find({
+      where: { provider: { id: providerId } },
+      relations: ['rooms', 'rooms.beds'],
+    });
 
-  // Step 4: Shape the result structure per request
-  const result = requests.map((request) => {
-    const { room, apartment } = roomMap.get(request.room.id.toString());
-    return {
-      id: request.id,
-      status: request.status,
-      duration: request.duration,
-      startDate: request.startDate,
-      endDate: request.endDate,
-      student: request.student,
-      apartment: {
-        ...apartment,
+    // Step 2: Map room.id (as string) to room + its apartment
+    const roomMap = new Map<string, { room: any; apartment: any }>();
+
+    for (const apartment of apartments) {
+      for (const room of apartment.rooms) {
+        roomMap.set(room.id.toString(), {
+          room: { ...room, beds: room.beds },
+          apartment: { ...apartment, rooms: undefined }, // remove circular nesting
+        });
+      }
+    }
+
+    // Step 3: Fetch all room rental requests for rooms owned by the provider
+    const requests = await this.roomRentalRequestRepo.find({
+      where: {
         room: {
-          ...room,
+          id: In(Array.from(roomMap.keys())),
         },
       },
-    };
-  });
+      relations: ['room', 'student'],
+    });
 
-  return result;
-}
+    // Step 4: Shape the result structure per request
+    const result = requests.map((request) => {
+      const { room, apartment } = roomMap.get(request.room.id.toString());
+      return {
+        id: request.id,
+        status: request.status,
+        duration: request.duration,
+        startDate: request.startDate,
+        endDate: request.endDate,
+        student: request.student,
+        apartment: {
+          ...apartment,
+          room: {
+            ...room,
+          },
+        },
+      };
+    });
 
-
-
-
-async getAllRoomRequests(){
-  const apartments = await this.apartmentRepo.find({
-    relations: ['rooms', 'rooms.beds'],
-  });
-
-  // Step 2: Map room.id (as string) to room + its apartment
-  const roomMap = new Map<string, { room: any; apartment: any }>();
-
-  for (const apartment of apartments) {
-    for (const room of apartment.rooms) {
-      roomMap.set(room.id.toString(), {
-        room: { ...room, beds: room.beds },
-        apartment: { ...apartment, rooms: undefined }, // remove circular nesting
-      });
-    }
+    return result;
   }
 
-  // Step 3: Fetch all room rental requests for rooms owned by the provider
-  const requests = await this.roomRentalRequestRepo.find({
-    where: {
-      room: {
-        id: In(Array.from(roomMap.keys())),
-      },
-    },
-    relations: ['room' , 'student'],
-  });
 
-  // Step 4: Shape the result structure per request
-  const result = requests.map((request) => {
-    const { room, apartment } = roomMap.get(request.room.id.toString());
-    return {
-      id: request.id,
-      status: request.status,
-      duration: request.duration,
-      startDate: request.startDate,
-      endDate: request.endDate,
-      student: request.student,
-      apartment: {
-        ...apartment,
+
+
+  async getAllRoomRequests() {
+    const apartments = await this.apartmentRepo.find({
+      relations: ['rooms', 'rooms.beds'],
+    });
+
+    // Step 2: Map room.id (as string) to room + its apartment
+    const roomMap = new Map<string, { room: any; apartment: any }>();
+
+    for (const apartment of apartments) {
+      for (const room of apartment.rooms) {
+        roomMap.set(room.id.toString(), {
+          room: { ...room, beds: room.beds },
+          apartment: { ...apartment, rooms: undefined }, // remove circular nesting
+        });
+      }
+    }
+
+    // Step 3: Fetch all room rental requests for rooms owned by the provider
+    const requests = await this.roomRentalRequestRepo.find({
+      where: {
         room: {
-          ...room,
+          id: In(Array.from(roomMap.keys())),
         },
       },
-    };
-  });
+      relations: ['room', 'student'],
+    });
 
-  return result;
+    // Step 4: Shape the result structure per request
+    const result = requests.map((request) => {
+      const { room, apartment } = roomMap.get(request.room.id.toString());
+      return {
+        id: request.id,
+        status: request.status,
+        duration: request.duration,
+        startDate: request.startDate,
+        endDate: request.endDate,
+        student: request.student,
+        apartment: {
+          ...apartment,
+          room: {
+            ...room,
+          },
+        },
+      };
+    });
 
-}
+    return result;
 
-
-async getRoomRequest(id:string){
-  const apartments = await this.apartmentRepo.find({
-    relations: ['rooms', 'rooms.beds'],
-  });
-
-  // Step 2: Map room.id (as string) to room + its apartment
-  const roomMap = new Map<string, { room: any; apartment: any }>();
-
-  for (const apartment of apartments) {
-    for (const room of apartment.rooms) {
-      roomMap.set(room.id.toString(), {
-        room: { ...room, beds: room.beds },
-        apartment: { ...apartment, rooms: undefined }, // remove circular nesting
-      });
-    }
   }
 
-  // Step 3: Fetch all room rental requests for rooms owned by the provider
-  const requests = await this.roomRentalRequestRepo.find({
-    where: {
-      id:id, 
-      room: {
-        id: In(Array.from(roomMap.keys())),
-      },
-    },
-    relations: ['room' , 'student'],
-  });
 
-  // Step 4: Shape the result structure per request
-  const result = requests.map((request) => {
-    const { room, apartment } = roomMap.get(request.room.id.toString());
-    return {
-      id: request.id,
-      status: request.status,
-      duration: request.duration,
-      startDate: request.startDate,
-      endDate: request.endDate,
-      student: request.student,
-      apartment: {
-        ...apartment,
+  async getRoomRequest(id: string) {
+    const apartments = await this.apartmentRepo.find({
+      relations: ['rooms', 'rooms.beds'],
+    });
+
+    // Step 2: Map room.id (as string) to room + its apartment
+    const roomMap = new Map<string, { room: any; apartment: any }>();
+
+    for (const apartment of apartments) {
+      for (const room of apartment.rooms) {
+        roomMap.set(room.id.toString(), {
+          room: { ...room, beds: room.beds },
+          apartment: { ...apartment, rooms: undefined }, // remove circular nesting
+        });
+      }
+    }
+
+    // Step 3: Fetch all room rental requests for rooms owned by the provider
+    const requests = await this.roomRentalRequestRepo.find({
+      where: {
+        id: id,
         room: {
-          ...room,
+          id: In(Array.from(roomMap.keys())),
         },
       },
-    };
-  });
+      relations: ['room', 'student'],
+    });
 
-  return result;
+    // Step 4: Shape the result structure per request
+    const result = requests.map((request) => {
+      const { room, apartment } = roomMap.get(request.room.id.toString());
+      return {
+        id: request.id,
+        status: request.status,
+        duration: request.duration,
+        startDate: request.startDate,
+        endDate: request.endDate,
+        student: request.student,
+        apartment: {
+          ...apartment,
+          room: {
+            ...room,
+          },
+        },
+      };
+    });
 
-}
+    return result;
+
+  }
 }

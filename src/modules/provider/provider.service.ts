@@ -100,20 +100,28 @@ export class ProviderService {
   }
 
   //provider list all his apartments
-  async getProviderApartments(userId: string): Promise<Apartment[]> {
-    const provider = await this.providerRepository
-      .createQueryBuilder('provider')
-      .leftJoinAndSelect('provider.apartments', 'apartments')
-      .leftJoinAndSelect('apartments.rooms', 'rooms')
-      .where('provider.userId = :userId', { userId })
-      .getOne();
+async getProviderApartments(userId: string): Promise<Apartment[]> {
+  // Step 1: Get the provider by userId
+  const provider = await this.providerRepository
+    .createQueryBuilder('provider')
+    .where('provider.userId = :userId', { userId })
+    .getOne();
 
-    if (!provider) {
-      throw new NotFoundException('Provider not found');
-    }
-
-    return provider.apartments || [];
+  if (!provider) {
+    throw new NotFoundException('Provider not found');
   }
+
+  // Step 2: Get apartments with their rooms and beds
+  const apartments = await this.apartmentRepository
+    .createQueryBuilder('apartment')
+    .leftJoinAndSelect('apartment.rooms', 'rooms')
+    .leftJoinAndSelect('rooms.beds', 'beds')
+    .where('apartment.providerId = :providerId', { providerId: provider.id })
+    .getMany();
+
+  return apartments;
+}
+
 
   async updateCard(userId:string , idCard:string){
     const provider = await this.providerRepository.findOneBy({ userId });

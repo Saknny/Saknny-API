@@ -35,6 +35,12 @@ export class ApartmentController {
     private readonly pendingRequestService: PendingRequestService,
   ) { }
 
+
+  @Get(':id')
+  async singleApartment(@Param('id') id:string){
+    return this.apartmentService.getById(id)
+
+  }
   @Post('create')
   async createApartment(
     @currentUser() { id }: currentUserType,

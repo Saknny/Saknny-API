@@ -54,6 +54,8 @@ export class ApartmentService {
     private readonly subscriptionPlanService: SubscriptionPlanService,
   ) { }
 
+
+
   async createApartment(
     userId: string,
     createApartmentDto: CreateApartmentDto,
