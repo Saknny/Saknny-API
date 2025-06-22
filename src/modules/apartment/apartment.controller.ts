@@ -203,6 +203,12 @@ async searchApartments(
     return this.apartmentService.publishApartment(user.id, id);
   }
 
+  @Get(':id/document')
+async getApartmentDocument(@Param('id') apartmentId: string) {
+  return this.apartmentService.getApartmentDocument(apartmentId);
+}
+
+
 
 
 

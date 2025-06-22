@@ -52,6 +52,7 @@ export class RentalRequestService {
     const bed = await this.bedRepo.findOne({ id: bedId }, [
       'room',
       'room.apartment',
+      'room.apartment.provider'
     ]);
 
     if (!bed || bed.status !== 'AVAILABLE') {
@@ -69,8 +70,26 @@ export class RentalRequestService {
         'Apartment gender restriction does not match student.',
       );
     }
+
+    // ✅ Check if the student already requested this bed
+    const existingRequest = await this.rentalRequestRepo
+      .createQueryBuilder('request')
+      .innerJoin('request.student', 'student')
+      .innerJoin('request.bed', 'bed')
+      .where('student.id = :studentId', { studentId })
+      .andWhere('bed.id = :bedId', { bedId })
+      .getOne();
+
+
+    if (existingRequest) {
+      throw new BadRequestException(
+        'You have already submitted a request for this bed.',
+      );
+    }
+
+    console.log(apartment.provider.userId)
     await this.notificationService.createNotification({
-      userId: student.userId,
+      userId: apartment.provider.userId,
       type: 'booking_request',
       message: `You get  a booking request for bed ${bed.id} from this student ${studentId}`,
       relatedEntityId: null,
@@ -377,6 +396,7 @@ export class RentalRequestService {
     const room = await this.roomRepo.findOne({ id: roomId }, [
       'beds',
       'apartment',
+      'apartment.provider'
     ]);
 
     if (!student || !room) throw new NotFoundException();
@@ -397,6 +417,27 @@ export class RentalRequestService {
       0,
     );
 
+    await this.notificationService.createNotification({
+      userId: room.apartment.provider.userId,
+      type: 'booking_request',
+      message: `You get a booking request for room ${room.id} from this student ${studentId}`,
+      relatedEntityId: null,
+    });
+    // Add this before creating the room rental request
+    const existingRequest = await this.roomRentalRequestRepo
+      .createQueryBuilder('request')
+      .innerJoin('request.student', 'student')
+      .innerJoin('request.room', 'room')
+      .where('student.id = :studentId', { studentId })
+      .andWhere('room.id = :roomId', { roomId })
+      .getOne();
+
+    if (existingRequest) {
+      throw new BadRequestException(
+        'You have already submitted a request for this room.',
+      );
+    }
+
     return this.roomRentalRequestRepo.createOne({
       student,
       room,
@@ -407,11 +448,23 @@ export class RentalRequestService {
   }
 
   async rejectRoomRequest(requestId: string) {
-    const request = await this.roomRentalRequestRepo.findOne({ id: requestId });
+    const request = await this.roomRentalRequestRepo
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.student', 'student')
+      .leftJoinAndSelect('student.user', 'user')
+      .leftJoinAndSelect('request.room', 'room')
+      .where('request.id = :requestId', { requestId })
+      .getOne();
 
     if (!request) throw new NotFoundException();
 
     request.status = RentalStatusEnum.REJECTED;
+    await this.notificationService.createNotification({
+      userId: request.student.user.id,
+      type: 'booking_request',
+      message: `Your booking request for bed ${request.room.id} was rejected`,
+      relatedEntityId: requestId,
+    });
 
     return this.roomRentalRequestRepo.save(request);
   }
@@ -423,8 +476,10 @@ export class RentalRequestService {
       .leftJoinAndSelect('request.room', 'room')
       .leftJoinAndSelect('room.beds', 'bed')
       .leftJoinAndSelect('room.apartment', 'apartment')
+      .leftJoinAndSelect('request.student', 'student') // ✅ Add this
       .where('request.id = :id', { id: requestId })
       .getOne();
+
 
     if (!request) {
       throw new NotFoundException('Request not found');
@@ -436,6 +491,12 @@ export class RentalRequestService {
 
     if (anyBedReserved) {
       request.status = RentalStatusEnum.REJECTED;
+      await this.notificationService.createNotification({
+        userId: request.student.userId,
+        type: 'booking_request',
+        message: `Your booking request for bed ${request.room.id} was rejected`,
+        relatedEntityId: requestId,
+      });
       return this.roomRentalRequestRepo.save(request);
     }
 
@@ -491,6 +552,12 @@ export class RentalRequestService {
         await this.apartmentRepo.save(apartment);
       }
     }
+    await this.notificationService.createNotification({
+      userId: request.student.userId,
+      type: 'booking_request',
+      message: `Your booking request for room ${request.room.id} was accepted`,
+      relatedEntityId: requestId,
+    });
 
     return await this.roomRentalRequestRepo.save(request);
   }

@@ -24,6 +24,9 @@ import { currentUserType } from '@src/libs/types/current-user.type';
 import { FilterApartmentsDto } from './dto/filter-apartments.dto';
 import { SubscriptionPlan } from '../subscription-plan/subscription-plan.entity/subscription-plan.entity';
 import { SubscriptionPlanService } from '../subscription-plan/subscription-plan.service';
+import { RequestItem } from '../request/entities/requestItem.entity';
+import { PendingRequest } from '../request/entities/pendingRequest.entity';
+import { EntityType } from '../request/entities/enum/entityType.enum';
 
 @Injectable()
 export class ApartmentService {
@@ -36,6 +39,10 @@ export class ApartmentService {
 
     @InjectRepository(Room)
     private readonly roomRepository: BaseRepository<Room>,
+    @InjectRepository(RequestItem)
+    private readonly requestItemRepo: BaseRepository<RequestItem>,
+     @InjectRepository(PendingRequest)
+    private readonly pendingRequestRepo: BaseRepository<PendingRequest>,
 
     @InjectRepository(Bed)
     private readonly bedRepository: BaseRepository<Bed>,
@@ -774,7 +781,38 @@ async getHomeData(studentId?: string, user?: currentUserType) {
     };
   }
 
+ async getApartmentDocument(apartmentId: string) {
+  // 1. Try to get document from approved apartment first
+  const apartment = await this.apartmentRepository.findOne(
+    { id: apartmentId },
+    ['document']
+  );
+
+  if (apartment?.document) {
+    return apartment.document;
+  }
+
+  // 2. If no approved apartment doc, check the pending request for this apartment ID
+  const pendingRequest = await this.pendingRequestRepo
+  .createQueryBuilder('pendingRequest')
+  .leftJoinAndSelect('pendingRequest.items', 'item')
+  .where('pendingRequest.referenceId = :apartmentId', { apartmentId })
+  .andWhere('pendingRequest.referenceType = :entityType', { entityType: EntityType.APARTMENT })
+  .getOne();
 
 
+  if (!pendingRequest) {
+    throw new NotFoundException('No pending request found for this apartment.');
+  }
 
+  // 3. Find the request item that has a document (you store the base64 string here)
+  const documentItem = pendingRequest.items?.find(item => !!item.document);
+
+  if (!documentItem) {
+    throw new NotFoundException('No document found in pending request for this apartment.');
+  }
+
+  // 4. Return the document string (base64)
+  return { document: documentItem.document };
+}
 }
