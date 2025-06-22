@@ -17,6 +17,7 @@ import { Image } from '../image/image.entity';
 import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.entity';
 import { SubscriptionPlanService } from '../subscription-plan/subscription-plan.service';
 import { SubscriptionPlanModule } from '../subscription-plan/subscription-plan.module';
+import { RequestItem } from '../request/entities/requestItem.entity';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SubscriptionPlanModule } from '../subscription-plan/subscription-plan.m
       ApartmentDocument,
       Student,
       FavoriteApartment,
+      RequestItem
       
     ]),
     ServeStaticModule.forRoot({

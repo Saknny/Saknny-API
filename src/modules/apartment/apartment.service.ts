@@ -24,6 +24,7 @@ import { currentUserType } from '@src/libs/types/current-user.type';
 import { FilterApartmentsDto } from './dto/filter-apartments.dto';
 import { SubscriptionPlan } from '../subscription-plan/subscription-plan.entity/subscription-plan.entity';
 import { SubscriptionPlanService } from '../subscription-plan/subscription-plan.service';
+import { RequestItem } from '../request/entities/requestItem.entity';
 
 @Injectable()
 export class ApartmentService {
@@ -36,6 +37,8 @@ export class ApartmentService {
 
     @InjectRepository(Room)
     private readonly roomRepository: BaseRepository<Room>,
+    @InjectRepository(RequestItem)
+    private readonly requestItemRepo: BaseRepository<RequestItem>,
 
     @InjectRepository(Bed)
     private readonly bedRepository: BaseRepository<Bed>,
@@ -772,19 +775,32 @@ async getHomeData(studentId?: string, user?: currentUserType) {
     };
   }
 
-  async getApartmentDocumentById(apartmentId: string) {
+ async getApartmentDocumentById(apartmentId: string) {
+  // Try to find approved apartment first
   const apartment = await this.apartmentRepository.findOne(
     { id: apartmentId },
     ['document', 'provider']
   );
-  if (!apartment) {
-    throw new NotFoundException('Apartment not found');
+
+  if (apartment?.document) {
+    return apartment.document;
   }
-  if (!apartment.document) {
+
+  // If no approved apartment/document found, check in pending requests
+  const pendingRequestItem = await this.requestItemRepo
+    .createQueryBuilder('item')
+    .leftJoinAndSelect('item.request', 'request')
+    .where('request.apartmentId = :apartmentId', { apartmentId })
+    .getOne();
+
+  if (!pendingRequestItem || !pendingRequestItem.document) {
     throw new NotFoundException('No document found for this apartment');
   }
-  return apartment.document;
+
+  // Return document from pending request
+  return { document: pendingRequestItem.document };
 }
+
 
 
 
