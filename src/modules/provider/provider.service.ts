@@ -245,6 +245,7 @@ async getProviderApartments(userId: string): Promise<Apartment[]> {
 async getProviderProfile(userId: string) {
   const provider = await this.providerRepository
     .createQueryBuilder('provider')
+    .leftJoinAndSelect('provider.user', 'user')
     .where('provider.userId = :userId', { userId })
     .getOne();
 
@@ -258,6 +259,8 @@ async getProviderProfile(userId: string) {
   return {
     ...provider , 
         image: provider.image ? baseUrl + provider.image : null, 
+         role: provider.user?.role ?? null,
+         user: undefined,
   };
 }
 
