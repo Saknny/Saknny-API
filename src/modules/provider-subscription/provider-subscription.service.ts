@@ -67,7 +67,7 @@ export class ProviderSubscriptionService {
         payment.subscription = subscription;
         await this.paymentRepo.save(payment);
         // Create a Stripe Checkout session
-        const session = await this.stripeService.createCheckoutSession(100, subscription.id, payment.id);
+        const session = await this.stripeService.createCheckoutSession(plan.price, subscription.id, payment.id);
 
 
         return session;
