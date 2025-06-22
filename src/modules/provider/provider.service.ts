@@ -212,15 +212,20 @@ async getProviderApartments(userId: string): Promise<Apartment[]> {
     .groupBy('request.status')
     .getRawMany();
 
-  const requestDistribution = {
+    const requestDistribution = {
     pending: 0,
-    approved: 0,
+    accepted: 0,
     rejected: 0,
+    canceled: 0,
   };
 
   for (const row of requestStatusCounts) {
-    requestDistribution[row.status.toLowerCase()] = +row.count;
+    const key = row.status.toLowerCase(); // "PENDING" → "pending"
+    if (key in requestDistribution) {
+      requestDistribution[key] = +row.count;
+    }
   }
+
 
 
 
