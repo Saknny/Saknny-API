@@ -198,12 +198,10 @@ async searchApartments(
   }
 
   @Get(':id/document')
-  async getApartmentDocument(
-    @Param('id') apartmentId: string,
-  ) {
+async getApartmentDocument(@Param('id') apartmentId: string) {
+  return this.apartmentService.getApartmentDocument(apartmentId);
+}
 
-    return this.apartmentService.getApartmentDocumentById(apartmentId);
-  }
 
 
 

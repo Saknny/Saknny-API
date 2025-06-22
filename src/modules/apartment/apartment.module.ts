@@ -18,6 +18,7 @@ import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.e
 import { SubscriptionPlanService } from '../subscription-plan/subscription-plan.service';
 import { SubscriptionPlanModule } from '../subscription-plan/subscription-plan.module';
 import { RequestItem } from '../request/entities/requestItem.entity';
+import { PendingRequest } from '../request/entities/pendingRequest.entity';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { RequestItem } from '../request/entities/requestItem.entity';
       ApartmentDocument,
       Student,
       FavoriteApartment,
-      RequestItem
+      RequestItem,
+      PendingRequest
       
     ]),
     ServeStaticModule.forRoot({
