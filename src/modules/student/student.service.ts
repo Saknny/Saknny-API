@@ -168,6 +168,7 @@ export class StudentService {
     const studentDto = {
       ...student,  
       image: student.image ? baseUrl + student.image : null, 
+      profileComplete: student.user?.profileComplete ?? null, // ✅ add this line
     };
 
     return studentDto;

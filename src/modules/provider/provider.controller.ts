@@ -30,11 +30,14 @@ import { PendingRequestService } from '../request/pendingRequest.service';
 import { EntityType } from '../request/entities/enum/entityType.enum';
 import { Type } from '../request/entities/enum/type.enum';
 import { fileUploadInterceptor } from './interceptors/file-upload.interceptor';
+import { ProfileCompleteEnum } from '../user/enums/profile-complete.enum';
+import { UserService } from '../user/user.service';
 
 @Controller('provider')
 export class ProviderController {
   constructor(
     private readonly providerService: ProviderService,
+    private readonly userService:UserService,
     @Inject(forwardRef(() => PendingRequestService))
     private readonly pendingRequestService: PendingRequestService,
   ) { }
@@ -66,6 +69,11 @@ export class ProviderController {
     if (files.image && files.image.length > 0) {
       completeProfileDto.image = `/uploads/${files.image[0].filename}`;
     }
+    await this.userService.updateProfileCompleteStatus(
+    id,
+    ProfileCompleteEnum.PENDING,
+  );
+
 
     return await this.pendingRequestService.CreateProfileRequest(
       id,

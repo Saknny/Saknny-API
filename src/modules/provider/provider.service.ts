@@ -265,6 +265,7 @@ async getProviderProfile(userId: string) {
     ...provider , 
         image: provider.image ? baseUrl + provider.image : null, 
          role: provider.user?.role ?? null,
+         profileComplete: provider.user?.profileComplete ?? null, 
          user: undefined,
   };
 }
