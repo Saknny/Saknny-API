@@ -1,14 +1,14 @@
 <mjml>
   <mj-head>
     <mj-style>
-      .button-link {
-        background-color: #003D25;
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-        padding: 12px 24px;
-        display: inline-block;
-        font-weight: bold;
+      .input {
+      margin-right: 10px;
+      height: 40px;
+      border-radius: 20px;
+      }
+      .forget-password-btn span {
+      white-space: nowrap;
+      max-width: 150px;
       }
     </mj-style>
   </mj-head>
@@ -20,39 +20,46 @@
       <mj-section background-color="#ffffff" border-radius="0px" padding="10px 0">
         <mj-column width="94%">
           <mj-text font-size="23px" font-weight="530" line-height="25px" color="#003D25">
-            Reset Your Password
+            Confirm Verification Code
           </mj-text>
         </mj-column>
 
         <mj-column width="94%" padding="0 0 10px 0">
           {{#if data.firstName}}
             <mj-text font-weight="350">Dear {{data.firstName}},</mj-text>
-          {{else}}
-            <mj-text font-weight="350">Hello,</mj-text>
           {{/if}}
         </mj-column>
 
         <mj-column width="94%">
-          <mj-text font-size="15px" padding="0 0 10px 0">
-            We received a request to reset your Saknnu account password. If you made this request, click the button below to set a new password:
-          </mj-text>
+          <mj-column background-color="#F5F5F5" width="95%" padding-left="30px" border-radius="12px">
+            <mj-text padding="20px 10px 0 0" font-size="15px">
+              This is your verification code:
+              <br /><br />
+            </mj-text>
 
-          <mj-button background-color="#003D25" color="#ffffff" border-radius="6px" font-size="16px" href="{{data.resetLink}}">
-            Reset Password
-          </mj-button>
+            <mj-group width="350px" padding="0 0 20px 0">
+              <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" padding="0" css-class="input">
+                <mj-text font-size="17px" padding="11px 0 0 0" align="center">{{data.verificationCode.[0]}}</mj-text>
+              </mj-column>
+              <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" css-class="input">
+                <mj-text font-size="17px" padding="11px 0 0 0" align="center">{{data.verificationCode.[1]}}</mj-text>
+              </mj-column>
+              <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" css-class="input">
+                <mj-text font-size="17px" padding="11px 0 0 0" align="center">{{data.verificationCode.[2]}}</mj-text>
+              </mj-column>
+              <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" css-class="input">
+                <mj-text font-size="17px" padding="11px 0 0 0" align="center">{{data.verificationCode.[3]}}</mj-text>
+              </mj-column>
+            </mj-group>
+          </mj-column>
 
-          <mj-text font-size="13px" padding="20px 0 0 0" color="#888888">
-            If you didn’t request a password reset, you can safely ignore this email.<br/>
-            The reset link is valid for 30 minutes.
-          </mj-text>
-        </mj-column>
-
-        <mj-column padding="10px 0 10px 0">
-          <mj-text>
-            Best regards,
-            <br/><br/>
-            <b>The Saknny Team</b>
-          </mj-text>
+          <mj-column padding="10px 0 10px 0">
+            <mj-text>
+              Best regards,
+              <br /><br />
+              <b>The Saknny Team</b>
+            </mj-text>
+          </mj-column>
         </mj-column>
       </mj-section>
 
@@ -61,9 +68,9 @@
         <mj-column>
           <mj-text font-size="12px" color="#777" align="center">
             © 2025 Saknny. All rights reserved.
-            <br/>
-            Need help? Contact us at <a href="mailto:support@Saknny.com" style="color:#003D25;">support@Saknny.com</a>
-            <br/>
+            <br /> <br />
+            Need help? Contact us at <a href="mailto:support@saknnu.com" style="color:#003D25;">support@Saknny.com</a>
+            <br /> <br />
             Saknny, Egypt
           </mj-text>
         </mj-column>
