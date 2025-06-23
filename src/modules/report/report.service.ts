@@ -6,6 +6,9 @@ import { Student } from '../student/entities/student.entity';
 import { AddReportDto } from './dtos/addReport.dto';
 import { Report } from './entities/report.entity';
 import { ApartmentReviewsDto } from '../review/dtos/apartmentReviews.dto';
+import { Provider } from '../provider/entities/provider.entity';
+import { User } from '../user/entities/user.entity';
+import { ProfileCompleteEnum } from '../user/enums/profile-complete.enum';
 
 
 @Injectable()
@@ -16,7 +19,11 @@ export class ReportService {
     @InjectRepository(Apartment)
     private readonly apartmentRepo: BaseRepository<Apartment>,
     @InjectRepository(Student)
-    private readonly studentRepo: BaseRepository<Student>
+    private readonly studentRepo: BaseRepository<Student>,
+    @InjectRepository(Provider)
+    private readonly providerRepo: BaseRepository<Provider>,
+    @InjectRepository(User)
+    private readonly userRepo: BaseRepository<User>
   ) { }
 
     
@@ -61,7 +68,12 @@ export class ReportService {
 
   async createReport(studentId: string, dto: AddReportDto){
     const student = await this.studentRepo.findOneBy({ userId: studentId });
-    const apartment = await this.apartmentRepo.findOneBy({ id: dto.apartmentId });
+     const apartment = await this.apartmentRepo
+    .createQueryBuilder('apartment')
+    .leftJoinAndSelect('apartment.provider', 'provider')
+    .leftJoinAndSelect('provider.user', 'user') // Assuming relation exists
+    .where('apartment.id = :id', { id: dto.apartmentId })
+    .getOne();
 
     if (!student || !apartment) {
       throw new NotFoundException('Student or apartment not found');
@@ -82,9 +94,25 @@ export class ReportService {
 
         console.log(count)
     if (count == 1){
-        await this.apartmentRepo.update(dto.apartmentId, {
-            status:"BLOCKED"
-        });
+      
+        // Block the apartment
+    await this.apartmentRepo
+      .createQueryBuilder()
+      .update()
+      .set({ status: 'BLOCKED' })
+      .where('id = :id', { id: dto.apartmentId })
+      .execute();
+
+    // Update provider's user profileComplete field to UNVERIFIED
+    const providerUserId = apartment.provider?.user?.id;
+    if (providerUserId) {
+      await this.userRepo
+        .createQueryBuilder()
+        .update()
+        .set({ profileComplete: ProfileCompleteEnum.UNVERIFIED })
+        .where('id = :id', { id: providerUserId })
+        .execute();
+    }
     }
 
     return report;
