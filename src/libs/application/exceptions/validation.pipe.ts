@@ -37,9 +37,8 @@ export class ValidationPipe implements PipeTransform {
   }
 
   // FORMAT ERROR FUNCTION
-  private formatErrors(errors: any[]) {
-    const firstError = errors.map((err) => Object.values(err.constraints)[0]);
-    return Array.isArray(firstError) ? firstError[0] : firstError;
+  private formatErrors(errors: any[]): string {
+    return errors.map((err) => Object.values(err.constraints)[0]).join(', ');
   }
 
   // CHECK EMPTY OBJECT FUNCTION

@@ -1,15 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectBaseRepository } from '../../libs/decorators/inject-base-repository.decorator';
 import { User } from './entities/user.entity';
 import { BaseRepository, WhereOptions } from '../../libs/types/base-repository';
-import { FindOptionsWhere } from 'typeorm';
+import { DeepPartial, FindOptionsWhere } from 'typeorm';
 import { ErrorCodeEnum } from '../../libs/application/exceptions/error-code.enum';
 import { BaseHttpException } from '../../libs/application/exceptions/base-http-exception';
-import { CompleteUserProfileInput } from './dtos/inputs/update-user.input';
+import { CompleteUserProfileInput, UpdateUserInfo } from './dtos/inputs/update-user.input';
 import { Student } from '../student/entities/student.entity';
 import { Provider } from '../provider/entities/provider.entity';
 import { UserTransformer } from './transformer/user.transformer';
 import { UserRoleEnum } from './enums/user.enum';
+import { ProfileCompleteEnum } from './enums/profile-complete.enum';
 
 @Injectable()
 export class UserService {
@@ -92,5 +93,100 @@ export class UserService {
 
   async deleteAllUser() {
     await this.userRepo.deleteAll({});
+  }
+
+
+
+  
+
+  async getAllUsersWithDetails(): Promise<User[]> {
+    const users=await this.userRepo.find({
+      relations: ['provider', 'student'],
+      order: { createdAt: 'DESC' }, 
+    });
+
+  const baseUrl = 'http://45.88.223.182:4000/';
+
+  return users.map((user) => {
+    if (user.student?.image) {
+      user.student.image = baseUrl + user.student.image.replace(/^\/+/, '');
+    }
+
+    if (user.provider?.image) {
+      user.provider.image = baseUrl + user.provider.image.replace(/^\/+/, '');
+    }
+
+    return user;
+  });
+  }
+
+  //find user by id 
+  async getUserWithDetailsById(id: string): Promise<User | null> {
+    const user = await this.userRepo
+    .createQueryBuilder('user')
+    .leftJoinAndSelect('user.student', 'student')
+    .leftJoinAndSelect('user.provider', 'provider')
+    .where('user.id = :id', { id })
+    .getOne();
+    
+    if (!user) return null;
+  
+    const baseUrl = 'http://45.88.223.182:4000/';
+  
+    if (user.student?.image) {
+      user.student.image = baseUrl + user.student.image.replace(/^\/+/, '');
+    }
+  
+    if (user.provider?.image) {
+      user.provider.image = baseUrl + user.provider.image.replace(/^\/+/, '');
+    }
+  
+    return user;
+  }
+  
+
+  async getUserById(id: string): Promise<User> {
+    const user = await this.userRepo.findOneBy({ id });
+    
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    
+    return user;
+  }
+
+  async updateUser(id: string, updateUserDto: UpdateUserInfo): Promise<User> {
+    const user = await this.getUserById(id);
+    
+    const updateData: DeepPartial<User> = {
+      
+    };
+    
+    const updatedUser = this.userRepo.merge(user, updateData);
+    
+    return this.userRepo.save(updatedUser);
+  }
+
+  
+  async deleteUserById(id: string): Promise<void> {
+    const user = await this.userRepo
+    .createQueryBuilder('user')
+    .leftJoinAndSelect('user.student', 'student')
+    .leftJoinAndSelect('user.provider', 'provider')
+    .where('user.id = :id', { id })
+    .getOne();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
+  
+    await this.userRepo.remove(user);
+  }
+
+
+  async updateProfileCompleteStatus(
+    userId: string,
+    status: ProfileCompleteEnum,
+  ): Promise<void> {
+    await this.userRepo.update(userId, { profileComplete: status });
   }
 }

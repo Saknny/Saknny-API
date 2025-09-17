@@ -1,0 +1,10 @@
+export enum EntityType {
+    APARTMENT = "APARTMENT",
+    APARTMENT_IMAGE = "APARTMENT_IMAGE",
+    APARTMENT_DOC = "APARTMENT_DOC",
+    ROOM = "ROOM",
+    BED = "BED",
+    PROVIDER = "PROVIDER",
+    STUDENT = "STUDENT",
+
+}

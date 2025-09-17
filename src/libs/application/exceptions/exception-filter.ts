@@ -36,7 +36,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const messageKey =
         typeof exceptionResponse === 'string'
           ? exceptionResponse
-          : (exceptionResponse as any).message;
+          : Array.isArray((exceptionResponse as any).message)
+            ? (exceptionResponse as any).message.join(', ')
+            : (exceptionResponse as any).message;
 
       // Localize message if available
       let localizedMessage =

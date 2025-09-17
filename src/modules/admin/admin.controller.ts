@@ -1,75 +1,70 @@
-import { Body, Controller, Get, Param, Patch } from "@nestjs/common";
-import { AdminService } from "./admin.service";
-import { ProviderService } from "../provider/provider.service";
-import { StudentService } from "../student/student.service";
-import { ApartmentService } from "../apartment/apartment.service";
-
-
-
+import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
+import { AdminService } from './admin.service';
+import { ProviderService } from '../provider/provider.service';
+import { StudentService } from '../student/student.service';
+import { ApartmentService } from '../apartment/apartment.service';
+import { PendingRequestService } from '../request/pendingRequest.service';
+import { ImageApprovalDto } from '../request/dto/image-approval.dto';
+import { RequestDto } from '../request/dto/Request.dto';
 
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService,
-    private readonly providerService: ProviderService,
-    private readonly studentService: StudentService,
-    private readonly apartmentService: ApartmentService,
-  ) {
-  }
-  // List All Un-Reviewed 
-  @Get('unReviewed-providers')
-  async getUnReviewedProviders() {
-    return this.providerService.getUnReviewedProviders();
+  constructor(
+    private readonly adminService: AdminService,
+
+    private readonly pendingRequestService: PendingRequestService,
+  ) { }
+
+  @Get('request/:id')
+  async getRequest(@Param('id') id: string) {
+    return await this.pendingRequestService.getRequest(id);
   }
 
-  // Get A Specific Provider
-  @Get(':id/provider')
-  async getProvider(@Param('id') id: string) {
-    return this.providerService.getById(id);
-  }
-
-  // Approve Or Reject Provider
-  @Patch(':id/approveVendor')
-  async approveOrRejectProvider(
-    @Param('id') id: string,
-    @Body('isTrusted') isTrusted: boolean
-  ) {
-    return this.providerService.updateProviderApproval(id, isTrusted);
+  @Get('item/:id')
+  async getItem(@Param('id') id: string) {
+    return await this.pendingRequestService.getItem(id);
   }
 
 
-  @Get('unReviewed-students')
-  async getUnReviewedStudents() {
-    return this.studentService.getUnReviewedStudents();
+
+  @Get('pending-requests')
+  async getPendingRequests() {
+    return await this.pendingRequestService.getPendingRequests();
   }
 
-  @Get(':id/student')
-  async getStudent(@Param('id') id: string) {
-    return this.studentService.getById(id);
+  @Get('pending-profile-requests')
+  async getPendingProfileRequests() {
+    return await this.pendingRequestService.getPendingProfileRequests();
+  }
+  
+
+  @Get('pending-profile-requests/:requestId')
+  async getPendingProfileRequestById(@Param('requestId') requestId: string) {
+    return await this.pendingRequestService.getPendingProfileRequestById(requestId);
   }
 
-  @Patch(':id/approveStudent')
-  async approveOrRejectStudent(
-    @Param('id') id: string,
-    @Body('isTrusted') isTrusted: boolean
-  ) {
-    return this.studentService.updateStudentApproval(id, isTrusted);
+
+
+
+
+  @Patch('request-approval')
+  async requestApproval(@Body() body: RequestDto) {
+    return await this.pendingRequestService.updateRequestApproval(body);
   }
 
-  @Get('unReviewed-apartments')
-  async getUnReviewedApartments() {
-    return this.apartmentService.getUnReviewedApartments();
+  @Patch('item-approval')
+  async itemApproval(@Body() body: RequestDto) {
+    return await this.pendingRequestService.updateItemApproval(body);
   }
 
-  @Get(':id/apartment')
-  async getApartment(@Param('id') id: string) {
-    return this.apartmentService.getById(id);
+  @Patch(':id/image-approval')
+  async imageApproval(@Param('id') id: string, @Body() body: ImageApprovalDto) {
+    return await this.pendingRequestService.updateImageApproval(id, body);
   }
 
-  @Patch(':id/approveApartment')
-  async approveOrRejectApartment(
-    @Param('id') id: string,
-    @Body('isTrusted') isTrusted: boolean
-  ) {
-    return this.apartmentService.updateApartmentApproval(id, isTrusted);
+  @Get('dashboard')
+  async getDashboardData() {
+    return await this.adminService.getDashboardData();
   }
+
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Apartment } from './entities/apartment.entity/apartment.entity';
 import { Provider } from '../provider/entities/provider.entity';
@@ -7,245 +7,812 @@ import { Room } from '../room/entities/room.entity/room.entity';
 import { Bed } from '../bed/entities/bed.entity/bed.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
 import { currentUser } from '../../libs/decorators/currentUser.decorator';
-import { Not, Repository, IsNull } from 'typeorm';
-import { ApartmentImage } from './entities/apartmentImage.entity';
+import { Not, Repository, IsNull, FindManyOptions, Brackets } from 'typeorm';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { UpdateApartmentDto } from './dto/update-apartment.dto/update-apartment.dto';
+import { ApartmentDocument } from './entities/document.entity';
+import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum';
+import { GetApartmentsDto } from './dto/get-apartments.dto';
+import { Status } from '../request/entities/enum/status.enum';
+import { ProviderSubscriptionService } from '../provider-subscription/provider-subscription.service';
+import { Student } from '../student/entities/student.entity';
+import { ApartmentLocation } from './enums/location.enum';
+import { FavoriteApartment } from '../favoriteList/entities/favorite-apartment.entity';
+import { SearchApartmentsDto } from './dto/search-apartments.dto';
+import { currentUserType } from '@src/libs/types/current-user.type';
+import { FilterApartmentsDto } from './dto/filter-apartments.dto';
+import { SubscriptionPlan } from '../subscription-plan/subscription-plan.entity/subscription-plan.entity';
+import { SubscriptionPlanService } from '../subscription-plan/subscription-plan.service';
+import { RequestItem } from '../request/entities/requestItem.entity';
+import { PendingRequest } from '../request/entities/pendingRequest.entity';
+import { EntityType } from '../request/entities/enum/entityType.enum';
 
 @Injectable()
 export class ApartmentService {
-    constructor(
-        @InjectRepository(Apartment)
-        private readonly apartmentRepository: BaseRepository<Apartment>,
+  constructor(
+    @InjectRepository(Apartment)
+    private readonly apartmentRepository: BaseRepository<Apartment>,
 
-        @InjectRepository(Provider)
-        private readonly providerRepository: BaseRepository<Provider>,
+    @InjectRepository(Provider)
+    private readonly providerRepository: BaseRepository<Provider>,
 
-        @InjectRepository(Room)
-        private readonly roomRepository: BaseRepository<Room>,
+    @InjectRepository(Room)
+    private readonly roomRepository: BaseRepository<Room>,
+    @InjectRepository(RequestItem)
+    private readonly requestItemRepo: BaseRepository<RequestItem>,
+     @InjectRepository(PendingRequest)
+    private readonly pendingRequestRepo: BaseRepository<PendingRequest>,
 
-        @InjectRepository(Bed)
-        private readonly bedRepository: BaseRepository<Bed>,
-        @InjectRepository(ApartmentImage)
-        private readonly imageRepo: BaseRepository<ApartmentImage>,
-    ) { }
+    @InjectRepository(Bed)
+    private readonly bedRepository: BaseRepository<Bed>,
+    @InjectRepository(Student)
+    private readonly studentRepository: BaseRepository<Student>,
 
-    async createApartment(providerId: string
-        , createApartmentDto: CreateApartmentDto): Promise<Apartment> {
-        const { descriptionEn, descriptionAr, rooms, gender } = createApartmentDto;
+    @InjectRepository(FavoriteApartment)
+    private readonly favoriteApartmentRepository: BaseRepository<FavoriteApartment>,
 
-        // Find the provider
-        const provider = await this.providerRepository.findOne({ userId: providerId });
-        if (!provider) {
-            throw new NotFoundException('Provider not found');
-        }
+    @InjectRepository(ApartmentDocument)
+    private readonly apartmentDocumentRepo: BaseRepository<ApartmentDocument>,
+    @Inject(ProviderSubscriptionService)
+    private readonly providerSubscriptionService: ProviderSubscriptionService,
 
-        // Create the apartment
-        const apartment = this.apartmentRepository.create({
-            descriptionEn,
-            descriptionAr,
-            provider,
-            gender,
-        });
+     @Inject(SubscriptionPlanService)
+    private readonly subscriptionPlanService: SubscriptionPlanService,
+  ) { }
 
-        await this.apartmentRepository.save(apartment);
 
-        // Create rooms and beds
-        for (const roomDto of rooms) {
-            const { descriptionEn, descriptionAr, bedCount, availableFor, hasAirConditioner, beds } = roomDto;
 
-            const room = this.roomRepository.create({
-                descriptionEn,
-                descriptionAr,
-                bedCount,
-                availableFor,
-                hasAirConditioner,
-                apartment,
-            });
-
-            await this.roomRepository.save(room);
-
-            // Create beds for the room
-            for (const bedDto of beds) {
-                const { descriptionEn, descriptionAr, price } = bedDto;
-                const bed = this.bedRepository.create({
-                    descriptionEn,
-                    descriptionAr,
-                    price,
-                    room,
-                });
-                await this.bedRepository.save(bed);
-            }
-        }
-
-        return apartment;
+  async createApartment(
+    userId: string,
+    createApartmentDto: CreateApartmentDto,
+  ): Promise<Apartment> {
+    const provider = await this.providerRepository.findOne({ userId });
+    if (!provider) {
+      throw new NotFoundException('Provider not found');
     }
 
-    async updateApartment(id: string, updateApartment: UpdateApartmentDto) {
-        const apartment = await this.apartmentRepository.findOne({ id })
-        if (!apartment) {
-            throw new NotFoundException('Apartment not found');
-        }
+    const apartment = this.apartmentRepository.create({
+      ...createApartmentDto,
+      provider,
+    });
 
+    await this.apartmentRepository.save(apartment);
 
-        if (apartment.status == "UNBOOKED" && updateApartment.gender) {
-            apartment.gender = updateApartment.gender;
-        }
+    return apartment;
+  }
 
-        if (updateApartment.descriptionAr) {
-            apartment.descriptionAr = updateApartment.descriptionAr;
-        }
-
-        if (updateApartment.descriptionEn) {
-            apartment.descriptionEn = updateApartment.descriptionEn;
-        }
-
-        return await this.apartmentRepository.save(apartment);
+  async updateApartment(id: string, updateApartment: UpdateApartmentDto) {
+    const apartment = await this.apartmentRepository.findOne({ id });
+    if (!apartment) {
+      throw new NotFoundException('Apartment not found');
     }
 
-    async saveApartmentImages(id: string, imageFilenames: string[]): Promise<Apartment> {
-        const apartment = await this.apartmentRepository.findOne({ id })
-        if (!apartment) {
-            throw new NotFoundException('Apartment not found');
+    if (apartment.bookingStatus == 'UNBOOKED' && updateApartment.gender) {
+      apartment.gender = updateApartment.gender;
+    }
+
+    if (updateApartment.descriptionAr) {
+      apartment.descriptionAr = updateApartment.descriptionAr;
+    }
+
+    if (updateApartment.descriptionEn) {
+      apartment.descriptionEn = updateApartment.descriptionEn;
+    }
+
+    return await this.apartmentRepository.save(apartment);
+  }
+
+  async uploadDocuments(id: string, document: string) {
+    const apartment = await this.apartmentRepository.findOne({ id });
+    if (!apartment) {
+      throw new NotFoundException('Apartment not found');
+    }
+    console.log(apartment.status);
+    apartment.status = 'APPROVED';
+    const apartmentDocument = await this.apartmentDocumentRepo.create({
+      document,
+      apartment,
+    });
+    await this.apartmentDocumentRepo.save(apartmentDocument);
+    apartment.document = apartmentDocument;
+    return await this.apartmentRepository.save(apartment);
+  }
+
+  async publishApartment(userId: string, apartmentId) {
+    const apartment = await this.apartmentRepository.findOneBy({
+      id: apartmentId,
+    });
+    const provider = await this.providerRepository.findOneBy({ userId });
+    if (!provider) {
+      throw new NotFoundException('provider not found');
+    }
+
+    if (!apartment) {
+      throw new NotFoundException('apartment not found');
+    }
+
+    if (
+      apartment.status == 'APPROVED' &&
+      this.providerSubscriptionService.checkSubscriptionLimit(provider.id)
+    ) {
+      apartment.status = 'PUBLISHED';
+      this.providerSubscriptionService.reduceMaxApartments(provider.id);
+    }
+    await this.apartmentRepository.save(apartment);
+    return apartment;
+  }
+
+  async getById(id: string) {
+    const apartment = await this.apartmentRepository.findOneBy({ id });
+    if (!apartment) {
+      throw new NotFoundException('apartment not found');
+    }
+    await this.apartmentRepository.save(apartment);
+    return apartment;
+  }
+
+  async getRecentApartments(userId: string, limit?: number): Promise<Apartment[]> {
+    const findOptions: FindManyOptions<Apartment> = {
+      order: { createdAt: 'DESC' },
+      relations: ['rooms', 'rooms.beds']
+    };
+
+    // Only add take if limit is provided and valid
+    if (limit && limit > 0) {
+      findOptions.take = limit;
+    }
+
+    const apartments = await this.apartmentRepository.find(findOptions);
+    // Fetch the favorite apartments for this student
+    let favoriteApartmentIds: string[] = [];
+    if (userId) {
+      console.log("blabla")
+      const favoriteApartments = await this.favoriteApartmentRepository.find({
+        where: { favorite: { student: { userId: userId } } },
+        relations: ['apartment'],
+      });
+
+      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+    }
+
+    // Add `isFavorite` field to each apartment
+    const markFavorite = (apartments: Apartment[]) =>
+      apartments.map((apartment) => ({
+        ...apartment,
+        isFavorite: favoriteApartmentIds.includes(apartment.id),
+      }));
+    return markFavorite(apartments);
+
+  }
+
+  async getRecentlyViewed(userId: string, limit = 6) {
+     if (!userId) {
+    return { apartments: [] }; // Return empty if no user
+  }
+
+  // Find apartments last viewed by this user, ordered by most recent
+  const apartments = await this.apartmentRepository.find({
+    where: { lastViewedBy: userId },
+    order: { lastViewedAt: 'DESC' },
+    take: limit,
+    relations: ['rooms', 'rooms.beds'],
+  });
+    // Fetch the favorite apartments for this student
+    let favoriteApartmentIds: string[] = [];
+    if (userId) {
+      console.log("blabla")
+      const favoriteApartments = await this.favoriteApartmentRepository.find({
+        where: { favorite: { student: { userId: userId } } },
+        relations: ['apartment'],
+      });
+
+      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+    }
+
+    // Add `isFavorite` field to each apartment
+    const markFavorite = (apartments: Apartment[]) =>
+      apartments.map((apartment) => ({
+        ...apartment,
+        isFavorite: favoriteApartmentIds.includes(apartment.id),
+      }));
+
+    return {
+      apartments: markFavorite(apartments)
+    }
+  }
+
+  async updateLastViewed(id: string, userId: string): Promise<Apartment> {
+    const apartment = await this.apartmentRepository.findOne( { id } );
+
+    if (!apartment) {
+      throw new NotFoundException('Apartment not found');
+    }
+
+    // Update both the timestamp and the user who viewed it
+    apartment.lastViewedAt = new Date();
+    apartment.lastViewedBy = userId; // Store the userId
+    
+    return this.apartmentRepository.save(apartment);
+  }
+  //filter by price
+  async getApartmentsByBedPrice(
+    minPrice: number,
+    maxPrice: number,
+    page: number,
+    limit: number,
+  ): Promise<{
+    data: Apartment[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const [data, total] = await this.apartmentRepository
+      .createQueryBuilder('apartment')
+      .leftJoinAndSelect('apartment.rooms', 'room')
+      .leftJoinAndSelect('room.beds', 'bed')
+      .where('bed.price BETWEEN :minPrice AND :maxPrice', {
+        minPrice,
+        maxPrice,
+      })
+      .take(limit)
+      .skip((page - 1) * limit) // Offset for pagination
+      .getManyAndCount(); // Get data + total count
+
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getApartment(id: string, user:currentUserType) {
+    const apartment = await this.apartmentRepository.findOne(
+      { id },//SHOULD BE PUBLISHED
+      ['provider', 'rooms', 'rooms.beds'],
+    );
+
+    if (!apartment) {
+      throw new NotFoundException('Apartment not found');
+    }
+    let favoriteApartmentIds: string[] = [];
+    if (user?.student?.id) {
+      const favoriteApartments = await this.favoriteApartmentRepository.find({
+        where: { favorite: { student: { id: user?.student?.id } } },
+        relations: ['apartment'],
+      });
+
+      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+    }
+
+    // Add `isFavorite` field to each apartment
+    const markFavorite = (apartment: Apartment) => ({
+      ...apartment,
+      isFavorite: favoriteApartmentIds.includes(apartment.id),
+    });
+
+    const response = {
+      provider: apartment.provider, // Keep provider at the top level
+      apartment: {
+        ...apartment, // Spread all apartment properties inside user
+        isFavorite: favoriteApartmentIds.includes(apartment.id),
+      },
+    };
+
+    // Remove `provider` from `user` object
+    delete response.apartment.provider;
+
+    return response;
+  }
+
+  async getApartmentBoard(id: string) {
+    const apartment = await this.apartmentRepository.findOne({ id }, [
+      'provider',
+      'rooms',
+      'rooms.beds',
+    ]);
+
+    if (!apartment) {
+      throw new NotFoundException('Apartment not found');
+    }
+
+    return apartment;
+  }
+
+  async getApartments(filters: GetApartmentsDto) {
+    const { gender, minPrice, maxPrice, page, limit } = filters;
+
+    const query = this.apartmentRepository.createQueryBuilder('apartment');
+
+    if (gender) {
+      query.andWhere('apartment.gender = :gender', { gender });
+    }
+
+    if (minPrice !== undefined) {
+      query.andWhere('apartment.price >= :minPrice', { minPrice });
+    }
+
+    if (maxPrice !== undefined) {
+      query.andWhere('apartment.price <= :maxPrice', { maxPrice });
+    }
+
+    // TODO: Location filter (to be implemented)
+
+    query.orderBy('apartment.createdAt', 'DESC');
+
+    const take = limit || 10;
+    const skip = (page - 1) * take;
+
+    query.skip(skip).take(take);
+
+    const [data, total] = await query.getManyAndCount();
+
+    return {
+      total,
+      page,
+      limit,
+      data,
+    };
+  }
+
+  // async getHomeData(studentId?: string, user?: currentUserType) {
+  //   const numberOfApartments = await this.apartmentRepository.count();
+
+  //   const numberOfBeds = await this.apartmentRepository
+  //     .createQueryBuilder('apartment')
+  //     .leftJoin('apartment.rooms', 'room')
+  //     .leftJoin('room.beds', 'bed')
+  //     .select('COUNT(bed.id)::int', 'totalBeds')
+  //     .getRawOne();
+
+  //   const numberOfProviders = await this.providerRepository.count();
+  //   const numberOfStudents = await this.studentRepository.count();
+  //   const recentlyAdded = await this.getRecentApartments(user.id, 6);
+  //   const recentlyViewed = await this.getRecentlyViewed(user.id, 6);
+  //   const apartmentsByLocation = await this.getApartmentsByLocation(
+  //     ApartmentLocation.ELSAIDY,
+  //     6,
+  //     1,
+  //   );
+
+  //   // Fetch the favorite apartments for this student
+  //   let favoriteApartmentIds: string[] = [];
+  //   if (studentId) {
+  //     const favoriteApartments = await this.favoriteApartmentRepository.find({
+  //       where: { favorite: { student: { id: studentId } } },
+  //       relations: ['apartment'],
+  //     });
+
+  //     favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+  //   }
+
+  //   // Add `isFavorite` field to each apartment
+  //   const markFavorite = (apartments: Apartment[]) =>
+  //     apartments.map((apartment) => ({
+  //       ...apartment,
+  //       isFavorite: favoriteApartmentIds.includes(apartment.id),
+  //     }));
+
+  //   return {
+  //     user: {
+  //       id: user?.id,
+  //       email: user?.verifiedEmail,
+  //       role: user?.role,
+  //       profileComplete: user?.profileComplete
+  //       // Add any other user fields you need
+  //     },
+  //     numberOfApartments,
+  //     numberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0,
+  //     numberOfProviders,
+  //     numberOfStudents,
+  //     recentlyAdded: markFavorite(recentlyAdded),
+  //     recentlyViewed: recentlyViewed,
+  //     apartmentsByLocation: markFavorite(apartmentsByLocation),
+  //   };
+  // }
+
+
+
+async getHomeData(studentId?: string, user?: currentUserType) {
+  const numberOfApartments = await this.apartmentRepository.count();
+
+  const numberOfBeds = await this.apartmentRepository
+    .createQueryBuilder('apartment')
+    .leftJoin('apartment.rooms', 'room')
+    .leftJoin('room.beds', 'bed')
+    .select('COUNT(bed.id)::int', 'totalBeds')
+    .getRawOne();
+
+  const numberOfProviders = await this.providerRepository.count();
+  const numberOfStudents = await this.studentRepository.count();
+  const recentlyAdded = await this.getRecentApartments(user.id, 6);
+  const recentlyViewed = await this.getRecentlyViewed(user.id, 6);
+
+  // Fetch the favorite apartments for this student
+  let favoriteApartmentIds: string[] = [];
+  if (studentId) {
+    const favoriteApartments = await this.favoriteApartmentRepository.find({
+      where: { favorite: { student: { id: studentId } } },
+      relations: ['apartment'],
+    });
+
+    favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+  }
+
+  // Add `isFavorite` field to each apartment
+  const markFavorite = (apartments: Apartment[]) =>
+    apartments.map((apartment) => ({
+      ...apartment,
+      isFavorite: favoriteApartmentIds.includes(apartment.id),
+    }));
+
+  const response: any = {
+    user: {
+      id: user?.id,
+      email: user?.verifiedEmail,
+      role: user?.role,
+      profileComplete: user?.profileComplete,
+    },
+    numberOfApartments,
+    numberOfBeds: parseInt(numberOfBeds.totalBeds, 10) || 0,
+    numberOfProviders,
+    numberOfStudents,
+    recentlyAdded: markFavorite(recentlyAdded),
+    recentlyViewed: recentlyViewed,
+  };
+
+  // Conditionally include apartmentsByLocation or subscriptionPlans
+  if (user?.role === 'STUDENT') {
+    const apartmentsByLocation = await this.getApartmentsByLocation(
+      ApartmentLocation.ELSAIDY,
+      6,
+      1,
+    );
+    response.apartmentsByLocation = markFavorite(apartmentsByLocation);
+  } else {
+    response.subscriptionPlans = await this.subscriptionPlanService.getAllPlans();
+  }
+
+  return response;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  async getApartmentsByLocation(
+    location: ApartmentLocation,
+    limit: number,
+    page: number,
+  ) {
+    return this.apartmentRepository.find({
+      where: { locationEnum: location },
+      take: limit,
+      skip: (page - 1) * limit,
+      relations: ['rooms', 'rooms.beds'],
+    });
+  }
+
+  async getBlockedApartments() {
+    const blockedApartments = this.apartmentRepository
+      .createQueryBuilder('apartment')
+      .where('apartment.status = :status', { status: 'BLOCKED' })
+      .getMany();
+    return blockedApartments;
+  }
+
+  
+
+  async searchApartments(query: SearchApartmentsDto, user: currentUserType) {
+    const { page, limit, sortBy, sortOrder, ...filters } = query;
+    const offset = (page - 1) * limit;
+    // 🧠 Get matching IDs FIRST if needed
+    let matchingIds: string[] = [];
+    if (filters.matching === true && user?.student?.id) {
+        const matchingResult = await this.getRankedMatchingApartments(user.student.id);
+        matchingIds = matchingResult.apartments.map((apt) => apt.id);
+        
+        if (matchingIds.length === 0) {
+            return {
+                data: [],
+                total: 0,
+                page,
+                totalPages: 0,
+            };
         }
-
-        const images = imageFilenames.map(filename =>
-            this.imageRepo.create({ imageUrl: filename, apartment })
-        );
-
-        await this.imageRepo.save(images);
-
-        apartment.images = await this.imageRepo.find({
-            where: { apartment: { id: apartment.id } },
-        });
-
-        apartment.isReviewed = false;
-        return await this.apartmentRepository.save(apartment);
     }
 
 
-    // ✅ Update an existing image
-    async updateApartmentImage(id: string, newFilename: string): Promise<ApartmentImage> {
-        const image = await this.imageRepo.findOne({ id }, ['apartment']);
+    const qb = this.apartmentRepository
+      .createQueryBuilder('apartment')
+      .leftJoinAndSelect('apartment.rooms', 'room')
+      .leftJoinAndSelect('room.beds', 'bed');
 
-        if (!image) {
-            throw new NotFoundException('Image not found');
-        }
+    // Apply matching filter FIRST if needed
+    if (filters.matching === true && matchingIds.length > 0) {
+      console.log("yess")
+        qb.andWhere('apartment.id IN (:...matchingIds)', { matchingIds });
+         const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
 
-        // 🔹 Delete old image from storage
-        const oldImagePath = join(__dirname, '../../uploads/apartments', image.imageUrl);
-        try {
-            await unlink(oldImagePath);
-        } catch (err) {
-            console.warn('Old image file not found or already deleted:', oldImagePath);
-        }
-
-        // 🔹 Update image URL in the database
-        image.imageUrl = newFilename;
-        return await this.imageRepo.save(image);
+        console.log( apartments)
+    }
+    // Apply filters (existing logic)
+    if (filters.locationEnum) {
+      qb.andWhere('apartment.locationEnum = :location', {
+        location: filters.locationEnum
+      });
     }
 
-    // ✅ Delete an image
-    async deleteApartmentImage(id: string): Promise<{ message: string }> {
-        const image = await this.imageRepo.findOne({ id }, ['apartment']);
-
-        if (!image) {
-            throw new NotFoundException('Image not found');
-        }
-
-        // 🔹 Remove image file from storage
-        const imagePath = join(__dirname, '../../uploads/apartments', image.imageUrl);
-        try {
-            await unlink(imagePath);
-        } catch (err) {
-            console.warn('Image file not found or already deleted:', imagePath);
-        }
-
-        // 🔹 Delete the image from the database
-        await this.imageRepo.delete(id);
-
-        return { message: 'Image deleted successfully' };
+    if (filters.text) {
+       console.log("text")
+       const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+        console.log( apartments)
+      const likeText = `%${filters.text}%`;
+      const trimmedText = filters.text.trim();
+      qb.andWhere(
+        new Brackets((subQb) => {
+          subQb
+            .where('apartment.title ILIKE :text', { text: likeText })
+            .orWhere('apartment.descriptionEn ILIKE :text', { text: likeText })
+            .orWhere('apartment.descriptionAr ILIKE :text', { text: likeText })
+            .orWhere('room.descriptionEn ILIKE :text', { text: likeText })
+            .orWhere('room.descriptionAr ILIKE :text', { text: likeText })
+            .orWhere('bed.descriptionEn ILIKE :text', { text: likeText })
+            .orWhere('bed.descriptionAr ILIKE :text', { text: likeText })
+            // Gender exact match (case-insensitive)
+            .orWhere('LOWER(apartment.gender) = LOWER(:trimmedText)', { trimmedText });
+        }),
+      );
     }
 
-
-    async getById(id: string) {
-        const apartment = await this.apartmentRepository.findOneBy({ id });
-        if (!apartment) {
-            throw new NotFoundException('apartment not found');
-        }
-        apartment.isReviewed = true;
-        await this.apartmentRepository.save(apartment);
-        return apartment
+    if (filters.minPrice !== undefined) {
+       console.log("min")
+       const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+        console.log( apartments)
+      qb.andWhere('bed.price >= :minPrice', { minPrice: filters.minPrice });
     }
 
-    async updateApartmentApproval(id: string, isTrusted: boolean): Promise<Apartment> {
-        const apartment = await this.apartmentRepository.findOneBy({ id });
-        if (!apartment) {
-            throw new NotFoundException(`apartment not found`);
-        }
-        apartment.isTrusted = isTrusted;
-        return this.apartmentRepository.save(apartment);
+    if (filters.maxPrice !== undefined) {
+       console.log("max")
+       const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+        console.log( apartments)
+      qb.andWhere('bed.price <= :maxPrice', { maxPrice: filters.maxPrice });
     }
 
-    async getUnReviewedApartments(): Promise<Apartment[]> {
-        return this.apartmentRepository.find({
-            where: {
-                isReviewed: false
-            },
-        });
+    if (filters.filterByGender) {
+       console.log("gender")
+       const [apartments, totalItems] = await qb.distinct(true).getManyAndCount();
+        console.log( apartments)
+      qb.andWhere('LOWER(apartment.gender) = LOWER(:gender)', { gender: filters.filterByGender });
     }
 
-    async getRecentApartments(limit = 10): Promise<Apartment[]> {
-        return this.apartmentRepository.find({
-            order: { createdAt: 'DESC' },
-            take: limit,
-        });
+     const [apartments2, totalItems2] = await qb.distinct(true).getManyAndCount();
+
+    console.log("apartemst normal after order ")
+    console.log(apartments2)
+
+   // 5. DEBUG: Get SQL query before pagination
+    console.log('SQL before pagination:', qb.getQueryAndParameters());
+
+    // 6. Apply sorting and pagination
+    qb.orderBy(`apartment.${sortBy}`, sortOrder)
+      .skip(offset)
+      .take(limit);
+
+    // 7. Execute query
+    const [apartments, totalItems] = await qb.getManyAndCount();
+    
+    // 8. DEBUG: Log results
+    console.log('Final apartments:', apartments);
+    console.log('Total items:', totalItems);
+
+    console.log("apartemst normal ")
+    console.log(apartments)
+
+    // Fetch the favorite apartments for this student
+    let favoriteApartmentIds: string[] = [];
+    if (user.id) {
+      const favoriteApartments = await this.favoriteApartmentRepository.find({
+        where: { favorite: { student: { userId: user.id } } },
+        relations: ['apartment'],
+      });
+
+      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
     }
 
-    // Get recently viewed apartments (sorted by lastViewedAt)
-    async getRecentlyViewed(): Promise<Apartment[]> {
-        return this.apartmentRepository.find({
-            where: { lastViewedAt: Not(IsNull()) },
-            order: { lastViewedAt: 'DESC' },
-            take: 10, // Limit to 10 results
-        });
+    // Add `isFavorite` field to each apartment
+    const markFavorite = (apartments: Apartment[]) =>
+      apartments.map((apartment) => ({
+        ...apartment,
+        isFavorite: favoriteApartmentIds.includes(apartment.id),
+      }));
+    return {
+      data: markFavorite(apartments)
+    };
+  }
+
+  getApartmentLocations(): string[] {
+    // Extract enum values while preserving order
+    return Object.values(ApartmentLocation).filter(
+      (value) => typeof value === 'string'
+    ) as string[];
+  }
+
+
+
+
+  async getRankedMatchingApartments(studentId: string) {
+  const currentStudent = await this.studentRepository
+    .createQueryBuilder('student')
+    .select(['student.id', 'student.major', 'student.university', 'student.level'])
+    .where('student.id = :studentId', { studentId })
+    .getOne();
+
+  if (!currentStudent) throw new Error('Student not found');
+
+  const studentMajor = currentStudent.major;
+  const studentUniversity = currentStudent.university;
+  const studentLevel = currentStudent.level;
+
+  console.log('\n🧍‍♂️ Current Student:');
+  console.log(`Major: ${studentMajor}`);
+  console.log(`University: ${studentUniversity}`);
+  console.log(`Level: ${studentLevel}`);
+
+  // Step 1: Subquery for per-roommate match score (without hobbies, add level)
+  const subQuery = this.studentRepository
+    .createQueryBuilder('roommate')
+    .select([
+      'apartment.id AS apartment_id',
+      `
+      (
+        CASE WHEN roommate.major = :major THEN 1 ELSE 0 END +
+        CASE WHEN roommate.university = :university THEN 1 ELSE 0 END +
+        CASE WHEN roommate.level = :level THEN 1 ELSE 0 END
+      ) AS match_score`
+    ])
+    .innerJoin('roommate.bed', 'bed')
+    .innerJoin('bed.room', 'room')
+    .innerJoin('room.apartment', 'apartment')
+    .where('roommate.id != :studentId', { studentId });
+
+  subQuery.setParameter('major', studentMajor);
+  subQuery.setParameter('university', studentUniversity);
+  subQuery.setParameter('level', studentLevel);
+
+  // Step 2: Main query - join subquery and load apartment -> rooms -> beds
+  const apartmentsWithScore = await this.apartmentRepository
+    .createQueryBuilder('apartment')
+    .leftJoinAndSelect('apartment.rooms', 'room')
+    .leftJoinAndSelect('room.beds', 'bed')
+    .leftJoin(
+      '(' + subQuery.getQuery() + ')',
+      'scored',
+      'scored.apartment_id = apartment.id'
+    )
+    .addSelect('COALESCE(CEIL(AVG(scored.match_score)), 0)', 'avg_match_score')
+    .groupBy('apartment.id')
+    .addGroupBy('room.id')
+    .addGroupBy('bed.id')
+    .orderBy('avg_match_score', 'DESC')
+    .setParameters(subQuery.getParameters())
+    .getRawAndEntities();
+
+  const { entities: apartments, raw } = apartmentsWithScore;
+
+  const result = apartments.map((apt, i) => ({
+    ...apt,
+    avgMatchScore: Number(raw[i].avg_match_score),
+  }));
+
+  // Fetch the favorite apartments for this student
+  let favoriteApartmentIds: string[] = [];
+  if (studentId) {
+    const favoriteApartments = await this.favoriteApartmentRepository.find({
+      where: { favorite: { student: { id: studentId } } },
+      relations: ['apartment'],
+    });
+
+    favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
+  }
+
+  // Add `isFavorite` field
+  const markFavorite = (apartments: Apartment[]) =>
+    apartments.map((apartment) => ({
+      ...apartment,
+      isFavorite: favoriteApartmentIds.includes(apartment.id),
+    }));
+
+  return {
+    apartments: markFavorite(result),
+  };
+}
+
+  async filterApartments(studentId: string, filterDto: FilterApartmentsDto) {
+    const { gender, page = 1, limit = 10 } = filterDto;
+    const skip = (page - 1) * limit;
+
+    const query = this.apartmentRepository
+      .createQueryBuilder('apartment')
+      .leftJoinAndSelect('apartment.rooms', 'room')          // Join rooms
+      .leftJoinAndSelect('room.beds', 'bed');                // Join beds inside rooms
+
+    console.log('gender:', gender);
+    console.log('limit:', limit);
+    console.log('page:', page);
+
+    if (gender) {
+      query.andWhere('apartment.gender = :gender', { gender });
     }
 
-    // Update lastViewedAt when an apartment is viewed
-    async updateLastViewed(id: string): Promise<Apartment> {
-        const apartment = await this.apartmentRepository.findOne({ id });
+    const [apartments, total] = await query.skip(skip).take(limit).getManyAndCount();
+    // Fetch the favorite apartments for this student
+    let favoriteApartmentIds: string[] = [];
+    if (studentId) {
+      const favoriteApartments = await this.favoriteApartmentRepository.find({
+        where: { favorite: { student: { id: studentId } } },
+        relations: ['apartment'],
+      });
 
-        if (!apartment) {
-            throw new Error('Apartment not found');
-        }
-
-        apartment.lastViewedAt = new Date();
-        return this.apartmentRepository.save(apartment);
-    }
-    //filter by price 
-    async getApartmentsByBedPrice(
-        minPrice: number,
-        maxPrice: number,
-        page: number,
-        limit: number
-    ): Promise<{ data: Apartment[]; total: number; page: number; totalPages: number }> {
-        const [data, total] = await this.apartmentRepository
-            .createQueryBuilder('apartment')
-            .leftJoinAndSelect('apartment.rooms', 'room')
-            .leftJoinAndSelect('room.beds', 'bed')
-            .where('bed.price BETWEEN :minPrice AND :maxPrice', { minPrice, maxPrice })
-            .take(limit)
-            .skip((page - 1) * limit) // Offset for pagination
-            .getManyAndCount(); // Get data + total count
-
-        return {
-            data,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit),
-        };
+      favoriteApartmentIds = favoriteApartments.map((fa) => fa.apartment.id);
     }
 
+    // Add `isFavorite` field to each apartment
+    const markFavorite = (apartments: Apartment[]) =>
+      apartments.map((apartment) => ({
+        ...apartment,
+        isFavorite: favoriteApartmentIds.includes(apartment.id),
+      }));
+    return {
+      apartments: markFavorite(apartments),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 
+ async getApartmentDocument(apartmentId: string) {
+  // 1. Try to get document from approved apartment first
+  const apartment = await this.apartmentRepository.findOne(
+    { id: apartmentId },
+    ['document']
+  );
+
+  if (apartment?.document) {
+    return apartment.document;
+  }
+
+  // 2. If no approved apartment doc, check the pending request for this apartment ID
+  const pendingRequest = await this.pendingRequestRepo
+  .createQueryBuilder('pendingRequest')
+  .leftJoinAndSelect('pendingRequest.items', 'item')
+  .where('pendingRequest.referenceId = :apartmentId', { apartmentId })
+  .andWhere('pendingRequest.referenceType = :entityType', { entityType: EntityType.APARTMENT })
+  .getOne();
+
+
+  if (!pendingRequest) {
+    throw new NotFoundException('No pending request found for this apartment.');
+  }
+
+  // 3. Find the request item that has a document (you store the base64 string here)
+  const documentItem = pendingRequest.items?.find(item => !!item.document);
+
+  if (!documentItem) {
+    throw new NotFoundException('No document found in pending request for this apartment.');
+  }
+
+  // 4. Return the document string (base64)
+  return { document: documentItem.document };
+}
 }

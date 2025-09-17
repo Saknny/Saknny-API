@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { DatabaseModule } from '../../configs/database/database.module';
@@ -13,7 +13,7 @@ import { StudentModule } from '../student/student.module';
   imports: [
     DatabaseModule.forFeature([User, Student, Provider]),
     HelperModule,
-    StudentModule,
+     forwardRef(() => StudentModule),
   ],
   controllers: [UserController],
   providers: [UserService, UserTransformer],

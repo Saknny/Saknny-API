@@ -1,16 +1,23 @@
-import { Expose, Type } from 'class-transformer';
-import { IsDate, IsString, Validate } from 'class-validator';
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
+import { RentalRequest } from '@src/modules/booking-request/entity/rental-request.entity';
+import { Favorite } from '@src/modules/favoriteList/entities/favorite-list.entity';
+import { Status } from '@src/modules/request/entities/enum/status.enum';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { BaseModel } from '../../../libs/database/base.model';
 import { DeepPartial } from '../../../libs/types/deep-partial.type';
-import { IsEndDateAfterStartDate } from '../../../libs/utils/validators/is-endDate-after-startDate';
 import { User } from '../../user/entities/user.entity';
-import { Bed } from '@src/modules/bed/entities/bed.entity/bed.entity';
+import { Review } from '@src/modules/review/entities/review.entity';
+import { Report } from '@src/modules/report/entities/report.entity';
+import { PendingRequest } from '@src/modules/request/entities/pendingRequest.entity';
+import { RoomRentalRequest } from '@src/modules/booking-request/entity/room-rental-request.entity';
 @Entity()
 export class Student extends BaseModel {
   constructor(input?: DeepPartial<Student>) {
     super(input);
   }
+
+  @Column({ type: 'enum', enum: Status, default: Status.PENDING })
+  status: Status;
 
   @Column()
   firstName: string;
@@ -36,29 +43,25 @@ export class Student extends BaseModel {
   @Column({ nullable: true })
   university: string;
 
-  @Column({ type: Boolean, default: false })
-  isTrusted: boolean;
-
-
-  @Column({ type: Boolean, default: false })
-  isReviewed: boolean;
-
-  @Column({ type: 'varchar', nullable: true })  // Store idCard as binary
-  idCardImage: string;
+  @Column({ type: 'varchar', nullable: true }) // Store idCard as binary
+  idCard: string;
 
   @Column({ nullable: true })
-  profilePictureUrl: string;
+  image: string;
 
   @Column({ nullable: true })
   major: string;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ nullable: true })
+  bio: string;
+
+  @Column({ type: 'boolean', default: false, nullable: true })
   smoking: boolean;
 
   @Column({ nullable: true })
   level: string;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, nullable: true })
   socialPerson: boolean;
 
   @Column('simple-array', { nullable: true })
@@ -74,4 +77,25 @@ export class Student extends BaseModel {
   @OneToOne(() => Bed, (bed) => bed.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'bedId' })
   bed: Bed;
+
+  @OneToMany(() => Favorite, (Favorite) => Favorite.student, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  favorites: Favorite[];
+
+  @OneToMany(() => RentalRequest, (request) => request.student)
+  rentalRequests: RentalRequest[];
+
+  @OneToMany(() => RoomRentalRequest, (request) => request.student)
+  roomRentalRequests: RoomRentalRequest[];
+
+  @OneToMany(() => Review, (review) => review.student)
+  reviews: Review[];
+
+  @OneToMany(() => Report, (report) => report.student)
+  reports: Report[];
+
+  @OneToMany(() => PendingRequest, (request) => request.sentByStudent)
+  requests: PendingRequest[];
 }

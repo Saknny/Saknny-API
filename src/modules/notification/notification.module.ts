@@ -1,22 +1,13 @@
-import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Notification } from './entities/notification.entity/notification.entity';
 import { NotificationService } from './notification.service';
 import { NotificationController } from './notification.controller';
-import { DatabaseModule } from '../../configs/database/database.module';
-import { FCMTokenModule } from '../fcm-token/fcm-token.module';
-import { Notification } from './entities/notification.entity';
-import { NotificationStatus } from './entities/notificationStatus.entity';
-import { BullModule } from '@nestjs/bull';
-import { Student } from '../student/entities/student.entity';
+import { Module } from '@nestjs/common';
 
 @Module({
-  imports: [
-    BullModule.registerQueue({
-      name: 'notification',
-    }),
-    DatabaseModule.forFeature([Student, Notification, NotificationStatus]),
-    FCMTokenModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Notification])],
   controllers: [NotificationController],
   providers: [NotificationService],
+  exports: [NotificationService], // export if you want to use it in other modules
 })
-export class NotificationModule { }
+export class NotificationModule {}

@@ -24,8 +24,24 @@ export class CreateRoomDto {
   @IsBoolean()
   hasAirConditioner?: boolean;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateBedDto)
-  beds: CreateBedDto[];
+
+  @IsBoolean()
+  wardrobe: boolean;
+
+  @IsBoolean()
+  Desk: boolean;
+
+  @IsBoolean()
+  nightStand: boolean;
+
+
+  @IsBoolean()
+  ceilingFan: boolean;
+
+  @IsBoolean()
+  curtains: boolean;
+
+
+  @IsBoolean()
+  balcony: boolean;
 }

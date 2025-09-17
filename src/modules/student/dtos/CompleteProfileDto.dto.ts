@@ -13,10 +13,10 @@ import { Transform } from 'class-transformer';
 export class CompleteProfileDto {
 
 
-  idCardImage?: any;
+  idCard?: any;
 
   @IsOptional()
-  profilePicture?: any;
+  image?: any;
 
   @IsOptional()
   @IsString()
@@ -54,7 +54,7 @@ export class CompleteProfileDto {
   linkedin?: string;
 
 
-  @IsOptional()
+
   @IsString()
   @IsPhoneNumber()
   phone?: string;
@@ -62,4 +62,12 @@ export class CompleteProfileDto {
   @IsOptional()
   @IsString()
   university?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?:string;
+
+  @IsOptional()
+  @IsString()
+  bio?:string;
 }

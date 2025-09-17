@@ -5,124 +5,90 @@ import { Room } from './entities/room.entity/room.entity';
 import { BaseRepository } from '@src/libs/types/base-repository';
 import { ApartmentService } from '../apartment/apartment.service';
 import { Apartment } from '../apartment/entities/apartment.entity/apartment.entity';
-import { RoomImage } from './entities/roomImage.entity';
 import { join } from 'path';
 import { unlink } from 'fs/promises';
 import { CreateRoomDto } from './dto/create-room.dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto/update-room.dto';
+import { ErrorCodeEnum } from '@src/libs/application/exceptions/error-code.enum';
 
 @Injectable()
 export class RoomService {
-    constructor(
+  constructor(
+    @InjectRepository(Room)
+    private readonly roomRepository: BaseRepository<Room>,
+    @InjectRepository(Apartment)
+    private readonly apartmentRepo: BaseRepository<Apartment>,
+  ) {}
 
-        @InjectRepository(Room)
-        private readonly roomRepository: BaseRepository<Room>,
-        @InjectRepository(Apartment)
-        private readonly apartmentRepo: BaseRepository<Apartment>,
-        @InjectRepository(RoomImage)
-        private readonly imageRepo: BaseRepository<RoomImage>,
+  async createRoom(
+    apartmentId: string,
+    createRoomDto: CreateRoomDto,
+  ): Promise<Room> {
+    const apartment = await this.apartmentRepo.findOne({ id: apartmentId });
 
-    ) { }
-
-    async createRoom(apartmentId: string, createRoomDto: CreateRoomDto): Promise<Room> {
-        const apartment = await this.apartmentRepo.findOne({ id: apartmentId });
-
-        if (!apartment) {
-            throw new NotFoundException('Apartment not found');
-        }
-
-        const room = this.roomRepository.create({
-            ...createRoomDto,
-            apartment,
-        });
-
-        return await this.roomRepository.save(room);
+    if (!apartment) {
+      throw new NotFoundException('Apartment not found');
     }
 
+    const room = this.roomRepository.create({
+      ...createRoomDto,
+      apartment,
+    });
 
-    async updateRoom(roomId: string, updateRoomDto: UpdateRoomDto): Promise<Room> {
-        const room = await this.roomRepository.findOne({ id: roomId });
+    return await this.roomRepository.save(room);
+  }
 
-        if (!room) {
-            throw new NotFoundException('Room not found');
-        }
+  async updateRoom(
+    roomId: string,
+    updateRoomDto: UpdateRoomDto,
+  ): Promise<Room> {
+    const room = await this.roomRepository.findOne({ id: roomId });
 
-        Object.assign(room, updateRoomDto);
-        return await this.roomRepository.save(room);
+    if (!room) {
+      throw new NotFoundException('Room not found');
     }
 
+    Object.assign(room, updateRoomDto);
+    return await this.roomRepository.save(room);
+  }
 
-    async deleteRoom(roomId: string): Promise<{ message: string }> {
-        const room = await this.roomRepository.findOne({ id: roomId });
+  async deleteRoom(roomId: string): Promise<{ message: string }> {
+    const room = await this.roomRepository.findOne({ id: roomId });
 
-        if (!room) {
-            throw new NotFoundException('Room not found');
-        }
-        if (room.status == "UNBOOKED") {
-            await this.roomRepository.remove(room);
-            return { message: 'Room deleted successfully' };
-        }
-        else {
-            return { message: 'Room can not be deleted ' };
-        }
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+    if (room.status == 'UNBOOKED') {
+      await this.roomRepository.remove(room);
+      return { message: 'Room deleted successfully' };
+    } else {
+      return { message: 'Room can not be deleted ' };
+    }
+  }
+
+  async getRoom(roomId: string): Promise<Room> {
+    const room = await this.roomRepository.findOne(
+      { id:roomId },
+      ['apartment', 'beds'],
+      );
+    
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
     }
 
-    async saveRoomImages(id: string, imageFilenames: string[]): Promise<Room> {
-        const room = await this.roomRepository.findOne({ id }, ['apartment']);
-        if (!room) {
-            throw new NotFoundException('Room not found');
-        }
+    return room;
+  }
 
-        const images = imageFilenames.map(filename =>
-            this.imageRepo.create({ imageUrl: filename, room })
-        );
+  async getRoomBoard(roomId: string): Promise<Room> {
+    const room = await this.roomRepository.findOne({ id: roomId }, [
+      'apartment',
+    ]);
 
-        await this.imageRepo.save(images);
-
-        room.images = await this.imageRepo.find({
-            where: { room: { id: room.id } },
-        });
-
-        room.apartment.isReviewed = false;
-        return this.roomRepository.save(room);
+    if (!room) {
+      throw new NotFoundException('Room not found');
     }
 
-    async updateRoomImage(id: string, newFilename: string): Promise<RoomImage> {
-        const image = await this.imageRepo.findOne({ id }, ['room']);
-
-        if (!image) {
-            throw new NotFoundException('Image not found');
-        }
-
-
-        const oldImagePath = join(__dirname, '../../uploads/rooms', image.imageUrl);
-        try {
-            await unlink(oldImagePath);
-        } catch (err) {
-            console.warn('Old image file not found or already deleted:', oldImagePath);
-        }
-
-        image.imageUrl = newFilename;
-        return await this.imageRepo.save(image);
-    }
-
-
-    async deleteRoomImage(id: string): Promise<{ message: string }> {
-        const image = await this.imageRepo.findOne({ id }, ['room']);
-
-        if (!image) {
-            throw new NotFoundException('Image not found');
-        }
-
-        const imagePath = join(__dirname, '../../uploads/rooms', image.imageUrl);
-        try {
-            await unlink(imagePath);
-        } catch (err) {
-            console.warn('Image file not found or already deleted:', imagePath);
-        }
-
-        await this.imageRepo.delete(id);
-
-        return { message: 'Image deleted successfully' };
-    }
+    return room;
+  }
 }

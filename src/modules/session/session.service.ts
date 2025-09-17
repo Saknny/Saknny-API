@@ -19,7 +19,7 @@ export class SessionService {
     });
   }
 
-  async remove(session: Session): Promise<void> {
-    await this.SessionRepo.delete({ id: session.id });
+  async remove(sessionId:string): Promise<void> {
+    await this.SessionRepo.delete(sessionId);
   }
 }

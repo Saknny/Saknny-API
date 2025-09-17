@@ -1,46 +1,81 @@
-{{> header headerImage="assets/images/Group.png"}}
-<mj-column background-color="white" width="94%" padding-top="10px" border-radius="0px">
-  <mj-text font-size="23px" font-weight="530" line-height="25px" color="#003D25">
-    Confirm Verification Code
-  </mj-text>
-</mj-column>
+<mjml>
+  <mj-head>
+    <mj-style>
+      .input {
+      margin-right: 10px;
+      height: 40px;
+      border-radius: 20px;
+      }
+      .forget-password-btn span {
+      white-space: nowrap;
+      max-width: 150px;
+      }
+    </mj-style>
+  </mj-head>
 
-<mj-column background-color="white" width="94%" padding="0 0 10px 0">
-  {{#if data.firstName}}
-    <mj-text font-weight="350">Dear {{data.firstName}},</mj-text>
-  {{/if}}
-</mj-column>
+  <mj-body>
+    <mj-wrapper background-color="#003D25" border-radius="20px" padding="0">
 
-<mj-column background-color="white" width="94%">
-  <mj-column background-color="#F5F5F5" width="95%" padding-left="30px" border-radius="12px">
-    <mj-text padding="20px 10px 0 0" font-size="15px">
-      This is your verification code:
-      <br/>
-      <br/>
-    </mj-text>
-    <mj-group width="350px" padding="0 0 20px 0">
-      <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" padding="0" css-class="input">
-        <mj-text font-size="17px" padding="11px 0 0 0" height="25px" align="center">{{data.verificationCode.[0]}}</mj-text>
-      </mj-column>
-      <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" css-class="input">
-        <mj-text font-size="17px" padding="11px 0 0 0" height="25px" align="center">{{data.verificationCode.[1]}}</mj-text>
-      </mj-column>
-      <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" css-class="input">
-        <mj-text font-size="17px" padding="11px 0 0 0" height="25px" align="center">{{data.verificationCode.[2]}}</mj-text>
-      </mj-column>
-      <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" css-class="input">
-        <mj-text font-size="17px" padding="11px 0 0 0" height="25px" align="center">{{data.verificationCode.[3]}}</mj-text>
-      </mj-column>
-    </mj-group>
-    {{!-- Optionally, add a button if needed for model verification --}}
-  </mj-column>
-  <mj-column padding="10px 0 10px 0">
-    <mj-text>
-      Best regards,
-      <br/>
-      <br/>
-      <b>Your Team</b>
-    </mj-text>
-  </mj-column>
-</mj-column>
-{{> footer}}
+      <!-- Body -->
+      <mj-section background-color="#ffffff" border-radius="0px" padding="10px 0">
+        <mj-column width="94%">
+          <mj-text font-size="23px" font-weight="530" line-height="25px" color="#003D25">
+            Confirm Verification Code
+          </mj-text>
+        </mj-column>
+
+        <mj-column width="94%" padding="0 0 10px 0">
+          {{#if data.firstName}}
+            <mj-text font-weight="350">Dear {{data.firstName}},</mj-text>
+          {{/if}}
+        </mj-column>
+
+        <mj-column width="94%">
+          <mj-column background-color="#F5F5F5" width="95%" padding-left="30px" border-radius="12px">
+            <mj-text padding="20px 10px 0 0" font-size="15px">
+              This is your verification code:
+              <br /><br />
+            </mj-text>
+
+            <mj-group width="350px" padding="0 0 20px 0">
+              <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" padding="0" css-class="input">
+                <mj-text font-size="17px" padding="11px 0 0 0" align="center">{{data.verificationCode.[0]}}</mj-text>
+              </mj-column>
+              <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" css-class="input">
+                <mj-text font-size="17px" padding="11px 0 0 0" align="center">{{data.verificationCode.[1]}}</mj-text>
+              </mj-column>
+              <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" css-class="input">
+                <mj-text font-size="17px" padding="11px 0 0 0" align="center">{{data.verificationCode.[2]}}</mj-text>
+              </mj-column>
+              <mj-column background-color="#E6ECE9" border-radius="8px" width="40px" css-class="input">
+                <mj-text font-size="17px" padding="11px 0 0 0" align="center">{{data.verificationCode.[3]}}</mj-text>
+              </mj-column>
+            </mj-group>
+          </mj-column>
+
+          <mj-column padding="10px 0 10px 0">
+            <mj-text>
+              Best regards,
+              <br /><br />
+              <b>The Saknny Team</b>
+            </mj-text>
+          </mj-column>
+        </mj-column>
+      </mj-section>
+
+      <!-- Footer -->
+      <mj-section background-color="#f4f4f4" padding="20px">
+        <mj-column>
+          <mj-text font-size="12px" color="#777" align="center">
+            © 2025 Saknny. All rights reserved.
+            <br /> <br />
+            Need help? Contact us at <a href="mailto:support@saknnu.com" style="color:#003D25;">support@Saknny.com</a>
+            <br /> <br />
+            Saknny, Egypt
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+    </mj-wrapper>
+  </mj-body>
+</mjml>

@@ -1,10 +1,14 @@
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { OtpUseCaseEnum } from '../../enums/otp.enum';
 
 export class VerifyOtpInput {
+  // @IsNotEmpty()
+  // @IsString()
+  // userId: string;
+
   @IsNotEmpty()
-  @IsString()
-  userId: string;
+  @IsEmail()
+  email: string; 
 
   @IsNotEmpty()
   @IsString()
